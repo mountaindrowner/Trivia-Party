@@ -70,7 +70,7 @@ Each game takes 6 questions from your level and 2 from the other, so Lambs get a
 
 ## 4. The Trial Room: minigames
 
-Built in the prototype:
+Built in the prototype (14):
 
 | # | Minigame | Story | Skill | TMP analogue |
 |---|---|---|---|---|
@@ -79,19 +79,20 @@ Built in the prototype:
 | 3 | **Walls of Jericho** | Joshua 6 | Mash the trumpet 25 or 35 times in 7 s | Button mash |
 | 4 | **David's Sling** | 1 Samuel 17 | Timing: release when the stone is on target | Timing |
 | 5 | **Gideon's Fleece** | Judges 6 | Pure luck: 2 of 3 fleeces are wet | Chalices (poison cup) |
-| 6 | **Scroll Scramble** | various | Spell a Bible name from mixed-up letters | Word / spelling |
+| 6 | **Scroll Scramble** | various | Spell a Bible name from mixed-up letters (16 names per age group) | Word / spelling |
 | 7 | **Find the Lost Sheep** | Luke 15 | Spot the one sheep in a herd of goats | Spot-the-difference |
+| 8 | **Manna Catch** | Exodus 16 | Steer a basket to catch manna, dodge the wormy leftovers | Catch |
+| 9 | **Red Sea Run** | Exodus 14 | Switch lanes to dodge waves for 12 s | Dodge / survive |
+| 10 | **Build the Ark** | Genesis 6 | Drop sliding beams; overhang gets trimmed (stacker) | Timing |
+| 11 | **Lions' Den Tiptoe** | Daniel 6 | Step while the lion sleeps, freeze when it wakes | Red light, green light |
+| 12 | **Fishers of Men** | John 21 | Whack-a-fish, avoid old boots | Reflex |
+| 13 | **Verse Builder** | various | Tap memory-verse words in order (12 verses) | Word order |
+| 14 | **Joseph's Dreams** | Genesis 37 | Repeat a growing sun/moon/star/wheat pattern | Simon says |
 
 Backlog ideas:
 
-- **Manna Catch** (Exodus 16): tilt or drag a basket to catch falling manna, dodge quail.
-- **Red Sea Run** (Exodus 14): lane-runner between walls of water.
-- **Build the Ark** (Genesis 6): stack beams quickly without the tower tipping.
-- **Lion's Den Hush** (Daniel 6): stop tapping when a lion opens one eye (red light / green light).
 - **Jonah's Big Fish Dodge**: steer a little boat through a storm.
-- **Fishers of Men** (Luke 5): cast the net at the right moment for the biggest catch.
 - **Blessing Wheel** (TMP2 "Wheel of Enormous Proportions"): bonus spin after a streak of 3.
-- **Verse Builder**: tap the words of a memory verse in order.
 
 ---
 
@@ -152,6 +153,8 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 - Avoid denominationally contested trivia (canon counts beyond the 27 New Testament books, dates, theology debates).
 - Distractors can be silly for Lambs ("Pizza") but plausible for Warriors.
 - Each item: `{ lvl, cat, q, a: [correct, ...wrong], ref, fact, host? }`. Final-round items: `{ p, opts: [[label, isRight]] }`.
+- Current pool: 140 questions (48 Lambs, 48 Warriors, 44 Legends), 50 final-round prompts (14 hard-only),
+  32 scramble names, 12 memory verses, about 135 host lines, 10 results-screen verses.
 - Target for v1: about 150 questions per level and about 60 final-round prompts.
 
 ---
@@ -179,7 +182,7 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 
 | Milestone | Scope |
 |---|---|
-| **M0: Sketch** (this commit) | Full loop playable, 7 minigames, 2 levels, about 48 questions, 18 final prompts |
+| **M0: Sketch** (done) | Full loop playable, 14 minigames, 3 levels, 140 questions, 50 final prompts |
 | M1: Content | 300+ questions reviewed by a children's ministry lead; fact cards with illustrations |
 | M2: Polish | Character animation pass, voice lines, music loop, 4 more minigames, Blessing Wheel |
 | M3: Ship | PWA/offline, read-aloud mode, parent page, app store builds |

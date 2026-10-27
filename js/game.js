@@ -69,7 +69,7 @@ window.THP = window.THP || {};
         el("span", { class: "logo-1" }, "TRIVIA"),
         el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
         el("span", { class: "logo-3" }, "PARTY")),
-      el("p", { class: "tagline" }, "Eight questions. Seven trials. One gate. Survive the Bible trivia gauntlet."),
+      el("p", { class: "tagline" }, "Eight questions. Fourteen trials. One gate. Survive the Bible trivia gauntlet."),
       el("div", { class: "name-row" }, nameInput),
       el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
       el("div", { class: "title-foot" },

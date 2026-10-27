@@ -244,6 +244,32 @@ body { font-weight: 600; }
 .herd { clip-path: var(--panel-clip); background: linear-gradient(180deg, #1d3a24, #0f2215); box-shadow: inset 0 0 0 0.1rem #2f5a38; }
 .critter:focus-visible { outline: 0.2rem solid var(--amber); }
 
+/* Minigames 8–14 */
+.field { border: 0; border-radius: 0; clip-path: var(--panel-clip); box-shadow: inset 0 -0.25rem 0 var(--fire);
+  background: radial-gradient(80% 60% at 50% 0%, rgba(255, 194, 26, 0.18), transparent 70%), var(--steel); }
+.field.lanes { background: linear-gradient(90deg, rgba(25, 227, 255, 0.12), transparent 15%, transparent 85%, rgba(25, 227, 255, 0.12)), var(--steel); }
+.lane-line { border-left-color: rgba(255, 255, 255, 0.15); }
+.ark-field { background: linear-gradient(180deg, #0c1220 0%, var(--steel) 70%, #08203a 70%); }
+.beam { border: 0; border-radius: 0; clip-path: var(--slant-clip); background: linear-gradient(180deg, #a26a3a, #6b3f1e); }
+.beam.moving { background: var(--flame); box-shadow: none; filter: drop-shadow(0 0 0.6rem var(--fire)); }
+.steer { font-size: 2rem; padding-inline: 1.6rem; }
+.tiptoe { border: 0; border-radius: 0; clip-path: var(--slant-clip); background: var(--steel-2); box-shadow: inset 0 -0.2rem 0 var(--fire); }
+.lion.awake { filter: drop-shadow(0 0 1.4rem var(--ruby)); }
+.pond-cell { border: 0; border-radius: 0; clip-path: var(--panel-clip); --cut: 0.6rem; box-shadow: inset 0 -0.25rem 0 var(--sapphire);
+  background: repeating-linear-gradient(170deg, #0b2a44 0 0.5rem, #0e3354 0.5rem 1rem); }
+.pond-cell:focus-visible { outline: 0; box-shadow: inset 0 0 0 0.2rem var(--amber); }
+.verse-slot { color: var(--white); border-bottom-color: var(--fire); font-family: var(--display); font-weight: 600; font-size: 1.7rem; line-height: 1; text-transform: uppercase; }
+.word-tile { border: 0; border-radius: 0; clip-path: var(--slant-clip); box-shadow: inset 0 -0.2rem 0 var(--fire); background: var(--steel-2); color: var(--white);
+  font-family: var(--display); font-weight: 600; font-size: 1.6rem; text-transform: uppercase; padding: 0.35rem 1.1rem 0.15rem; }
+.word-tile:focus-visible { outline: 0; box-shadow: inset 0 0 0 0.2rem var(--amber); }
+.dream-pad { border: 0; border-radius: 0; clip-path: var(--panel-clip); box-shadow: none; opacity: 0.35; }
+.dream-pad.pad-0 { background: linear-gradient(160deg, var(--amber), var(--fire)); }
+.dream-pad.pad-1 { background: linear-gradient(160deg, var(--violet), #3d2080); }
+.dream-pad.pad-2 { background: linear-gradient(160deg, var(--sapphire), #0a6f8a); }
+.dream-pad.pad-3 { background: linear-gradient(160deg, var(--emerald), #12804a); }
+.dream-pad.lit { opacity: 1; filter: brightness(1.35); }
+.dream-pad:focus-visible { outline: 0; opacity: 0.8; }
+
 /* ---------- Final round ---------- */
 .final-panel { border: 0; border-radius: 0; clip-path: var(--panel-clip); --cut: 1.2rem; background: var(--steel); box-shadow: inset 0 0.25rem 0 var(--sapphire); }
 .final-prompt { font-size: 2.6rem; text-shadow: var(--glitch); }
