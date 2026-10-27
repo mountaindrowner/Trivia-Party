@@ -1,0 +1,184 @@
+/* Edge theme: a darker, sharper layer on top of style.css.
+ * Same game, more "late-night game show": blacker stage, neon jewel tones, skewed slabs instead of pills,
+ * comic display face, glitchy titles, hazard tape in the Trial Room. Remove this <link> to get the original look. */
+:root {
+  --ink: #07020f;
+  --night: #0d0518;
+  --plum: #3a0b4f;
+  --ruby: #ff2e88;
+  --sapphire: #00c8ff;
+  --emerald: #3dffa2;
+  --amber: #ffd23f;
+  --violet: #a66bff;
+  --parch: #f6f1e4;
+  --slab: #160a29;       /* dark card surface */
+  --display: "Bangers", "Impact", "Arial Narrow Bold", system-ui, sans-serif;
+  --skew: -7deg;
+  --radius: 0.3rem;
+  --glitch: -0.06em 0 var(--sapphire), 0.06em 0 var(--ruby), 0 0.18rem 0 var(--ink);
+  --neon: 0.4rem 0.4rem 0 var(--ruby);
+}
+
+/* ---------- Backdrop: spotlight, halftone, scanlines ---------- */
+.sky {
+  background:
+    radial-gradient(40% 70% at 50% -10%, rgba(255, 210, 63, 0.22), transparent 70%),
+    radial-gradient(110% 55% at 50% 115%, rgba(255, 46, 136, 0.55) 0%, rgba(58, 11, 79, 0.6) 40%, transparent 70%),
+    linear-gradient(180deg, #05010b 0%, var(--night) 55%, #1c0730 100%);
+}
+.rays { background: repeating-conic-gradient(from 0deg, rgba(166, 107, 255, 0.07) 0deg 4deg, transparent 4deg 22deg); animation-duration: 140s; }
+.glass {
+  opacity: 1;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1.5px) 0 0 / 7px 7px,
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 4px);
+  mask-image: none; -webkit-mask-image: none;
+}
+
+/* ---------- Type ---------- */
+.screen-title, .trial-title, .final-prompt, .q-text, .mg-title, .final-score, .logo-1, .logo-3 { letter-spacing: 0.03em; }
+.screen-title { font-size: 2.6rem; text-shadow: var(--glitch); }
+.eyebrow { font-family: var(--body); font-weight: 900; letter-spacing: 0.24em; font-size: 0.75rem; }
+.mg-title { font-size: 2rem; text-shadow: var(--glitch); }
+
+/* ---------- Logo ---------- */
+.logo-1, .logo-3 { font-size: 2.8rem; letter-spacing: 0.18em; text-shadow: var(--glitch); }
+.logo-1 { rotate: -4deg; }
+.logo-3 { color: var(--amber); rotate: -2deg; }
+.logo-2 { gap: 0.25rem; }
+.logo-2 b { font-size: 5rem; width: 1em; height: 1.15em; border-radius: 0.08em; border-width: 0.22rem; color: var(--ink);
+  text-shadow: 0.05em 0.05em 0 rgba(255, 255, 255, 0.55); transform: skewX(var(--skew));
+  box-shadow: 0.35rem 0.35rem 0 var(--ink), inset 0 -0.35rem 0 rgba(0, 0, 0, 0.2); animation-name: hop, jitter; animation-duration: 2.4s, 5s;
+  animation-timing-function: ease-in-out, steps(1); animation-delay: calc(var(--i) * 0.15s), calc(var(--i) * 0.7s); }
+.logo-2 b:nth-child(1) { background: var(--ruby); }
+.logo-2 b:nth-child(2) { background: var(--sapphire); }
+.logo-2 b:nth-child(3) { background: var(--emerald); }
+.logo-2 b:nth-child(4) { background: var(--amber); }
+@keyframes jitter { 0%, 91%, 100% { filter: none; } 92% { filter: drop-shadow(-0.2rem 0 0 var(--sapphire)) drop-shadow(0.2rem 0 0 var(--ruby)); } 94% { filter: none; } 96% { filter: drop-shadow(0.15rem 0 0 var(--ruby)); } }
+.tagline { font-weight: 800; opacity: 0.9; }
+
+/* ---------- Slabs: buttons, chips, pills become skewed parallelograms ---------- */
+.btn, .hud-pill, .cat-chip, .lost-badge, .bubble-next { border-radius: 0.2rem; transform: skewX(var(--skew)); }
+.btn > *, .hud-pill > * { display: inline-block; transform: skewX(calc(var(--skew) * -1)); }
+.btn { font-size: 1.45rem; letter-spacing: 0.06em; padding-inline: 1.8rem; box-shadow: var(--neon), 0.4rem 0.4rem 0 0.22rem var(--ink); }
+.btn:active:not(:disabled) { transform: skewX(var(--skew)) translate(0.3rem, 0.3rem); box-shadow: 0.1rem 0.1rem 0 var(--ruby); }
+.btn-go { background: var(--emerald); }
+.btn-warn { background: var(--ruby); }
+.btn-ghost { background: transparent; color: var(--white); border-color: var(--white); box-shadow: 0.35rem 0.35rem 0 var(--violet); }
+.hud-pill { background: var(--ink); border-color: var(--violet); }
+.hud-btn { border-radius: 0.2rem; background: var(--ink); border-color: var(--violet); }
+.cat-chip { rotate: 0deg; background: var(--amber); font-size: 1.15rem; letter-spacing: 0.06em; box-shadow: 0.3rem 0.3rem 0 var(--ruby); }
+.lost-badge { background: var(--ruby); color: var(--white); border-color: var(--ink); font-family: var(--body); font-weight: 900; }
+
+/* ---------- Host bubble ---------- */
+.bubble { border-radius: 0.2rem; background: var(--parch); box-shadow: 0.35rem 0.35rem 0 var(--sapphire); rotate: -0.6deg; }
+.host-name { font-family: var(--body); font-weight: 900; color: var(--ruby); letter-spacing: 0.22em; }
+.bubble-next { background: var(--ink); color: var(--emerald); }
+
+/* Barnabas puts on his shades. When worried they slide down his nose. */
+.donkey .shades { transition: transform 0.25s; }
+.donkey .shades-lens { fill: var(--ink); stroke: var(--ink); stroke-width: 4; }
+.donkey .shades-shine { fill: none; stroke: var(--sapphire); stroke-width: 3; stroke-linecap: round; opacity: 0.9; }
+.donkey .shades-bridge { fill: none; stroke: var(--ink); stroke-width: 5; }
+.host[data-mood="worried"] .shades { transform: translateY(14px); }
+.donkey .scarf { fill: var(--ink); }
+.donkey .scarf-stripe { stroke: var(--ruby); stroke-dasharray: 4 6; }
+.donkey { filter: drop-shadow(0.3rem 0.3rem 0 var(--ruby)); }
+
+/* ---------- Title cards ---------- */
+.name-row input { border-radius: 0.2rem; background: var(--ink); color: var(--white); border-color: var(--violet); box-shadow: 0.35rem 0.35rem 0 var(--violet); }
+.name-row input::placeholder { color: rgba(255, 255, 255, 0.5); }
+.level-card { border-radius: 0.2rem; transform: skewX(var(--skew)); box-shadow: 0.45rem 0.45rem 0 var(--ink); }
+.level-card > * { transform: skewX(calc(var(--skew) * -1)); }
+.level-card:hover, .level-card:focus-visible { transform: skewX(var(--skew)) translateY(-0.25rem); }
+.level-card.lvl-1 { background: var(--amber); box-shadow: 0.45rem 0.45rem 0 var(--ruby); }
+.level-card.lvl-2 { background: var(--sapphire); box-shadow: 0.45rem 0.45rem 0 var(--violet); }
+.level-card strong { font-size: 1.7rem; letter-spacing: 0.04em; }
+.howto-list li { border-radius: 0.2rem; box-shadow: 0.35rem 0.35rem 0 var(--ruby); }
+.howto-list li:nth-child(even) { box-shadow: 0.35rem 0.35rem 0 var(--sapphire); }
+.howto-list strong { font-size: 1.35rem; letter-spacing: 0.03em; }
+
+/* ---------- Question ---------- */
+.q-card { background: var(--slab); color: var(--white); border-color: var(--sapphire); border-radius: 0.2rem;
+  box-shadow: 0 0 0 0.22rem var(--ink), 0 0 1.6rem rgba(0, 200, 255, 0.35), inset 0 0 1.2rem rgba(0, 200, 255, 0.12); }
+.q-text { font-size: 2rem; letter-spacing: 0.03em; text-shadow: 0 0.15rem 0 var(--ink); }
+.answer { border-radius: 0.2rem; transform: skewX(var(--skew)); color: var(--ink); text-shadow: none; font-weight: 900;
+  box-shadow: 0.35rem 0.35rem 0 var(--ink); }
+.answer > * { transform: skewX(calc(var(--skew) * -1)); }
+.answer:not(:disabled):hover { transform: skewX(var(--skew)) translateY(-0.15rem); }
+.answer:not(:disabled):active { transform: skewX(var(--skew)) translate(0.25rem, 0.25rem); box-shadow: 0.1rem 0.1rem 0 var(--ink); }
+.answer-key { border-radius: 0.15rem; background: var(--ink); color: var(--white); }
+.gem-0 { background: var(--ruby); }
+.gem-1 { background: var(--sapphire); }
+.gem-2 { background: var(--emerald); }
+.gem-3 { background: var(--amber); }
+.is-right { animation-name: edgePulse; outline-color: var(--white); box-shadow: 0 0 1.4rem var(--emerald), 0.35rem 0.35rem 0 var(--ink); }
+.is-wrong { animation-name: edgeShake; }
+@keyframes edgePulse { 50% { scale: 1.05; } }
+@keyframes edgeShake { 20%, 60% { translate: -0.4rem 0; } 40%, 80% { translate: 0.4rem 0; } }
+.scripture { border-radius: 0.2rem; background: var(--ink); border-color: var(--violet); border-left-color: var(--amber); }
+.scripture .ref { font-size: 1.1rem; letter-spacing: 0.04em; }
+
+/* Ring timer becomes a hard-edged neon gauge */
+.ring-fg { stroke: var(--emerald); stroke-linecap: butt; }
+.ring-bg { stroke: rgba(166, 107, 255, 0.35); }
+.ring.urgent { animation-name: edgePulse; }
+.ring.urgent .ring-fg { stroke: var(--ruby); }
+.ring-num { font-size: 1.6rem; }
+
+/* ---------- Trial Room: hazard tape + flicker ---------- */
+#stage[data-scene="trial"] { background: radial-gradient(70% 55% at 50% 40%, rgba(255, 46, 136, 0.25), transparent 70%); }
+.trial-intro { position: relative; padding-block: 2.2rem; }
+.trial-intro::before, .trial-intro::after { content: ""; position: absolute; left: -5%; right: -5%; height: 1.1rem; border-block: 0.18rem solid var(--ink);
+  background: repeating-linear-gradient(-45deg, var(--amber) 0 0.9rem, var(--ink) 0.9rem 1.8rem); }
+.trial-intro::before { top: 0; rotate: -1.5deg; }
+.trial-intro::after { bottom: 0; rotate: 1deg; }
+.trial-title { font-size: 4rem; letter-spacing: 0.05em; color: var(--ruby); text-shadow: var(--glitch), 0 0 1.6rem rgba(255, 46, 136, 0.7); animation: flickerTitle 3.5s steps(1) infinite; }
+.trial-title.gold { color: var(--amber); text-shadow: var(--glitch), 0 0 1.6rem rgba(255, 210, 63, 0.7); animation: none; }
+@keyframes flickerTitle { 0%, 100% { opacity: 1; } 47% { opacity: 0.55; } 48% { opacity: 1; } 50% { opacity: 0.7; } 51% { opacity: 1; } }
+.reel { border-radius: 0.2rem; transform: skewX(var(--skew)); background: var(--ink); color: var(--white); border-color: var(--ruby); box-shadow: 0.4rem 0.4rem 0 var(--ruby); }
+.reel > * { transform: skewX(calc(var(--skew) * -1)); }
+.reel-name { font-size: 1.9rem; letter-spacing: 0.04em; }
+.reel.landed { animation-name: edgePulse; background: var(--amber); color: var(--ink); }
+.countdown span { font-size: 11rem; color: var(--ruby); text-shadow: var(--glitch); }
+
+/* ---------- Minigames ---------- */
+.bar-timer { border-radius: 0.1rem; transform: skewX(var(--skew)); }
+.bar-timer i { background: repeating-linear-gradient(-45deg, var(--emerald) 0 0.6rem, #22d784 0.6rem 1.2rem); }
+.mg-count { font-family: var(--body); font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.85rem; }
+.food-row, .scroll-paper, .herd { border-radius: 0.2rem; box-shadow: 0.35rem 0.35rem 0 var(--ruby); }
+.chip-btn { background: var(--parch); }
+.flip { border-radius: 0.2rem; background: repeating-linear-gradient(45deg, var(--plum) 0 0.5rem, #4c1266 0.5rem 1rem); }
+.flip .face { border-radius: 0.1rem; }
+.flip .back { color: var(--emerald); }
+.tile { border-radius: 0.15rem; background: var(--parch); }
+.sling-track { border-radius: 0.2rem; }
+.horn { border-radius: 0.3rem; transform: skewX(var(--skew)); box-shadow: 0.4rem 0.4rem 0 var(--ruby); }
+.horn.blow { animation-name: hornBlow; }
+@keyframes hornBlow { 50% { scale: 1.12; rotate: -6deg; } }
+.fleece { box-shadow: 0.35rem 0.35rem 0 var(--violet); }
+
+/* ---------- Final round ---------- */
+.final-panel { border-radius: 0.2rem; background: var(--slab); border-color: var(--violet); box-shadow: 0.4rem 0.4rem 0 var(--violet); }
+.final-prompt { font-size: 2rem; text-shadow: var(--glitch); }
+.tile-step { border-radius: 0.1rem; transform: skewX(var(--skew)); background: rgba(246, 241, 228, 0.85); }
+.tile-step:nth-child(odd) { background: rgba(166, 107, 255, 0.85); }
+.tile-step.gate { background: var(--amber); }
+.pick { border-radius: 0.2rem; transform: skewX(var(--skew)); color: var(--ink); text-shadow: none; font-weight: 900; box-shadow: 0.35rem 0.35rem 0 var(--ink); }
+.pick[aria-pressed="true"] { transform: skewX(var(--skew)) translate(0.2rem, 0.2rem); box-shadow: 0.1rem 0.1rem 0 var(--ink); }
+
+/* ---------- Results ---------- */
+.final-score { font-size: 4rem; text-shadow: var(--glitch); }
+.stat { border-radius: 0.2rem; box-shadow: 0.3rem 0.3rem 0 var(--sapphire); }
+.stat:nth-child(2) { box-shadow: 0.3rem 0.3rem 0 var(--ruby); }
+.stat:nth-child(3) { box-shadow: 0.3rem 0.3rem 0 var(--emerald); }
+.stat strong { font-size: 1.9rem; }
+.pop { text-shadow: var(--glitch); font-size: 2rem; }
+
+@media (max-width: 420px) {
+  .logo-2 b { font-size: 4rem; }
+  .q-text { font-size: 1.65rem; }
+  .trial-title { font-size: 3rem; }
+  .final-prompt { font-size: 1.6rem; }
+  :root { --skew: -5deg; }
+}

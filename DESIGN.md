@@ -120,6 +120,14 @@ Future: Barnabas voice lines (recorded or text-to-speech), more moods (surprised
   animated lamp flames in the HUD, a 3-2-1 countdown before every trial, and a roulette that picks the trial.
 - **Sound:** synthesized with Web Audio, so there are no audio files. There's a mute toggle and the setting is remembered.
 
+### Edge theme (current default)
+
+`css/edge.css` layers a sharper, late-night game-show look on top of the base style: a near-black stage with a
+spotlight, halftone dots and scanlines, neon jewel tones, skewed slabs instead of rounded pills, a comic display
+face (Bangers), chromatic-glitch titles, hazard tape and a flickering sign in the Trial Room, and sunglasses on
+Barnabas that slide down his nose when he's worried. Delete its `<link>` in `index.html` to go back to the softer
+stained-glass look.
+
 ### Phone vs TV
 
 - **Phone (portrait):** HUD, then a compact Barnabas strip, then the stage. Answers stack in one column below 420 px.
