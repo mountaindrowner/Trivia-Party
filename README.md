@@ -16,13 +16,14 @@ python3 -m http.server 8000
 
 ## What's in the sketch
 
-- 2 levels: **Little Lambs** (ages 5–8) and **Mighty Warriors** (ages 9–12)
-- 8 questions per game from a bank of about 48, each with a scripture reference and a fun fact
+- 3 levels: **Legends** (13+), **Mighty Warriors** (ages 9–12) and **Little Lambs** (ages 5–8)
+- 8 questions per game from a bank of 70, each with a scripture reference and a fun fact
 - 7 Trial Room minigames: Loaves & Fishes, Noah's Pairs, Walls of Jericho, David's Sling,
   Gideon's Fleece, Scroll Scramble, Find the Lost Sheep
 - The Lost Sheep mechanic: lose all your oil and the Good Shepherd can still find you
 - Final race, **The Narrow Gate**: "tap every one that fits" against Grumbles the Goat
-- Synthesized sound, responsive phone and TV layouts, best score saved on the device
+- Streak multiplier (x1.5, then x2 "ON FIRE"), slam-in stamps, cracked-glass hits
+- Holy Fire esports-style theme (`css/edge.css`), synthesized sound, responsive phone and TV layouts, best score saved on the device
 
 See [DESIGN.md](DESIGN.md) for the full game design, the mapping from *Trivia Murder Party*, the art direction, and the roadmap.
 

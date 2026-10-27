@@ -208,6 +208,63 @@ THP.ui = (function () {
     setTimeout(() => app.classList.remove(cls), 700);
   }
 
+  /** Big slam-in word across the screen ("NAILED IT", "TOO SLOW"). */
+  function stamp(text, cls) {
+    const layer = $("#fx");
+    const n = el("div", { class: "stamp " + (cls || "") }, text);
+    layer.append(n);
+    THP.Sound.play("impact");
+    setTimeout(() => n.remove(), 1100);
+  }
+
+  /** Cracked-glass overlay radiating from a random point near the center. */
+  function crack() {
+    const layer = $("#fx");
+    const cx = 35 + Math.random() * 30, cy = 30 + Math.random() * 30;
+    let d = "";
+    for (let i = 0; i < 11; i++) {
+      const a = (i / 11) * Math.PI * 2 + Math.random() * 0.4;
+      let x = cx, y = cy;
+      d += `M${x} ${y}`;
+      for (let k = 0; k < 4; k++) {
+        const len = 6 + Math.random() * 14;
+        const aa = a + (Math.random() - 0.5) * 0.6;
+        x += Math.cos(aa) * len; y += Math.sin(aa) * len;
+        d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+    }
+    for (let r = 1; r <= 2; r++) {
+      const R = r * 7 + Math.random() * 3;
+      d += ` M${cx + R} ${cy}`;
+      for (let i = 1; i <= 9; i++) {
+        const a = (i / 9) * Math.PI * 2, j = R * (0.8 + Math.random() * 0.4);
+        d += ` L${(cx + Math.cos(a) * j).toFixed(1)} ${(cy + Math.sin(a) * j).toFixed(1)}`;
+      }
+    }
+    const wrap = el("div", { class: "crack" });
+    wrap.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${d}"/></svg>`;
+    layer.append(wrap);
+    THP.Sound.play("shatter");
+    setTimeout(() => wrap.remove(), 1600);
+  }
+
+  /** Rising embers in the background (CSS-animated, no loop). */
+  function embers(n) {
+    const sky = $(".sky");
+    if (!sky || $(".embers", sky) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = el("div", { class: "embers" });
+    for (let i = 0; i < (n || 26); i++) {
+      const e = el("i");
+      e.style.left = Math.random() * 100 + "%";
+      e.style.setProperty("--s", (0.2 + Math.random() * 0.35).toFixed(2) + "rem");
+      e.style.setProperty("--dx", (Math.random() * 2 - 1) * 8 + "vw");
+      e.style.animationDuration = 6 + Math.random() * 8 + "s";
+      e.style.animationDelay = -Math.random() * 12 + "s";
+      box.append(e);
+    }
+    sky.append(box);
+  }
+
   /* ---------- Keyboard / TV-remote spatial navigation ---------- */
   function navTargets() {
     return $$("#stage button:not([disabled]), #stage input, #bubble-next:not([hidden]), #hud button").filter(
@@ -251,5 +308,5 @@ THP.ui = (function () {
     }
   });
 
-  return { $, $$, el, sleep, pick, rand, shuffle, show, focusFirst, say, setMood, waitButton, timer, ringTimer, barTimer, confetti, popText, flash };
+  return { $, $$, el, sleep, pick, rand, shuffle, show, focusFirst, say, setMood, waitButton, timer, ringTimer, barTimer, confetti, popText, flash, stamp, crack, embers };
 })();

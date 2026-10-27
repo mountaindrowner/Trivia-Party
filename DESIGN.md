@@ -58,7 +58,7 @@ Title → pick level (Little Lambs 5–8 / Mighty Warriors 9–12)
 
 | | Little Lambs (5–8) | Mighty Warriors (9–12) |
 |---|---|---|
-| Question timer | 20 s | 15 s |
+| Question timer | 20 s | 15 s |  
 | Final round timer | 16 s | 12 s |
 | Question pool | mostly well-known stories | names, places, books, numbers |
 | Minigames | slower, more forgiving | faster, tighter windows |
@@ -120,13 +120,21 @@ Future: Barnabas voice lines (recorded or text-to-speech), more moods (surprised
   animated lamp flames in the HUD, a 3-2-1 countdown before every trial, and a roulette that picks the trial.
 - **Sound:** synthesized with Web Audio, so there are no audio files. There's a mute toggle and the setting is remembered.
 
-### Edge theme (current default)
+### Holy Fire theme (current default, aimed at teens)
 
-`css/edge.css` layers a sharper, late-night game-show look on top of the base style: a near-black stage with a
-spotlight, halftone dots and scanlines, neon jewel tones, skewed slabs instead of rounded pills, a comic display
-face (Bangers), chromatic-glitch titles, hazard tape and a flickering sign in the Trial Room, and sunglasses on
-Barnabas that slide down his nose when he's worried. Delete its `<link>` in `index.html` to go back to the softer
-stained-glass look.
+`css/edge.css` layers an esports-arena look on top of the base style: a black arena with rising embers, a fire
+glow and a vignette, cut-corner steel panels with colored edges, a flame-gradient "HOLY" logo, condensed
+display type (Teko) with techy body type (Chakra Petch), glitch flickers, and hazard tape in the Trial Room.
+Gameplay juice to match: slam-in stamps ("NAILED IT", "CLUTCH", "TOO SLOW"), cracked glass when oil spills,
+an "ON FIRE" streak badge, and heavier bass-hit sound effects. Barnabas wears shades that slide down when he's
+worried. Delete the stylesheet's `<link>` in `index.html` to go back to the softer stained-glass look.
+
+### Legends level (13+)
+
+- 12 s question timer, 10 s final round, goat double-steps 60% of the time.
+- Deep-cut questions (Ehud, Eutychus, Melchizedek, Malta, Belshazzar...) plus 7 harder final-round prompts.
+- Barnabas switches to a hype-announcer voice (`THP.LINES_TEEN`).
+- **Streaks:** 2 in a row = x1.5 points, 3+ = x2 and "ON FIRE". A miss resets it. These apply on every level.
 
 ### Phone vs TV
 

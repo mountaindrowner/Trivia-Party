@@ -2,16 +2,19 @@
 window.THP = window.THP || {};
 
 (function () {
-  const { $, el, sleep, pick, shuffle, show, say, setMood, waitButton, ringTimer, confetti, popText, flash } = THP.ui;
+  const { $, el, sleep, pick, shuffle, show, say, setMood, waitButton, ringTimer, confetti, popText, flash, stamp, crack } = THP.ui;
   const S = (n) => THP.Sound.play(n);
-  const L = THP.LINES;
+  // Host lines: Legends get the hype-announcer set, everything else falls back to the default lines.
+  const L = new Proxy({}, { get: (_, k) => (THP.state && THP.state.lvl === 3 && THP.LINES_TEEN[k]) || THP.LINES[k] });
 
   const QUESTIONS_PER_GAME = 8;
   const MAX_OIL = 3;
   const GATE = 10;
+  const streakMult = (n) => (n >= 3 ? 2 : n === 2 ? 1.5 : 1);
   const LEVELS = {
     1: { name: "Little Lambs", ages: "Ages 5–8", qTime: 20, fTime: 16, goatJump: 0.25 },
     2: { name: "Mighty Warriors", ages: "Ages 9–12", qTime: 15, fTime: 12, goatJump: 0.5 },
+    3: { name: "Legends", ages: "Ages 13+", qTime: 12, fTime: 10, goatJump: 0.6 },
   };
 
   const store = {
@@ -35,6 +38,10 @@ window.THP = window.THP || {};
     lamps.setAttribute("aria-label", `Lamp oil: ${st.oil} of ${MAX_OIL}`);
     $("#lost-badge").hidden = !st.lost;
     $("#score").textContent = st.score.toLocaleString();
+    const streak = $("#streak");
+    streak.hidden = st.streak < 2;
+    streak.textContent = `x${streakMult(st.streak)} ${st.streak >= 3 ? "ON FIRE" : "STREAK"}`;
+    streak.classList.toggle("hot", st.streak >= 3);
     $("#progress").textContent = st.phase === "final" ? "FINAL" : `${Math.min(st.qi + 1, QUESTIONS_PER_GAME)} / ${QUESTIONS_PER_GAME}`;
   }
 
@@ -53,7 +60,7 @@ window.THP = window.THP || {};
     const levelBtn = (lvl) => {
       const cfg = LEVELS[lvl];
       return el("button", { class: "level-card lvl-" + lvl, onclick: () => start(lvl, nameInput.value.trim()) },
-        el("span", { class: "level-icon", "aria-hidden": "true" }, lvl === 1 ? "🐑" : "🛡️"),
+        el("span", { class: "level-icon", "aria-hidden": "true" }, ["", "🐑", "🛡️", "⚡"][lvl]),
         el("strong", {}, cfg.name),
         el("small", {}, cfg.ages));
     };
@@ -62,16 +69,16 @@ window.THP = window.THP || {};
         el("span", { class: "logo-1" }, "TRIVIA"),
         el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
         el("span", { class: "logo-3" }, "PARTY")),
-      el("p", { class: "tagline" }, "Survive the Gauntlet of Bible trivia, pass the Trials, and race to the Narrow Gate!"),
+      el("p", { class: "tagline" }, "Eight questions. Seven trials. One gate. Survive the Bible trivia gauntlet."),
       el("div", { class: "name-row" }, nameInput),
-      el("div", { class: "level-row" }, levelBtn(1), levelBtn(2)),
+      el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
         best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null));
     show(node, { scene: "title" });
     $(".level-card", node).setAttribute("data-autofocus", "");
     THP.ui.focusFirst(node);
-    say("Hee-HAW! Pick your level to start the party!");
+    say("Hee-HAW. Pick your level. Legends, the arena's waiting.");
   }
 
   async function howTo() {
@@ -95,7 +102,8 @@ window.THP = window.THP || {};
   /* ---------- Game ---------- */
   function pickQuestions(lvl) {
     const mine = shuffle(THP.QUESTIONS.filter((q) => q.lvl === lvl));
-    const other = shuffle(THP.QUESTIONS.filter((q) => q.lvl !== lvl));
+    const near = lvl === 1 ? [2] : lvl === 2 ? [1, 3] : [2];
+    const other = shuffle(THP.QUESTIONS.filter((q) => near.includes(q.lvl)));
     // Mostly your level, with a couple from the other pool for variety.
     const mix = mine.slice(0, QUESTIONS_PER_GAME - 2).concat(other.slice(0, 2));
     // Warriors get the harder questions last; Lambs get an easy warm-up first.
@@ -108,7 +116,7 @@ window.THP = window.THP || {};
     store.set("thp-name", name);
     THP.state = {
       name: name || "Pilgrim", lvl, cfg: LEVELS[lvl], oil: MAX_OIL, lost: false, score: 0,
-      correct: 0, trialsWon: 0, trialsPlayed: 0, qi: 0, phase: "questions",
+      correct: 0, trialsWon: 0, trialsPlayed: 0, qi: 0, phase: "questions", streak: 0, bestStreak: 0,
       questions: pickQuestions(lvl), recentGames: [],
     };
     renderHud();
@@ -151,7 +159,7 @@ window.THP = window.THP || {};
     show(node, { scene: "question" });
     buttons.forEach((b) => (b.disabled = true));
     setMood("happy");
-    say(pick([`Category: ${q.cat}!`, `Here comes a ${q.cat} question!`, `${q.cat}! Ooh, I love this one.`]), { hold: 0 });
+    say(pick(L.category).replace("{cat}", q.cat), { hold: 0 });
     await sleep(700);
     const live = ringTimer(seconds);
     $(".q-top", node).append(live.node);
@@ -175,11 +183,18 @@ window.THP = window.THP || {};
     if (right) {
       S("correct"); flash("flash-good"); confetti(40);
       st.correct++;
-      const pts = 500 + Math.round(500 * Math.max(0, 1 - elapsed / seconds));
+      st.streak++;
+      st.bestStreak = Math.max(st.bestStreak, st.streak);
+      const pts = Math.round((500 + 500 * Math.max(0, 1 - elapsed / seconds)) * streakMult(st.streak));
       addScore(pts, buttons[chosen]);
+      stamp(st.streak >= 3 ? "ON FIRE" : elapsed < seconds * 0.3 ? "CLUTCH" : pick(["NAILED IT", "LOCKED IN", "CLEAN"]), "good");
       setMood("happy");
     } else {
       S("wrong"); flash("shake");
+      if (st.streak >= 2) popText("STREAK LOST", "bad", $("#streak"));
+      st.streak = 0;
+      renderHud();
+      stamp(chosen < 0 ? "TOO SLOW" : "MISS", "bad");
       setMood("worried");
     }
 
@@ -237,7 +252,7 @@ window.THP = window.THP || {};
     S("fanfare");
     await sleep(500);
     node.append(
-      el("p", { class: "howto-line" }, game.howto(st.lvl)),
+      el("p", { class: "howto-line" }, game.howto(Math.min(st.lvl, 2))),
       el("p", { class: "eyebrow small" }, "Read about it: " + game.verse));
     await waitButton(node, "I'm ready!");
 
@@ -250,7 +265,7 @@ window.THP = window.THP || {};
 
     const body = el("section", { class: "minigame mg-" + game.id }, el("h2", { class: "mg-title" }, game.icon + " " + game.name));
     show(body, { scene: "trial" });
-    const won = await game.play(body, st.lvl);
+    const won = await game.play(body, Math.min(st.lvl, 2));
     st.trialsPlayed++;
 
     let msg;
@@ -263,6 +278,7 @@ window.THP = window.THP || {};
     } else {
       S("lose");
       if (!st.lost) {
+        crack();
         st.oil--;
         if (st.oil <= 0) { st.oil = 0; st.lost = true; msg = pick(L.lost); }
         else msg = pick(L.trialLose);
@@ -310,7 +326,8 @@ window.THP = window.THP || {};
 
     let you = st.lost ? 0 : st.oil;
     let goat = 0;
-    let prompts = shuffle(THP.FINAL_PROMPTS);
+    const pool = THP.FINAL_PROMPTS.filter((f) => st.lvl > 1 || !f.hard);
+    let prompts = shuffle(pool);
     let turn = 0;
     const track = trackNode();
     const prompt = el("h2", { class: "final-prompt" });
@@ -323,7 +340,7 @@ window.THP = window.THP || {};
     await sleep(400);
 
     while (you < GATE && goat < GATE) {
-      if (turn >= prompts.length) { prompts = prompts.concat(shuffle(THP.FINAL_PROMPTS)); }
+      if (turn >= prompts.length) { prompts = prompts.concat(shuffle(pool)); }
       const fp = prompts[turn++];
       prompt.textContent = fp.p + "!";
       const opts = shuffle(fp.opts);
@@ -377,7 +394,8 @@ window.THP = window.THP || {};
     }
 
     const won = you >= GATE;
-    if (won) addScore(2000);
+    if (won) { addScore(2000); stamp("VICTORY", "good"); } else stamp("DEFEATED", "bad");
+    await sleep(900);
     await results(won);
   }
 
@@ -397,7 +415,8 @@ window.THP = window.THP || {};
       el("div", { class: "stats" },
         stat(`${st.correct}/${QUESTIONS_PER_GAME}`, "answered right"),
         stat(`${st.trialsWon}/${st.trialsPlayed}`, "trials passed"),
-        stat(st.oil + (st.lost ? " 🐑" : ""), "oil left")),
+        stat(st.oil + (st.lost ? " 🐑" : ""), "oil left"),
+        stat(`x${st.bestStreak}`, "best streak")),
       el("p", { class: "verse" }, `“${verse}”`, el("cite", {}, ref)),
       el("div", { class: "btn-row" },
         el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => start(st.lvl, st.name === "Pilgrim" ? "" : st.name) }, "Play again"),
@@ -413,6 +432,7 @@ window.THP = window.THP || {};
     mute.addEventListener("click", () => { THP.Sound.toggle(); sync(); });
     sync();
     document.addEventListener("pointerdown", () => THP.Sound.unlock(), { once: true });
+    THP.ui.embers();
     titleScreen();
   }
 

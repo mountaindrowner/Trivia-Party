@@ -1,6 +1,6 @@
 /* Trivia Holy Party — content.
  * Questions: first entry in `a` is always the correct answer (shuffled at runtime).
- * lvl 1 = Little Lambs (ages 5–8), lvl 2 = Mighty Warriors (ages 9–12).
+ * lvl 1 = Little Lambs (ages 5–8), lvl 2 = Mighty Warriors (ages 9–12), lvl 3 = Legends (13+).
  */
 window.THP = window.THP || {};
 
@@ -56,7 +56,31 @@ THP.QUESTIONS = [
   { lvl: 2, cat: "Book Smarts", q: "Which book of the Bible has the most chapters?", a: ["Psalms", "Genesis", "Isaiah", "Revelation"], ref: "Psalms 1–150", fact: "Psalms has 150 chapters. Many are songs!" },
   { lvl: 2, cat: "Church Begins", q: "Before he was called Paul, the apostle was known as...", a: ["Saul", "Silas", "Stephen", "Simon"], ref: "Acts 13:9", fact: "Paul met Jesus in a bright light on the road to Damascus." },
   { lvl: 2, cat: "Book Smarts", q: "What is the last book of the Bible?", a: ["Revelation", "Malachi", "Jude", "Acts"], ref: "Revelation 22:21", fact: "John wrote Revelation on the island of Patmos." },
+  // ---------- Legends (13+) ----------
+  { lvl: 3, cat: "Deep Cuts", q: "Which left-handed judge took down Eglon, the king of Moab?", a: ["Ehud", "Gideon", "Jephthah", "Othniel"], ref: "Judges 3:15–21", fact: "Ehud hid a short sword on his right thigh, where no one checked a right-handed man." },
+  { lvl: 3, cat: "Battle Plans", q: "God cut Gideon's army down to how many men?", a: ["300", "3,000", "12", "1,000"], ref: "Judges 7:7", fact: "They won with trumpets, jars and torches. Strategy level: legendary." },
+  { lvl: 3, cat: "Fire From Heaven", q: "On which mountain did Elijah call down fire against the prophets of Baal?", a: ["Mount Carmel", "Mount Sinai", "Mount of Olives", "Mount Hermon"], ref: "1 Kings 18:19–38", fact: "Elijah soaked the altar with water three times first. The fire burned up the water too." },
+  { lvl: 3, cat: "Giant Slayer", q: "What was Goliath's hometown?", a: ["Gath", "Gaza", "Jericho", "Tyre"], ref: "1 Samuel 17:4", fact: "Goliath was over nine feet tall, and his armor weighed about 125 pounds." },
+  { lvl: 3, cat: "Kings & Crowns", q: "Which king saw a hand write on the wall during his party?", a: ["Belshazzar", "Nebuchadnezzar", "Darius", "Herod"], ref: "Daniel 5:5", fact: "The message: MENE, MENE, TEKEL, PARSIN. His kingdom fell that same night." },
+  { lvl: 3, cat: "Church Begins", q: "Who was the first follower of Jesus to die for his faith?", a: ["Stephen", "James", "Peter", "Philip"], ref: "Acts 7:59–60", fact: "Stephen forgave the people stoning him, just like Jesus did on the cross." },
+  { lvl: 3, cat: "Road Trips", q: "On which island was Paul shipwrecked?", a: ["Malta", "Crete", "Cyprus", "Patmos"], ref: "Acts 28:1–5", fact: "A viper bit Paul's hand. He shook it into the fire and was totally fine." },
+  { lvl: 3, cat: "Giant Slayer", q: "How many smooth stones did David pick up before facing Goliath?", a: ["5", "1", "3", "7"], ref: "1 Samuel 17:40", fact: "He only needed one." },
+  { lvl: 3, cat: "Easter Week", q: "Who was the high priest at Jesus' trial?", a: ["Caiaphas", "Annas", "Pilate", "Nicodemus"], ref: "Matthew 26:57", fact: "Annas, his father-in-law, questioned Jesus first." },
+  { lvl: 3, cat: "Strength Test", q: "Samson defeated 1,000 Philistines using the jawbone of a...", a: ["Donkey", "Lion", "Camel", "Ox"], ref: "Judges 15:15", fact: "Samson's strength came from God, not from his muscles.", host: "HEY. Leave donkeys out of this. ...Okay fine, that's correct." },
+  { lvl: 3, cat: "Prophets", q: "Which prophet saw a valley of dry bones come back to life?", a: ["Ezekiel", "Jeremiah", "Isaiah", "Hosea"], ref: "Ezekiel 37:1–10", fact: "The bones rattled, got muscles and skin, then stood up as a vast army." },
+  { lvl: 3, cat: "Deep Cuts", q: "Which mysterious king of Salem blessed Abraham?", a: ["Melchizedek", "Abimelech", "Jethro", "Lot"], ref: "Genesis 14:18–20", fact: "Hebrews calls Jesus a priest \"in the order of Melchizedek.\"" },
+  { lvl: 3, cat: "Church Begins", q: "What did Paul do for work while he traveled?", a: ["Made tents", "Fished", "Collected taxes", "Built houses"], ref: "Acts 18:3", fact: "He worked so he wouldn't be a burden to the churches." },
+  { lvl: 3, cat: "Book Smarts", q: "In Revelation, how many churches get a letter from Jesus?", a: ["7", "12", "3", "10"], ref: "Revelation 2–3", fact: "Ephesus, Smyrna, Pergamum, Thyatira, Sardis, Philadelphia and Laodicea." },
+  { lvl: 3, cat: "Deep Cuts", q: "Which young man fell out of a window when Paul preached too long?", a: ["Eutychus", "Timothy", "Onesimus", "Silas"], ref: "Acts 20:9–12", fact: "He fell three stories. Paul went down, hugged him, and he was alive." },
+  { lvl: 3, cat: "Deep Cuts", q: "A group of youths mocked the prophet Elisha for being...", a: ["Bald", "Short", "Old", "Loud"], ref: "2 Kings 2:23", fact: "Lesson: don't roast the prophet." },
+  { lvl: 3, cat: "Book Smarts", q: "What is the shortest verse in most English Bibles?", a: ["\"Jesus wept.\"", "\"Pray continually.\"", "\"God is love.\"", "\"Rejoice always.\""], ref: "John 11:35", fact: "Jesus wept at Lazarus' tomb, right before raising him from the dead." },
+  { lvl: 3, cat: "Jesus' Friends", q: "Who was chosen to replace Judas as an apostle?", a: ["Matthias", "Barnabas", "Paul", "Stephen"], ref: "Acts 1:26", fact: "They cast lots, and the lot fell to Matthias.", host: "Not Barnabas? Rude. Correct, but rude." },
+  { lvl: 3, cat: "Kings & Crowns", q: "When King Nebuchadnezzar lost his mind, what did he eat?", a: ["Grass, like cattle", "Only bread", "Nothing at all", "Raw fish"], ref: "Daniel 4:33", fact: "His hair grew like eagle feathers. Then he praised God and got his kingdom back." },
+  { lvl: 3, cat: "Exodus", q: "Who took over leading Israel after Moses died?", a: ["Joshua", "Aaron", "Caleb", "Gideon"], ref: "Deuteronomy 34:9; Joshua 1:1–2", fact: "God told Joshua: \"Be strong and courageous.\"" },
+  { lvl: 3, cat: "Book Smarts", q: "Which book of the Bible never mentions God by name?", a: ["Esther", "Ruth", "Jonah", "Philemon"], ref: "Esther 4:14", fact: "God isn't named, but He is clearly at work behind every twist." },
+  { lvl: 3, cat: "Jesus' Friends", q: "Before Jesus renamed him Peter, what was his name?", a: ["Simon", "Saul", "Levi", "Andrew"], ref: "John 1:42", fact: "\"Peter\" means rock." },
 ];
+
 
 /* Final round — "The Narrow Gate". Each prompt shows 3 choices; tap every one that fits. */
 THP.FINAL_PROMPTS = [
@@ -78,6 +102,14 @@ THP.FINAL_PROMPTS = [
   { p: "Tap brothers in the Bible", opts: [["Cain & Abel", true], ["Jacob & Esau", true], ["Ruth & Naomi", false]] },
   { p: "Tap books of the Bible", opts: [["Hezekiah", false], ["Jude", true], ["Genesis", true]] },
   { p: "Tap who met Jesus", opts: [["Zacchaeus", true], ["Mary Magdalene", true], ["Noah", false]] },
+  // hard: only for Warriors and Legends
+  { hard: true, p: "Tap judges of Israel", opts: [["Gideon", true], ["Deborah", true], ["Nehemiah", false]] },
+  { hard: true, p: "Tap Paul's letters", opts: [["Galatians", true], ["Philemon", true], ["James", false]] },
+  { hard: true, p: "Tap the minor prophets", opts: [["Amos", true], ["Micah", true], ["Daniel", false]] },
+  { hard: true, p: "Tap kings of Judah", opts: [["Hezekiah", true], ["Josiah", true], ["Nicodemus", false]] },
+  { hard: true, p: "Tap people raised from the dead", opts: [["Lazarus", true], ["Eutychus", true], ["Elijah", false]] },
+  { hard: true, p: "Tap sons of Jacob", opts: [["Judah", true], ["Levi", true], ["Isaac", false]] },
+  { hard: true, p: "Tap things from Elijah's story", opts: [["Fire from heaven", true], ["Ravens bringing food", true], ["A burning bush", false]] },
 ];
 
 /* Barnabas the Donkey's lines. {name} is replaced with the player's name. */
@@ -100,9 +132,35 @@ THP.LINES = {
     "Tap EVERY answer that fits. Each right tap moves you forward. Each wrong tap moves you back!",
     "Every drop of oil you saved gives you a head start. Grumbles the Goat is already complaining. Go!",
   ],
+  category: ["Category: {cat}!", "Here comes a {cat} question!", "{cat}! Ooh, I love this one."],
   goat: ["Grumbles: \"Baaah, this is too hard!\"", "Grumbles: \"Hmph! I'm coming for you!\"", "Grumbles: \"Grumble grumble grumble...\"", "Grumbles: \"Are we there yet?\""],
   win: ["You made it through the Narrow Gate! Well done, good and faithful servant!"],
   lose: ["Grumbles got there first... but don't worry. God's mercies are new every morning. Try again!"],
+};
+
+/* Legends (13+) get a hype-announcer Barnabas. Missing keys fall back to THP.LINES. */
+THP.LINES_TEEN = {
+  intro: [
+    "LADIES AND GENTLEMEN... and goats. Welcome to TRIVIA HOLY PARTY: LEGENDS. I'm Barnabas. Yes, the donkey. Yes, the shades are necessary.",
+    "Three drops of oil. Eight questions. Miss one and you go to the Trial Room. No pressure.",
+    "Survive, then beat Grumbles the Goat to the Narrow Gate. Stack answers in a row to catch fire. Let's go, {name}.",
+  ],
+  category: ["{cat}. Lock in.", "{cat}. Let's see if you're built different.", "Category: {cat}. No hints, no mercy.", "{cat}. This one separates the legends."],
+  correct: ["CLEAN.", "Too easy for you, huh?", "That's a W.", "Elijah-level fire right there.", "Locked in. Respect.", "Somebody actually reads the book. Love to see it."],
+  wrong: ["Ooof. Not it.", "Swing and a miss.", "That's gonna cost you.", "Bold choice. Wrong, but bold."],
+  timeout: ["The clock beat you. Even the clock.", "Frozen like Lot's wife. Too slow!"],
+  trial: ["TRIAL ROOM. Show me what you've got.", "You missed. Now you earn it back. James 1, let's go.", "Trial time. No excuses."],
+  trialWin: ["CLUTCH. Oil's safe.", "That's how you survive a trial."],
+  trialLose: ["Oil spilled. Shake it off.", "Lamp's flickering. Lock in."],
+  lost: ["Lamp's OUT. You're a Lost Sheep now. But the Shepherd goes after the one. Nail the next one and you're back."],
+  found: ["FOUND. The Shepherd came for you. Lamp relit. Comeback arc starts NOW."],
+  finalIntro: [
+    "FINAL ROUND: THE NARROW GATE.",
+    "Tap EVERY right answer. Right taps move you up. Wrong taps knock you back.",
+    "Grumbles is already complaining. Every drop of oil you saved is a head start. Don't choke.",
+  ],
+  win: ["THROUGH THE GATE. \"Well done, good and faithful servant.\" That's a legend run."],
+  lose: ["Grumbles took it. Painful. But His mercies are new every morning. Run it back."],
 };
 
 THP.VERSES = [
