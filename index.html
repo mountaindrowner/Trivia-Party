@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a0b3d">
+  <title>Trivia Holy Party</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800;900&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="sky" aria-hidden="true"><div class="rays"></div><div class="glass"></div></div>
+
+    <header class="hud" id="hud" hidden>
+      <div class="hud-group">
+        <div class="lamps" id="lamps" role="img" aria-label="Lamp oil"></div>
+        <span class="lost-badge" id="lost-badge" hidden>Lost sheep</span>
+      </div>
+      <div class="hud-group">
+        <span class="hud-pill" id="progress">1 / 8</span>
+        <span class="hud-pill coin"><span class="coin-dot" aria-hidden="true"></span><span id="score">0</span></span>
+        <button class="hud-btn" id="mute" aria-label="Mute">🔊</button>
+      </div>
+    </header>
+
+    <aside class="host" id="host" data-mood="happy" aria-live="polite">
+      <svg class="donkey" viewBox="0 0 200 210" aria-hidden="true">
+        <g class="ears">
+          <g class="ear ear-l"><ellipse cx="62" cy="52" rx="17" ry="46" transform="rotate(-20 62 52)" class="fur"/><ellipse cx="62" cy="56" rx="8" ry="32" transform="rotate(-20 62 56)" class="ear-in"/></g>
+          <g class="ear ear-r"><ellipse cx="138" cy="52" rx="17" ry="46" transform="rotate(20 138 52)" class="fur"/><ellipse cx="138" cy="56" rx="8" ry="32" transform="rotate(20 138 56)" class="ear-in"/></g>
+        </g>
+        <path class="scarf" d="M48 176 Q100 206 152 176 L160 200 Q100 222 40 200 Z"/>
+        <path class="scarf-stripe" d="M44 188 Q100 214 156 188"/>
+        <ellipse cx="100" cy="112" rx="60" ry="62" class="fur"/>
+        <path class="mane" d="M78 56 Q86 34 98 50 Q106 30 114 52 Q126 40 124 62 Q100 54 78 56Z"/>
+        <ellipse cx="100" cy="158" rx="46" ry="32" class="muzzle"/>
+        <ellipse cx="84" cy="150" rx="5" ry="7" class="ink"/>
+        <ellipse cx="116" cy="150" rx="5" ry="7" class="ink"/>
+        <g class="eyes">
+          <circle cx="76" cy="104" r="15" class="eye-white"/><circle cx="124" cy="104" r="15" class="eye-white"/>
+          <circle cx="78" cy="107" r="7" class="ink"/><circle cx="122" cy="107" r="7" class="ink"/>
+          <circle cx="81" cy="103" r="2.5" class="glint"/><circle cx="125" cy="103" r="2.5" class="glint"/>
+        </g>
+        <path class="brow brow-l" d="M62 84 Q76 76 90 82"/>
+        <path class="brow brow-r" d="M110 82 Q124 76 138 84"/>
+        <path class="mouth-closed" d="M82 172 Q100 184 118 172"/>
+        <ellipse class="mouth-open" cx="100" cy="176" rx="15" ry="9"/>
+        <ellipse cx="62" cy="130" rx="9" ry="5" class="blush"/><ellipse cx="138" cy="130" rx="9" ry="5" class="blush"/>
+      </svg>
+      <div class="bubble" id="bubble">
+        <p class="host-name">Barnabas</p>
+        <p id="bubble-text"></p>
+        <button class="bubble-next" id="bubble-next" hidden aria-label="Next">Next ▶</button>
+      </div>
+    </aside>
+
+    <main id="stage"></main>
+    <div id="fx" aria-hidden="true"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/minigames.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

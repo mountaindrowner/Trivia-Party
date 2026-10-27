@@ -1,0 +1,421 @@
+/* Trivia Holy Party — game flow: title → 8 questions (+ Trial Room on misses) → The Narrow Gate → results. */
+window.THP = window.THP || {};
+
+(function () {
+  const { $, el, sleep, pick, shuffle, show, say, setMood, waitButton, ringTimer, confetti, popText, flash } = THP.ui;
+  const S = (n) => THP.Sound.play(n);
+  const L = THP.LINES;
+
+  const QUESTIONS_PER_GAME = 8;
+  const MAX_OIL = 3;
+  const GATE = 10;
+  const LEVELS = {
+    1: { name: "Little Lambs", ages: "Ages 5–8", qTime: 20, fTime: 16, goatJump: 0.25 },
+    2: { name: "Mighty Warriors", ages: "Ages 9–12", qTime: 15, fTime: 12, goatJump: 0.5 },
+  };
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+
+  /* ---------- HUD ---------- */
+  const LAMP_SVG =
+    '<svg viewBox="0 0 48 40" aria-hidden="true"><path class="lamp-flame" d="M34 4c3 4 4 7 1 10-2 2-5 1-5-2 0-3 3-4 4-8z"/>' +
+    '<path class="lamp-body" d="M4 22c0-3 4-5 12-5h14l8-4 6 1-8 8c-2 6-8 9-16 9-9 0-16-3-16-9z"/>' +
+    '<rect class="lamp-body" x="14" y="31" width="18" height="5" rx="2"/></svg>';
+
+  function renderHud() {
+    const st = THP.state;
+    const hud = $("#hud");
+    hud.hidden = false;
+    const lamps = $("#lamps");
+    lamps.replaceChildren(...Array.from({ length: MAX_OIL }, (_, i) =>
+      el("span", { class: "lamp" + (i < st.oil ? " lit" : ""), html: LAMP_SVG })));
+    lamps.setAttribute("aria-label", `Lamp oil: ${st.oil} of ${MAX_OIL}`);
+    $("#lost-badge").hidden = !st.lost;
+    $("#score").textContent = st.score.toLocaleString();
+    $("#progress").textContent = st.phase === "final" ? "FINAL" : `${Math.min(st.qi + 1, QUESTIONS_PER_GAME)} / ${QUESTIONS_PER_GAME}`;
+  }
+
+  function addScore(n, anchor) {
+    THP.state.score += n;
+    popText((n > 0 ? "+" : "") + n.toLocaleString(), "coin", anchor || $("#score"));
+    renderHud();
+  }
+
+  /* ---------- Title ---------- */
+  function titleScreen() {
+    $("#hud").hidden = true;
+    setMood("happy");
+    const best = store.get("thp-best", 0);
+    const nameInput = el("input", { id: "player-name", maxlength: 14, placeholder: "Your name", value: store.get("thp-name", ""), autocomplete: "off", "aria-label": "Your name" });
+    const levelBtn = (lvl) => {
+      const cfg = LEVELS[lvl];
+      return el("button", { class: "level-card lvl-" + lvl, onclick: () => start(lvl, nameInput.value.trim()) },
+        el("span", { class: "level-icon", "aria-hidden": "true" }, lvl === 1 ? "🐑" : "🛡️"),
+        el("strong", {}, cfg.name),
+        el("small", {}, cfg.ages));
+    };
+    const node = el("section", { class: "title-screen" },
+      el("h1", { class: "logo", "aria-label": "Trivia Holy Party" },
+        el("span", { class: "logo-1" }, "TRIVIA"),
+        el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
+        el("span", { class: "logo-3" }, "PARTY")),
+      el("p", { class: "tagline" }, "Survive the Gauntlet of Bible trivia, pass the Trials, and race to the Narrow Gate!"),
+      el("div", { class: "name-row" }, nameInput),
+      el("div", { class: "level-row" }, levelBtn(1), levelBtn(2)),
+      el("div", { class: "title-foot" },
+        el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
+        best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null));
+    show(node, { scene: "title" });
+    $(".level-card", node).setAttribute("data-autofocus", "");
+    THP.ui.focusFirst(node);
+    say("Hee-HAW! Pick your level to start the party!");
+  }
+
+  async function howTo() {
+    S("tap");
+    const steps = [
+      ["🪔", "Keep your lamp lit", "You start with 3 drops of lamp oil. Answer Bible questions before the candle burns down."],
+      ["⚖️", "Survive the Trial Room", "Miss a question and you face a Trial minigame. Lose it and a drop of oil spills."],
+      ["🐑", "Lost, then found", "If your lamp goes out you become a Lost Sheep. Get the next one right and the Good Shepherd brings you back!"],
+      ["🚪", "Race to the Narrow Gate", "Tap every answer that fits to move forward. Beat Grumbles the Goat to the gate to win!"],
+    ];
+    const node = el("section", { class: "howto" },
+      el("h2", { class: "screen-title" }, "How to Play"),
+      el("ol", { class: "howto-list" }, ...steps.map(([i, t, d]) => el("li", {}, el("span", { class: "howto-icon", "aria-hidden": "true" }, i), el("div", {}, el("strong", {}, t), el("p", {}, d))))),
+      el("p", { class: "fine" }, "On a TV or keyboard: arrow keys to move, Enter to choose, 1–4 to answer."));
+    show(node);
+    say("Easy as manna from heaven!");
+    await waitButton(node, "Got it!");
+    titleScreen();
+  }
+
+  /* ---------- Game ---------- */
+  function pickQuestions(lvl) {
+    const mine = shuffle(THP.QUESTIONS.filter((q) => q.lvl === lvl));
+    const other = shuffle(THP.QUESTIONS.filter((q) => q.lvl !== lvl));
+    // Mostly your level, with a couple from the other pool for variety.
+    const mix = mine.slice(0, QUESTIONS_PER_GAME - 2).concat(other.slice(0, 2));
+    // Warriors get the harder questions last; Lambs get an easy warm-up first.
+    return lvl === 1 ? mix.slice(0, 2).concat(shuffle(mix.slice(2))) : shuffle(mix);
+  }
+
+  async function start(lvl, name) {
+    S("fanfare");
+    THP.Sound.unlock();
+    store.set("thp-name", name);
+    THP.state = {
+      name: name || "Pilgrim", lvl, cfg: LEVELS[lvl], oil: MAX_OIL, lost: false, score: 0,
+      correct: 0, trialsWon: 0, trialsPlayed: 0, qi: 0, phase: "questions",
+      questions: pickQuestions(lvl), recentGames: [],
+    };
+    renderHud();
+    const intro = el("section", { class: "interstitial" },
+      el("div", { class: "big-emblem", "aria-hidden": "true" }, "🪔"),
+      el("h2", { class: "screen-title" }, `Welcome, ${THP.state.name}!`),
+      el("p", { class: "sub" }, `${LEVELS[lvl].name} · ${QUESTIONS_PER_GAME} questions · 1 race`));
+    show(intro, { scene: "intro" });
+    for (const line of L.intro) await say(line, { wait: true, mood: "happy" });
+
+    const st = THP.state;
+    for (st.qi = 0; st.qi < QUESTIONS_PER_GAME; st.qi++) {
+      renderHud();
+      const right = await askQuestion(st.questions[st.qi]);
+      if (right) {
+        if (st.lost) await getFound();
+      } else {
+        await trialRoom();
+      }
+    }
+    await finalRound();
+  }
+
+  async function askQuestion(q) {
+    const st = THP.state;
+    const seconds = st.cfg.qTime;
+    const answers = shuffle(q.a.map((text, i) => ({ text, right: i === 0 })));
+    const shapes = ["◆", "●", "▲", "★"];
+    const buttons = answers.map((ans, i) =>
+      el("button", { class: `answer gem-${i}`, "data-key": i + 1 },
+        el("span", { class: "answer-key", "aria-hidden": "true" }, shapes[i]),
+        el("span", { class: "answer-text" }, ans.text)));
+    const node = el("section", { class: "question-screen" },
+      el("div", { class: "q-top" },
+        el("span", { class: "cat-chip" }, q.cat),
+        el("span", { class: "q-num" }, `Question ${st.qi + 1}`)),
+      el("div", { class: "q-card" }, el("h2", { class: "q-text" }, q.q)),
+      el("div", { class: "answers" }, ...buttons),
+      el("div", { class: "q-reveal", hidden: true }));
+    show(node, { scene: "question" });
+    buttons.forEach((b) => (b.disabled = true));
+    setMood("happy");
+    say(pick([`Category: ${q.cat}!`, `Here comes a ${q.cat} question!`, `${q.cat}! Ooh, I love this one.`]), { hold: 0 });
+    await sleep(700);
+    const live = ringTimer(seconds);
+    $(".q-top", node).append(live.node);
+    buttons.forEach((b) => (b.disabled = false));
+    THP.ui.focusFirst($(".answers", node));
+
+    const chosen = await new Promise((resolve) => {
+      buttons.forEach((b, i) => b.addEventListener("click", () => resolve(i), { once: true }));
+      live.done.then(() => resolve(-1));
+    });
+    live.stop();
+    const elapsed = live.elapsed();
+    buttons.forEach((b) => (b.disabled = true));
+    const right = chosen >= 0 && answers[chosen].right;
+    buttons.forEach((b, i) => {
+      if (answers[i].right) b.classList.add("is-right");
+      else if (i === chosen) b.classList.add("is-wrong");
+      else b.classList.add("is-dim");
+    });
+
+    if (right) {
+      S("correct"); flash("flash-good"); confetti(40);
+      st.correct++;
+      const pts = 500 + Math.round(500 * Math.max(0, 1 - elapsed / seconds));
+      addScore(pts, buttons[chosen]);
+      setMood("happy");
+    } else {
+      S("wrong"); flash("shake");
+      setMood("worried");
+    }
+
+    const reveal = $(".q-reveal", node);
+    reveal.hidden = false;
+    reveal.append(
+      el("div", { class: "scripture" }, el("span", { class: "ref" }, q.ref), el("span", {}, q.fact)));
+    const line = right ? q.host || pick(L.correct) : chosen < 0 ? pick(L.timeout) : pick(L.wrong);
+    await say(line, { hold: 300 });
+    await waitButton(reveal, right ? "Next question" : "Uh oh...", right ? "btn-go" : "btn-warn");
+    return right;
+  }
+
+  async function getFound() {
+    const st = THP.state;
+    st.lost = false;
+    st.oil = 1;
+    S("win"); confetti(90);
+    renderHud();
+    const node = el("section", { class: "interstitial found" },
+      el("div", { class: "big-emblem", "aria-hidden": "true" }, "🐑"),
+      el("h2", { class: "screen-title" }, "FOUND!"),
+      el("p", { class: "verse" }, "“Rejoice with me; I have found my lost sheep.”", el("cite", {}, "Luke 15:6")));
+    show(node, { scene: "found" });
+    await say(pick(L.found), { mood: "happy" });
+    await waitButton(node, "Keep going!");
+  }
+
+  /* ---------- Trial Room ---------- */
+  async function trialRoom() {
+    const st = THP.state;
+    S("trial");
+    setMood("worried");
+    const pool = THP.MINIGAMES.filter((g) => !st.recentGames.includes(g.id));
+    const game = pick(pool);
+    st.recentGames = [game.id, ...st.recentGames].slice(0, 3);
+
+    // Roulette reveal.
+    const reel = el("div", { class: "reel" }, el("span", { class: "reel-icon" }, "?"), el("span", { class: "reel-name" }, "..."));
+    const node = el("section", { class: "trial-intro" },
+      el("p", { class: "eyebrow" }, "James 1:2–3"),
+      el("h2", { class: "trial-title" }, "THE TRIAL ROOM"),
+      reel);
+    show(node, { scene: "trial" });
+    say(pick(L.trial), { mood: "worried", hold: 0 });
+    const order = shuffle(THP.MINIGAMES);
+    for (let i = 0; i < 14; i++) {
+      const g = i === 13 ? game : order[i % order.length];
+      reel.firstChild.textContent = g.icon;
+      reel.lastChild.textContent = g.name;
+      S("tick");
+      await sleep(60 + i * 18);
+    }
+    reel.classList.add("landed");
+    S("fanfare");
+    await sleep(500);
+    node.append(
+      el("p", { class: "howto-line" }, game.howto(st.lvl)),
+      el("p", { class: "eyebrow small" }, "Read about it: " + game.verse));
+    await waitButton(node, "I'm ready!");
+
+    // 3-2-1
+    for (const n of ["3", "2", "1"]) {
+      show(el("section", { class: "countdown" }, el("span", {}, n)), { scene: "trial" });
+      S("tick");
+      await sleep(550);
+    }
+
+    const body = el("section", { class: "minigame mg-" + game.id }, el("h2", { class: "mg-title" }, game.icon + " " + game.name));
+    show(body, { scene: "trial" });
+    const won = await game.play(body, st.lvl);
+    st.trialsPlayed++;
+
+    let msg;
+    if (won) {
+      st.trialsWon++;
+      S("win"); confetti(50);
+      addScore(250);
+      if (st.lost) { await resultCard(true, "Trial passed!"); await getFound(); return; }
+      msg = pick(L.trialWin);
+    } else {
+      S("lose");
+      if (!st.lost) {
+        st.oil--;
+        if (st.oil <= 0) { st.oil = 0; st.lost = true; msg = pick(L.lost); }
+        else msg = pick(L.trialLose);
+      } else msg = "Still wandering... get the next one right and the Shepherd will find you!";
+      renderHud();
+    }
+    await resultCard(won, won ? "Trial passed!" : st.lost ? "Lamp out!" : "Oil spilled!", msg);
+  }
+
+  async function resultCard(won, title, line) {
+    const node = el("section", { class: "interstitial " + (won ? "won" : "lost-card") },
+      el("div", { class: "big-emblem", "aria-hidden": "true" }, won ? "🏆" : THP.state.lost ? "🐑" : "💧"),
+      el("h2", { class: "screen-title" }, title));
+    show(node, { scene: won ? "found" : "trial" });
+    if (line) await say(line, { mood: won ? "happy" : "worried" });
+    await waitButton(node, "Continue");
+  }
+
+  /* ---------- Final round: The Narrow Gate ---------- */
+  function trackNode() {
+    const tiles = Array.from({ length: GATE + 1 }, (_, i) =>
+      el("div", { class: "tile-step" + (i === GATE ? " gate" : "") }, i === GATE ? el("span", { class: "gate-arch", "aria-hidden": "true" }) : null));
+    return el("div", { class: "track", style: { "--n": GATE + 1 } },
+      ...tiles,
+      el("div", { class: "token goat", "aria-label": "Grumbles the Goat" }, "🐐"),
+      el("div", { class: "token you", "aria-label": "You" }, "🐑"));
+  }
+
+  function placeTokens(track, you, goat) {
+    track.querySelector(".you").style.setProperty("--pos", Math.min(you, GATE));
+    track.querySelector(".goat").style.setProperty("--pos", Math.min(goat, GATE));
+  }
+
+  async function finalRound() {
+    const st = THP.state;
+    st.phase = "final";
+    renderHud();
+    S("fanfare");
+    const head = el("section", { class: "interstitial final-intro" },
+      el("p", { class: "eyebrow" }, "Matthew 7:14"),
+      el("h2", { class: "trial-title gold" }, "THE NARROW GATE"),
+      el("p", { class: "sub" }, st.lost ? "Lost sheep start at the very back, but you can still win!" : `Your ${st.oil} drop${st.oil === 1 ? "" : "s"} of oil = ${st.oil} step head start!`));
+    show(head, { scene: "final" });
+    for (const line of L.finalIntro) await say(line, { wait: true, mood: "happy" });
+
+    let you = st.lost ? 0 : st.oil;
+    let goat = 0;
+    let prompts = shuffle(THP.FINAL_PROMPTS);
+    let turn = 0;
+    const track = trackNode();
+    const prompt = el("h2", { class: "final-prompt" });
+    const choiceRow = el("div", { class: "final-choices" });
+    const lock = el("button", { class: "btn btn-go", "data-primary": true }, "Lock it in!");
+    const timerSlot = el("div", { class: "final-timer" });
+    const node = el("section", { class: "final-screen" }, track, el("div", { class: "final-panel" }, el("div", { class: "final-top" }, prompt, timerSlot), choiceRow, lock));
+    show(node, { scene: "final" });
+    placeTokens(track, you, goat);
+    await sleep(400);
+
+    while (you < GATE && goat < GATE) {
+      if (turn >= prompts.length) { prompts = prompts.concat(shuffle(THP.FINAL_PROMPTS)); }
+      const fp = prompts[turn++];
+      prompt.textContent = fp.p + "!";
+      const opts = shuffle(fp.opts);
+      const picked = new Set();
+      const btns = opts.map(([label], i) => {
+        const b = el("button", { class: "pick gem-" + i, "aria-pressed": "false" }, label);
+        b.addEventListener("click", () => {
+          S("tap");
+          picked.has(i) ? picked.delete(i) : picked.add(i);
+          b.setAttribute("aria-pressed", picked.has(i) ? "true" : "false");
+        });
+        return b;
+      });
+      choiceRow.replaceChildren(...btns);
+      lock.disabled = false;
+      lock.hidden = false;
+      const t = ringTimer(st.cfg.fTime);
+      timerSlot.replaceChildren(t.node);
+      btns[0].focus();
+      await Promise.race([t.done, new Promise((r) => lock.addEventListener("click", r, { once: true }))]);
+      t.stop();
+      lock.disabled = true;
+      btns.forEach((b) => (b.disabled = true));
+
+      let delta = 0;
+      opts.forEach(([, ok], i) => {
+        const chose = picked.has(i);
+        if (ok && chose) { delta++; btns[i].classList.add("is-right"); }
+        else if (!ok && chose) { delta--; btns[i].classList.add("is-wrong"); }
+        else if (ok && !chose) btns[i].classList.add("is-missed");
+        else btns[i].classList.add("is-dim");
+      });
+      await sleep(700);
+      const target = Math.max(0, you + delta);
+      if (delta > 0) {
+        for (let s = you + 1; s <= Math.min(target, GATE); s++) { you = s; placeTokens(track, you, goat); S("step"); await sleep(260); }
+        addScore(delta * 100, track.querySelector(".you"));
+        say(delta >= 3 ? "PERFECT! Look at that lamb go!" : pick(L.correct), { hold: 0, mood: "happy" });
+      } else {
+        you = target; placeTokens(track, you, goat);
+        S("wrong");
+        say(delta < 0 ? "Oops! A wrong tap sends you back." : "No steps that time. Shake it off!", { hold: 0, mood: "worried" });
+      }
+      await sleep(700);
+      if (you >= GATE) break;
+
+      const jump = Math.random() < st.cfg.goatJump ? 2 : 1;
+      for (let s = 0; s < jump; s++) { goat++; placeTokens(track, you, goat); S("bray"); await sleep(300); }
+      if (Math.random() < 0.5) say(pick(L.goat), { hold: 0 });
+      await sleep(900);
+    }
+
+    const won = you >= GATE;
+    if (won) addScore(2000);
+    await results(won);
+  }
+
+  /* ---------- Results ---------- */
+  async function results(won) {
+    const st = THP.state;
+    const best = store.get("thp-best", 0);
+    const newBest = st.score > best;
+    if (newBest) store.set("thp-best", st.score);
+    won ? (S("win"), confetti(160)) : S("lose");
+    const [verse, ref] = pick(THP.VERSES);
+    const stat = (n, label) => el("div", { class: "stat" }, el("strong", {}, n), el("span", {}, label));
+    const node = el("section", { class: "results " + (won ? "won" : "lost-card") },
+      el("div", { class: "big-emblem", "aria-hidden": "true" }, won ? "👑" : "🐐"),
+      el("h2", { class: "screen-title" }, won ? "Through the Gate!" : "Grumbles Wins!"),
+      el("p", { class: "final-score" }, st.score.toLocaleString(), el("small", {}, " talents"), newBest ? el("em", { class: "new-best" }, "New best!") : null),
+      el("div", { class: "stats" },
+        stat(`${st.correct}/${QUESTIONS_PER_GAME}`, "answered right"),
+        stat(`${st.trialsWon}/${st.trialsPlayed}`, "trials passed"),
+        stat(st.oil + (st.lost ? " 🐑" : ""), "oil left")),
+      el("p", { class: "verse" }, `“${verse}”`, el("cite", {}, ref)),
+      el("div", { class: "btn-row" },
+        el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => start(st.lvl, st.name === "Pilgrim" ? "" : st.name) }, "Play again"),
+        el("button", { class: "btn btn-ghost", onclick: titleScreen }, "Title screen")));
+    show(node, { scene: won ? "found" : "trial" });
+    await say(pick(won ? L.win : L.lose), { mood: won ? "happy" : "worried" });
+  }
+
+  /* ---------- Boot ---------- */
+  function boot() {
+    const mute = $("#mute");
+    const sync = () => { mute.textContent = THP.Sound.isMuted() ? "🔇" : "🔊"; mute.setAttribute("aria-label", THP.Sound.isMuted() ? "Unmute" : "Mute"); };
+    mute.addEventListener("click", () => { THP.Sound.toggle(); sync(); });
+    sync();
+    document.addEventListener("pointerdown", () => THP.Sound.unlock(), { once: true });
+    titleScreen();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
