@@ -46,7 +46,7 @@ After the first review, the owner made these calls. The game follows them:
 - **Other wording:**
   - "People with disabilities" replaced "the disabled."
   - "Fishers of People" replaced "Fishers of Men."
-  - Name fields say "Nickname or first name."
+  - Name fields say "Nickname."
 
 ## Fact check
 
@@ -120,7 +120,7 @@ These are all biblical and non-graphic. Some families or churches may choose dif
   - the player's name, best score, XP, modes beaten and questions learned
   - Versus player names
   - the skin and mute settings
-- **Name fields** now say "Nickname or first name" (and "Player 1 nickname" in Versus), since the game is used on
+- **Name fields** now say "Nickname" (and "Player 1 nickname" in Versus), since the game is used on
   shared and church devices.
 - **One outside request:** fonts load from Google Fonts, which sees the device's IP address. For a church or school
   deployment, self-host the font files so the game makes no outside requests at all.

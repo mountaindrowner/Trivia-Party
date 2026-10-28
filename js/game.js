@@ -127,7 +127,7 @@ window.THP = window.THP || {};
     $("#hud").hidden = true;
     setMood("happy");
     const best = store.get("thp-best", 0);
-    const nameInput = el("input", { id: "player-name", maxlength: 14, placeholder: "Nickname or first name", value: store.get("thp-name", ""), autocomplete: "off", "aria-label": "Your name" });
+    const nameInput = el("input", { id: "player-name", maxlength: 14, placeholder: "Nickname", value: store.get("thp-name", ""), autocomplete: "off", "aria-label": "Your name" });
     const done = beatenSet();
     const levelBtn = (lvl) => {
       const cfg = LEVELS[lvl];
