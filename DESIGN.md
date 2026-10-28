@@ -134,7 +134,7 @@ when Jesus died (Matthew 27:51; Hebrews 10:19–20).
   Games pick questions you haven't learned yet first, so repeat players keep meeting new material.
 - 10 more hard Narrow Gate prompts (prophecies, "I am" sayings, feasts, empires, prison letters...).
 
-Content totals: **385 questions** (48 / 48 / 44 / 64 / 60 / 60 / 61) and 60 final-round prompts.
+Content totals: **1,150 questions** (144 / 142 / 131 / 191 / 180 / 179 / 183) and 180 final-round prompts.
 
 ## 4c. Daily Challenge
 
@@ -368,10 +368,10 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 - Avoid denominationally contested trivia (canon counts beyond the 27 New Testament books, dates, theology debates).
 - Distractors can be silly for Lambs ("Pizza") but plausible for Warriors.
 - Each item: `{ lvl, cat, q, a: [correct, ...wrong], ref, fact, host? }`. Final-round items: `{ p, opts: [[label, isRight]] }`.
-- Current pool: 385 questions (48 Lambs, 48 Warriors, 44 Legends, 64 Parable Pros, 60 Prophecy Hunters, 60 Scholars,
-  61 Holy of Holies), 60 final-round prompts (24 hard-only),
-  32 scramble names, 12 memory verses, about 135 host lines, 10 results-screen verses.
-- Target for v1: about 150 questions per level and about 60 final-round prompts.
+- Current pool: 1,150 questions (144 Lambs, 142 Warriors, 131 Legends, 191 Parable Pros, 180 Prophecy Hunters,
+  179 Scholars, 183 Holy of Holies), 180 final-round prompts (74 hard-only). The original 385 live in `js/data.js` and
+  `js/data-modes.js`; the expansion is one file per mode in `js/more/` (`l1.js` … `l7.js`, `final.js`).
+- At 8 questions a game, a player sticking to one mode sees new questions for about 16–24 games.
 
 ---
 

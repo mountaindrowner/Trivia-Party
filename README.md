@@ -18,7 +18,7 @@ python3 -m http.server 8000
 
 - 3 levels, listed easiest to hardest: **Little Lambs** (ages 5–8), **Mighty Warriors** (ages 9–12) and **Legends** (13+).
   Each mode's border gets grittier as the difficulty rises (`css/grit.css`).
-- 8 questions per game from a bank of 385, each with a scripture reference and a lesson
+- 8 questions per game from a bank of 1,150 (about 130–190 per mode), each with a scripture reference and a lesson; 180 final-race prompts
 - **Challenge Modes** with harder kinds of questions: Parable Pros (what Jesus' teachings mean, 64), Prophecy Hunters
   (promise → fulfillment, 60), Scholars (languages, places, history, 60), plus the secret **Holy of Holies** (61),
   unlocked by winning all six other modes

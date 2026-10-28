@@ -100,6 +100,44 @@ be arguably right, the reference must contain the fact, and lessons and quotes m
 - Mark 10:27 now matches the NIV: "All things are possible with God."
 - Psalm 118:24 in the verse builder now matches the ESV.
 
+## The content expansion (about 765 new questions, 120 final-race prompts)
+
+The question bank was roughly tripled, from 385 to 1,150, plus 120 new final-race prompts. Every new item went through
+the same standard as the originals, in four steps:
+
+1. **Writing.** One writer per mode. Each read the existing questions, this file and the mode's description first.
+2. **Removing repeats.** An automatic pass across all files, then a keyword search, dropped repeated facts. Writers on
+   different levels had often picked the same story (Peter's coin in the fish appeared three times). The lowest-level
+   copy was kept.
+3. **Independent fact check.** One checker per mode, who hadn't written those questions, read every question, every
+   wrong answer, every reference and every lesson against the text. Problems were fixed or the question was replaced.
+4. **Topping up.** Each level was filled back to its target, and the duplicate check ran again.
+
+**Examples of what the fact check caught:**
+- A question said David found Saul in a cave. It was Saul who came into the cave where David was hiding.
+- A question said Jehoiada hid young Joash. Jehosheba did.
+- "Barnabas" was a wrong answer for who opposed Peter at Antioch, but Galatians 2:13 says Barnabas also drew back.
+  Leah's "the LORD has seen my misery" sat next to Hagar's "the God who sees me".
+- Lessons that went beyond the text:
+  - The Bereans being "praised by Paul" (Luke says it, not Paul).
+  - Peter "used the coin" (the text only records Jesus telling him to).
+  - Jesus' family "wasn't wealthy".
+  - "The bread and cup point to His body and blood". This takes a side on communion, so it's now just the quote.
+- Misquotes:
+  - Matthew credited with Zechariah's wording.
+  - "That is Christ" for "who is Christ" (Galatians 3:16).
+  - "Wash all of me!" for Peter's actual words (John 13:9).
+- Translation-dependent answers. Bilhah and Zilpah as Jacob's "wives" became Leah and Rachel. NIV and ESV wordings
+  are noted where they differ.
+- The Gomer question came back in one draft and was removed again, per the decision above.
+
+**The limit:** the checkers couldn't reach Bible Gateway from the build environment. The check is a careful expert
+reading of the NIV/ESV text, not a line-by-line comparison with a live copy. Lessons that rely on history outside the
+Bible are hedged with "about" or attributed to a source:
+- Suetonius on Claudius.
+- The Taylor Prism.
+- Translation dates (Wycliffe, Tyndale, Erasmus, Luther).
+
 ## Things a church may want to know
 
 These are all biblical and non-graphic. Some families or churches may choose differently for their youngest kids:
