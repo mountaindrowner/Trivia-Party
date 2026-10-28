@@ -108,6 +108,34 @@ Backlog ideas:
 
 ---
 
+## 4a. Challenge Modes and the secret mode
+
+Opened from the "Challenge Modes" card on the title screen. Each one asks a harder *kind* of question, gets a
+longer timer for longer questions, has its own opening briefing from Barnabas, and draws only from its own pool:
+
+| Mode | Questions | What it asks | Timer |
+|---|---|---|---|
+| **Parable Pros** (10+) | 64 | What Jesus' stories and teachings *mean*: parables, Sermon on the Mount, "I am" sayings | 22 s |
+| **Prophecy Hunters** (12+) | 60 | Old Testament promise → New Testament fulfillment, shadows and pictures of Jesus, the prophets | 22 s |
+| **Scholars** (14+) | 60 | Bible languages, places, empires, feasts, tabernacle and temple, authors, how the Bible came to us | 18 s |
+| **Holy of Holies** (secret) | 61 | Kings of Judah, numbers, name meanings, family trees, prophets' signs, early church, deep doctrine | 15 s |
+
+**Unlocking:** win the Narrow Gate once in each of the six other modes (Lambs, Warriors, Legends and the three
+above). Progress shows on the locked card and on the title ("secret mode 3/6"). The results screen shows
+"✓ Parable Pros beaten! 4/6", and the game that completes the set shows an UNLOCKED banner with "Enter now". The name
+comes from the inner room of the tabernacle, which only the high priest entered once a year, until the curtain tore
+when Jesus died (Matthew 27:51; Hebrews 10:19–20).
+
+**Teaching:**
+- Every Challenge Mode answer is followed by a lesson that explains *why*, not just *what*.
+- After every game (any mode), **Review answers** lists all 8 questions, misses first, with the right answer, what you
+  picked, the verse and the lesson.
+- Each mode card shows **Learned x/y**: how many of that pool's questions you've answered right at least once.
+  Games pick questions you haven't learned yet first, so repeat players keep meeting new material.
+- 10 more hard Narrow Gate prompts (prophecies, "I am" sayings, feasts, empires, prison letters...).
+
+Content totals: **385 questions** (48 / 48 / 44 / 64 / 60 / 60 / 61) and 60 final-round prompts.
+
 ## 4b. Versus mode (pass & play)
 
 - 2–4 players on one device, with a name and color each. Pick a level (Lambs / Warriors / Legends) and 3, 5 or 7 rounds.
@@ -207,7 +235,8 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 - Avoid denominationally contested trivia (canon counts beyond the 27 New Testament books, dates, theology debates).
 - Distractors can be silly for Lambs ("Pizza") but plausible for Warriors.
 - Each item: `{ lvl, cat, q, a: [correct, ...wrong], ref, fact, host? }`. Final-round items: `{ p, opts: [[label, isRight]] }`.
-- Current pool: 140 questions (48 Lambs, 48 Warriors, 44 Legends), 50 final-round prompts (14 hard-only),
+- Current pool: 385 questions (48 Lambs, 48 Warriors, 44 Legends, 64 Parable Pros, 60 Prophecy Hunters, 60 Scholars,
+  61 Holy of Holies), 60 final-round prompts (24 hard-only),
   32 scramble names, 12 memory verses, about 135 host lines, 10 results-screen verses.
 - Target for v1: about 150 questions per level and about 60 final-round prompts.
 

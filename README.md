@@ -17,7 +17,11 @@ python3 -m http.server 8000
 ## What's in the sketch
 
 - 3 levels: **Legends** (13+), **Mighty Warriors** (ages 9–12) and **Little Lambs** (ages 5–8)
-- 8 questions per game from a bank of 140 (48 / 48 / 44 per level), each with a scripture reference and a fun fact
+- 8 questions per game from a bank of 385, each with a scripture reference and a lesson
+- **Challenge Modes** with harder kinds of questions: Parable Pros (what Jesus' teachings mean, 64), Prophecy Hunters
+  (promise → fulfillment, 60), Scholars (languages, places, history, 60), plus the secret **Holy of Holies** (61),
+  unlocked by winning all six other modes
+- Teaching built in: a lesson after every answer, an answer review after every game, and a "learned" count per mode
 - 24 Trial Room minigames: Loaves & Fishes, Noah's Pairs, Walls of Jericho, David's Sling,
   Gideon's Fleece, Scroll Scramble, Find the Lost Sheep, Manna Catch, Red Sea Run, Build the Ark,
   Lions' Den Tiptoe, Fishers of Men, Verse Builder, Joseph's Dreams, Soak the Altar, Jacob's Ladder,
@@ -37,7 +41,7 @@ See [DESIGN.md](DESIGN.md) for the full game design, the mapping from *Trivia Mu
 
 ## Adding questions
 
-Edit `js/data.js`. The first answer in `a` is the correct one (answers are shuffled when shown):
+Edit `js/data.js` (age levels) or `js/data-modes.js` (Challenge Modes). The first answer in `a` is the correct one (answers are shuffled when shown):
 
 ```js
 { lvl: 1, cat: "Noah's Ark", q: "Who built the ark?", a: ["Noah", "Abraham", "Adam", "Elijah"], ref: "Genesis 6:13–14", fact: "God told Noah exactly how big to build it." }

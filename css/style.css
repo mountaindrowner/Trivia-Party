@@ -164,6 +164,8 @@ button:disabled { cursor: default; }
 /* ---------- Title ---------- */
 .title-screen { gap: 1rem; }
 .title-brand, .title-play { display: flex; flex-direction: column; align-items: center; gap: inherit; width: 100%; }
+.extra-row { display: grid; gap: inherit; width: min(34rem, 100%); }
+.extra-row .versus-card { width: 100%; }
 .logo { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-weight: 400; line-height: 0.9; }
 .logo-1, .logo-3 { font-size: 2.3rem; letter-spacing: 0.08em; color: var(--white); text-shadow: 0 0.22rem 0 var(--ink); }
 .logo-1 { rotate: -3deg; }
@@ -502,6 +504,53 @@ button:disabled { cursor: default; }
 .stamp.rarity-epic { color: #b14bff; }
 .stamp.rarity-legendary { color: #ff9d1a; }
 
+/* ---------- Challenge Modes, unlock, review ---------- */
+.modes-screen { gap: 0.9rem; }
+.mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; width: 100%; }
+.mode-card { display: flex; gap: 0.7rem; align-items: flex-start; text-align: left; padding: 0.9rem; min-width: 0; color: var(--white);
+  border: var(--line) solid var(--ink); border-radius: var(--radius); box-shadow: var(--drop); background: var(--plum); transition: transform 0.12s, filter 0.12s; }
+.mode-card:hover, .mode-card:focus-visible { transform: translateY(-0.2rem); filter: brightness(1.12); }
+.mode-4 { background: linear-gradient(160deg, #3fae25, #1f6e12); }
+.mode-5 { background: linear-gradient(160deg, #b14bff, #5a1a9e); }
+.mode-6 { background: linear-gradient(160deg, #1d6fe0, #0f3a82); }
+.mode-7 { background: linear-gradient(160deg, #ffc35a, #c2410c); }
+.mode-card.locked { background: repeating-linear-gradient(135deg, #2a2a3a 0 0.8rem, #22222f 0.8rem 1.6rem); filter: saturate(0.6); }
+.mode-icon { font-size: 2.2rem; line-height: 1; flex: none; }
+.mode-body { display: grid; gap: 0.25rem; min-width: 0; }
+.mode-body strong { font-family: var(--display); font-weight: 400; font-size: 1.4rem; line-height: 1.05; }
+.mode-body small { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; }
+.mode-blurb { font-size: 0.88rem; line-height: 1.35; opacity: 0.95; }
+.mode-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 900; margin-top: 0.2rem; }
+.mode-beaten { color: var(--amber); }
+.mode-progress { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.2rem; }
+.mode-progress i { font-style: normal; font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 99rem; background: rgba(255, 255, 255, 0.1); opacity: 0.7; }
+.mode-progress i.on { background: var(--emerald); color: var(--ink); opacity: 1; font-weight: 900; }
+.challenge-card { background: linear-gradient(90deg, #3fae25, #b14bff, #1d6fe0); }
+.unlock-banner { display: grid; justify-items: center; gap: 0.35rem; width: min(26rem, 100%); padding: 0.9rem 1rem; border: var(--line) solid var(--ink);
+  border-radius: var(--radius); background: linear-gradient(160deg, #ffe08a, #ff9d1a 60%, #c2410c); color: var(--ink); box-shadow: 0 0 2rem rgba(255, 197, 61, 0.7), var(--drop);
+  animation: pulse 1.6s ease-in-out infinite; }
+.unlock-banner .eyebrow { color: var(--ink); }
+.unlock-banner strong { font-family: var(--display); font-weight: 400; font-size: 1.8rem; }
+.unlock-banner span { font-size: 0.9rem; line-height: 1.35; }
+.beat-note { margin: 0; font-weight: 900; color: var(--emerald); }
+.scripture.lesson { border-left-color: var(--emerald); }
+.scripture.lesson .ref::before { content: "LESSON · "; color: var(--emerald); }
+.review-screen { gap: 0.8rem; }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; width: 100%; text-align: left; }
+.review-list li { display: grid; gap: 0.3rem; padding: 0.75rem 0.9rem; border: var(--line) solid var(--ink); border-left: 0.5rem solid var(--emerald);
+  border-radius: 0.6rem; background: var(--parch); color: var(--ink); }
+.review-list li.miss { border-left-color: var(--ruby); }
+.review-q { margin: 0; font-weight: 900; font-size: 1rem; line-height: 1.3; display: flex; gap: 0.5rem; }
+.review-q b { flex: none; color: var(--emerald); }
+.review-list li.miss .review-q b { color: var(--ruby); }
+.review-a { margin: 0; font-size: 0.92rem; }
+.review-yours { opacity: 0.7; }
+.review-fact { margin: 0; font-size: 0.88rem; line-height: 1.4; opacity: 0.9; }
+.review-fact .ref { font-weight: 900; color: var(--plum); }
+.seg { flex-wrap: wrap; }
+.seg-btn { min-width: 5.5rem; }
+@media (max-width: 560px) { .mode-grid { grid-template-columns: 1fr; } }
+
 /* ---------- Final round ---------- */
 .final-screen { gap: 1rem !important; }
 .track { overflow: visible; max-width: 100%; --tile: calc((100% - (var(--n) - 1) * 0.25rem) / var(--n)); position: relative; width: 100%; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 0.25rem; padding-block: 2.6rem 2.5rem; }
@@ -560,6 +609,8 @@ button:disabled { cursor: default; }
   #bubble-text { font-size: 1.05rem; min-height: 4em; }
   #stage > section.title-screen { flex-direction: row; align-items: center; max-width: 66rem; gap: 2.5rem; }
   .title-brand, .title-play { flex: 1; min-width: 0; gap: 0.9rem; }
+  .extra-row { grid-template-columns: 1fr 1fr; width: min(36rem, 100%); }
+  .extra-row .versus-card { flex-direction: column; gap: 0.2rem; text-align: center; }
 }
 
 /* ---------- Small phones ---------- */

@@ -338,6 +338,17 @@ body { font-weight: 600; }
 .vs-bar { box-shadow: 0 0 0.6rem var(--pc); }
 .vs-champ .vs-pass-name { font-size: 4.6rem; }
 
+/* Challenge Modes, unlock, review */
+.mode-card { border: 0; border-radius: 0; clip-path: var(--panel-clip); box-shadow: inset 0 -0.3rem 0 var(--mc, var(--fire)); background: var(--steel) !important; }
+.mode-4 { --mc: var(--emerald); } .mode-5 { --mc: var(--violet); } .mode-6 { --mc: var(--sapphire); } .mode-7 { --mc: var(--amber); }
+.mode-card.locked { --mc: #444; opacity: 0.7; }
+.mode-body strong { font-family: var(--display); font-weight: 600; font-size: 1.9rem; text-transform: uppercase; color: var(--mc); }
+.unlock-banner { border: 0; border-radius: 0; clip-path: var(--panel-clip); background: var(--flame); color: var(--ink); box-shadow: none; }
+.unlock-banner strong { font-family: var(--display); font-weight: 700; font-size: 2.4rem; text-transform: uppercase; }
+.review-list li { border: 0; border-radius: 0; clip-path: var(--panel-clip); --cut: 0.6rem; background: var(--steel); color: var(--white); box-shadow: inset 0.3rem 0 0 var(--emerald); }
+.review-list li.miss { box-shadow: inset 0.3rem 0 0 var(--ruby); }
+.review-fact .ref { color: var(--amber); }
+
 /* ---------- Final round ---------- */
 .final-panel { border: 0; border-radius: 0; clip-path: var(--panel-clip); --cut: 1.2rem; background: var(--steel); box-shadow: inset 0 0.25rem 0 var(--sapphire); }
 .final-prompt { font-size: 2.6rem; text-shadow: var(--glitch); }
@@ -364,6 +375,15 @@ body { font-weight: 600; }
 .verse { font-weight: 500; }
 .verse cite { font-family: var(--body); font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.72rem; }
 
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .title-screen { gap: 0.7rem; }
+  .logo-2 b { font-size: 6.4rem; }
+  .level-card { padding-block: 0.6rem; }
+  .level-card strong { font-size: 1.7rem; }
+  .level-card.lvl-3 strong { font-size: 2.6rem; }
+  .versus-card { padding-block: 0.6rem 0.5rem; }
+  .versus-card strong { font-size: 2rem; }
+}
 @media (max-width: 420px) {
   .vs-pass-name { font-size: 4rem; }
   .vs-champ .vs-pass-name { font-size: 3.4rem; }

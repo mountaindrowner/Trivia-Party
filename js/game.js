@@ -8,6 +8,7 @@ window.THP = window.THP || {};
   // Any key a set doesn't have falls back to the default lines.
   const L = new Proxy({}, {
     get: (_, k) => {
+      if (k === "intro" && THP.state && THP.MODE_INTROS[THP.state.lvl]) return THP.MODE_INTROS[THP.state.lvl];
       if (THP.state && THP.state.lvl === 3 && THP.LINES_TEEN[k]) return THP.LINES_TEEN[k];
       if (THP.ui.skin() === "cyber" && THP.LINES_CYBER[k]) return THP.LINES_CYBER[k];
       if (THP.ui.skin() === "loot" && THP.LINES_LOOT[k]) return THP.LINES_LOOT[k];
@@ -19,16 +20,37 @@ window.THP = window.THP || {};
   const MAX_OIL = 3;
   const GATE = 10;
   const streakMult = (n) => (n >= 3 ? 2 : n === 2 ? 1.5 : 1);
+  // Modes. 1–3 are the age levels; 4–6 are Challenge Modes with harder kinds of questions (longer timers for longer
+  // questions); 7 is the secret mode, unlocked by beating 1–6. `near` lists pools that lend a couple of questions for variety.
   const LEVELS = {
-    1: { name: "Little Lambs", ages: "Ages 5–8", qTime: 20, fTime: 16, goatJump: 0.25 },
-    2: { name: "Mighty Warriors", ages: "Ages 9–12", qTime: 15, fTime: 12, goatJump: 0.5 },
-    3: { name: "Legends", ages: "Ages 13+", qTime: 12, fTime: 10, goatJump: 0.6 },
+    1: { name: "Little Lambs", ages: "Ages 5–8", icon: "🐑", qTime: 20, fTime: 16, goatJump: 0.25, near: [2] },
+    2: { name: "Mighty Warriors", ages: "Ages 9–12", icon: "🛡️", qTime: 15, fTime: 12, goatJump: 0.5, near: [1, 3] },
+    3: { name: "Legends", ages: "Ages 13+", icon: "⚡", qTime: 12, fTime: 10, goatJump: 0.6, near: [2] },
+    4: { name: "Parable Pros", ages: "Ages 10+", icon: "🌱", qTime: 22, fTime: 14, goatJump: 0.5, near: [], challenge: true,
+      blurb: "Not just who or what, but what it means. Parables, the Sermon on the Mount and Jesus' \"I am\" sayings." },
+    5: { name: "Prophecy Hunters", ages: "Ages 12+", icon: "📜", qTime: 22, fTime: 13, goatJump: 0.55, near: [], challenge: true,
+      blurb: "Connect Old Testament promises to their New Testament fulfillment, and find Jesus all through the Bible." },
+    6: { name: "Scholars", ages: "Ages 14+", icon: "🧭", qTime: 18, fTime: 12, goatJump: 0.6, near: [], challenge: true,
+      blurb: "Bible languages, maps, empires, feasts, the temple, and how the Bible was written and kept." },
+    7: { name: "Holy of Holies", ages: "Secret mode", icon: "✨", qTime: 15, fTime: 10, goatJump: 0.7, near: [], challenge: true, secret: true,
+      blurb: "The hardest questions in the game: kings, numbers, name meanings, the early church and deep doctrine." },
   };
+  const UNLOCK_NEEDS = [1, 2, 3, 4, 5, 6];
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   };
+
+  /* ---------- Progress: modes beaten, questions learned (saved on this device) ---------- */
+  const beatenSet = () => new Set(store.get("thp-beaten", []));
+  const isUnlocked = () => { const b = beatenSet(); return UNLOCK_NEEDS.every((l) => b.has(l)); };
+  const learnedSet = () => new Set(store.get("thp-learned", []));
+  function learnedCount(lvl) {
+    const known = learnedSet();
+    const pool = THP.QUESTIONS.filter((q) => q.lvl === lvl);
+    return [pool.filter((q) => known.has(q.q)).length, pool.length];
+  }
 
   /* ---------- XP & rank (solo games, saved on this device) ---------- */
   const RANKS = [[30, "Champion", "🏆"], [20, "Diamond", "💎"], [15, "Platinum", "💠"], [10, "Gold", "🥇"], [5, "Silver", "🥈"], [1, "Bronze", "🥉"]];
@@ -93,13 +115,15 @@ window.THP = window.THP || {};
     setMood("happy");
     const best = store.get("thp-best", 0);
     const nameInput = el("input", { id: "player-name", maxlength: 14, placeholder: "Your name", value: store.get("thp-name", ""), autocomplete: "off", "aria-label": "Your name" });
+    const done = beatenSet();
     const levelBtn = (lvl) => {
       const cfg = LEVELS[lvl];
       return el("button", { class: "level-card lvl-" + lvl, onclick: () => start(lvl, nameInput.value.trim()) },
-        el("span", { class: "level-icon", "aria-hidden": "true" }, ["", "🐑", "🛡️", "⚡"][lvl]),
+        el("span", { class: "level-icon", "aria-hidden": "true" }, cfg.icon),
         el("strong", {}, cfg.name),
-        el("small", {}, cfg.ages));
+        el("small", {}, cfg.ages + (done.has(lvl) ? " · ✓ Beaten" : "")));
     };
+    const beatenCount = UNLOCK_NEEDS.filter((l) => done.has(l)).length;
     // Two groups so big screens can lay the title out side by side: brand on the left, play options on the right.
     const node = el("section", { class: "title-screen" },
       el("div", { class: "title-brand" },
@@ -115,10 +139,15 @@ window.THP = window.THP || {};
       el("div", { class: "name-row" }, nameInput)),
       el("div", { class: "title-play" },
       el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
+      el("div", { class: "extra-row" },
+      el("button", { class: "versus-card challenge-card", onclick: () => modesScreen(nameInput.value.trim()) },
+        el("span", { class: "level-icon", "aria-hidden": "true" }, isUnlocked() ? "✨" : "🎯"),
+        el("strong", {}, "Challenge Modes"),
+        el("small", {}, isUnlocked() ? "Holy of Holies unlocked!" : `Harder questions · secret mode ${beatenCount}/6 🔒`)),
       el("button", { class: "versus-card", onclick: () => THP.versus.setup() },
         el("span", { class: "level-icon", "aria-hidden": "true" }, "⚔️"),
         el("strong", {}, "Versus"),
-        el("small", {}, "Pass & play · 2–4 players")),
+        el("small", {}, "Pass & play · 2–4 players"))),
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
         el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look", onclick: () => {
@@ -142,6 +171,8 @@ window.THP = window.THP || {};
       ["⚖️", "Survive the Trial Room", "Miss a question and you face a Trial minigame. Lose it and a drop of oil spills."],
       ["🐑", "Lost, then found", "If your lamp goes out you become a Lost Sheep. Get the next one right and the Good Shepherd brings you back!"],
       ["🚪", "Race to the Narrow Gate", "Tap every answer that fits to move forward. Beat Grumbles the Goat to the gate to win!"],
+      ["🎯", "Challenge Modes", "Harder questions about what Jesus taught, prophecy and Bible history. Win in all six modes to unlock a secret one."],
+      ["📖", "Learn as you go", "Every answer comes with a verse and a lesson. After each game, review what you missed."],
     ];
     const node = el("section", { class: "howto" },
       el("h2", { class: "screen-title" }, "How to Play"),
@@ -153,13 +184,58 @@ window.THP = window.THP || {};
     titleScreen();
   }
 
+  /* ---------- Challenge Modes ---------- */
+  function modesScreen(name) {
+    S("tap");
+    $("#hud").hidden = true;
+    setMood("happy");
+    const done = beatenSet();
+    const open = isUnlocked();
+    const card = (lvl) => {
+      const cfg = LEVELS[lvl];
+      const [got, total] = learnedCount(lvl);
+      const locked = cfg.secret && !open;
+      return el("button", {
+        class: "mode-card mode-" + lvl + (locked ? " locked" : "") + (done.has(lvl) ? " beaten" : ""),
+        "aria-disabled": locked ? "true" : null,
+        onclick: () => {
+          if (!locked) return start(lvl, name);
+          S("wrong");
+          say(`Locked! Win the Narrow Gate in all six modes to open it. You've beaten ${UNLOCK_NEEDS.filter((l) => done.has(l)).length} of 6.`, { mood: "worried" });
+        },
+      },
+        el("span", { class: "mode-icon", "aria-hidden": "true" }, locked ? "🔒" : cfg.icon),
+        el("span", { class: "mode-body" },
+          el("strong", {}, locked ? "??? Secret Mode" : cfg.name),
+          el("small", {}, locked ? "Locked" : cfg.ages),
+          el("span", { class: "mode-blurb" }, locked ? "Win the Narrow Gate in all six modes to unlock it." : cfg.blurb),
+          locked
+            ? el("span", { class: "mode-progress" }, ...UNLOCK_NEEDS.map((l) => el("i", { class: done.has(l) ? "on" : "" }, (done.has(l) ? "✓ " : "") + LEVELS[l].name)))
+            : el("span", { class: "mode-meta" },
+                el("span", {}, `📖 Learned ${got}/${total}`),
+                done.has(lvl) ? el("span", { class: "mode-beaten" }, "✓ Beaten") : null)));
+    };
+    const node = el("section", { class: "modes-screen" },
+      el("p", { class: "eyebrow" }, "Harder questions · more to learn"),
+      el("h2", { class: "screen-title" }, "Challenge Modes"),
+      el("div", { class: "mode-grid" }, card(4), card(5), card(6), card(7)),
+      el("div", { class: "btn-row" }, el("button", { class: "btn btn-ghost", onclick: titleScreen }, "Back")));
+    show(node, { scene: "title" });
+    THP.ui.focusFirst($(".mode-grid", node));
+    say(open
+      ? "The Holy of Holies is open. Only the bravest scholars go in there."
+      : pick(["These modes are tough, but every answer teaches you something new.", "Read the lessons after each answer. That's how you get good at these."]));
+  }
+
   /* ---------- Game ---------- */
   function pickQuestions(lvl) {
-    const mine = shuffle(THP.QUESTIONS.filter((q) => q.lvl === lvl));
-    const near = lvl === 1 ? [2] : lvl === 2 ? [1, 3] : [2];
-    const other = shuffle(THP.QUESTIONS.filter((q) => near.includes(q.lvl)));
-    // Mostly your level, with a couple from the other pool for variety.
-    const mix = mine.slice(0, QUESTIONS_PER_GAME - 2).concat(other.slice(0, 2));
+    const known = learnedSet();
+    // Questions you haven't gotten right yet come first, so repeat players keep seeing new material.
+    const mine = shuffle(THP.QUESTIONS.filter((q) => q.lvl === lvl)).sort((a, b) => known.has(a.q) - known.has(b.q));
+    const other = shuffle(THP.QUESTIONS.filter((q) => LEVELS[lvl].near.includes(q.lvl)));
+    // Mostly your level, with a couple from a neighboring pool for variety (Challenge Modes stay pure).
+    const borrow = Math.min(2, other.length);
+    const mix = mine.slice(0, QUESTIONS_PER_GAME - borrow).concat(other.slice(0, borrow));
     // Warriors get the harder questions last; Lambs get an easy warm-up first.
     return lvl === 1 ? mix.slice(0, 2).concat(shuffle(mix.slice(2))) : shuffle(mix);
   }
@@ -170,7 +246,7 @@ window.THP = window.THP || {};
     store.set("thp-name", name);
     THP.state = {
       name: name || "Pilgrim", lvl, cfg: LEVELS[lvl], oil: MAX_OIL, lost: false, score: 0,
-      correct: 0, trialsWon: 0, trialsPlayed: 0, qi: 0, phase: "questions", streak: 0, bestStreak: 0,
+      correct: 0, trialsWon: 0, trialsPlayed: 0, qi: 0, phase: "questions", streak: 0, bestStreak: 0, history: [],
       questions: pickQuestions(lvl), recentGames: [],
     };
     renderHud();
@@ -228,6 +304,8 @@ window.THP = window.THP || {};
     const elapsed = live.elapsed();
     buttons.forEach((b) => (b.disabled = true));
     const right = chosen >= 0 && answers[chosen].right;
+    if (st.history) st.history.push({ q, right, picked: chosen >= 0 ? answers[chosen].text : null });
+    if (right) { const known = learnedSet(); known.add(q.q); store.set("thp-learned", [...known]); }
     buttons.forEach((b, i) => {
       if (answers[i].right) b.classList.add("is-right");
       else if (i === chosen) b.classList.add("is-wrong");
@@ -258,7 +336,8 @@ window.THP = window.THP || {};
     const reveal = $(".q-reveal", node);
     reveal.hidden = false;
     reveal.append(
-      el("div", { class: "scripture" }, el("span", { class: "ref" }, q.ref), el("span", {}, q.fact)));
+      el("div", { class: "scripture" + (LEVELS[st.lvl] && LEVELS[st.lvl].challenge ? " lesson" : "") },
+        el("span", { class: "ref" }, q.ref), el("span", {}, q.fact)));
     const line = right ? q.host || pick(L.correct) : chosen < 0 ? pick(L.timeout) : pick(L.wrong);
     await say(line, { hold: 300 });
     await waitButton(reveal, right ? "Next question" : "Uh oh...", right ? "btn-go" : "btn-warn");
@@ -481,6 +560,13 @@ window.THP = window.THP || {};
     store.set("thp-xp", xpBefore + earned);
     const after = levelOf(xpBefore + earned);
     const leveled = after.lvl > before.lvl;
+    // Beating a mode counts toward the secret Holy of Holies.
+    const wasOpen = isUnlocked();
+    const beatenBefore = beatenSet();
+    const firstBeat = won && !beatenBefore.has(st.lvl);
+    if (won) { beatenBefore.add(st.lvl); store.set("thp-beaten", [...beatenBefore]); }
+    const justUnlocked = !wasOpen && isUnlocked();
+    const beatenNow = UNLOCK_NEEDS.filter((l) => beatenBefore.has(l)).length;
     won ? (S("win"), confetti(160)) : S("lose");
     const [verse, ref] = pick(THP.VERSES);
     const stat = (n, label) => el("div", { class: "stat" }, el("strong", {}, n), el("span", {}, label));
@@ -497,17 +583,47 @@ window.THP = window.THP || {};
         el("p", { class: "xp-gain" }, `+${earned.toLocaleString()} XP`, leveled ? el("em", {}, `LEVEL UP! LVL ${after.lvl}`) : null),
         el("ul", { class: "xp-list" }, ...gains.map(([label, n]) => el("li", {}, el("span", {}, label), el("b", {}, "+" + n)))),
         xpCard(xpBefore + earned, leveled ? 0 : Math.round((before.into / before.need) * 100))),
+      justUnlocked
+        ? el("div", { class: "unlock-banner" },
+            el("p", { class: "eyebrow" }, "New mode unlocked"),
+            el("strong", {}, "✨ Holy of Holies ✨"),
+            el("span", {}, "You beat all six modes. The way into the Most Holy Place is open (Hebrews 10:19–20)."),
+            el("button", { class: "btn btn-go", onclick: () => start(7, st.name === "Pilgrim" ? "" : st.name) }, "Enter now"))
+        : firstBeat && UNLOCK_NEEDS.includes(st.lvl)
+          ? el("p", { class: "beat-note" }, `✓ ${LEVELS[st.lvl].name} beaten! ${isUnlocked() ? "" : `${beatenNow}/6 toward the secret mode.`}`)
+          : null,
       el("p", { class: "verse" }, `“${verse}”`, el("cite", {}, ref)),
       el("div", { class: "btn-row" },
         el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => start(st.lvl, st.name === "Pilgrim" ? "" : st.name) }, "Play again"),
+        el("button", { class: "btn btn-ghost", id: "review-btn", onclick: () => review(st.history, node) }, "Review answers"),
         el("button", { class: "btn btn-ghost", onclick: titleScreen }, "Title screen")));
     show(node, { scene: won ? "found" : "trial" });
     if (leveled) setTimeout(() => { stamp(after.rank !== before.rank ? after.rank.toUpperCase() + "!" : "LEVEL UP!", "good rarity-legendary"); confetti(80); }, 900);
+    if (justUnlocked) setTimeout(() => { S("fanfare"); stamp("UNLOCKED!", "good rarity-legendary"); confetti(200); }, leveled ? 2200 : 900);
     await say(pick(won ? L.win : L.lose), { mood: won ? "happy" : "worried" });
   }
 
+  /* ---------- Answer review: every question from the game, misses first, with the answer, verse and lesson ---------- */
+  function review(history, backNode) {
+    S("tap");
+    const items = history.slice().sort((a, b) => a.right - b.right);
+    const missed = items.filter((h) => !h.right).length;
+    const node = el("section", { class: "review-screen" },
+      el("p", { class: "eyebrow" }, missed ? `${missed} to study` : "Perfect game"),
+      el("h2", { class: "screen-title" }, "Answer Review"),
+      el("ol", { class: "review-list" }, ...items.map((h) => el("li", { class: h.right ? "ok" : "miss" },
+        el("p", { class: "review-q" }, el("b", { "aria-label": h.right ? "Right" : "Missed" }, h.right ? "✓" : "✗"), h.q.q),
+        el("p", { class: "review-a" }, "Answer: ", el("strong", {}, h.q.a[0]),
+          h.right ? null : el("span", { class: "review-yours" }, h.picked ? ` · You said: ${h.picked}` : " · Time ran out")),
+        el("p", { class: "review-fact" }, el("span", { class: "ref" }, h.q.ref), " ", h.q.fact)))),
+      el("div", { class: "btn-row" },
+        el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => { S("tap"); show(backNode, { scene: "found" }); } }, "Back to results")));
+    show(node, { scene: "found" });
+    say(missed ? pick(["Read these once more and they'll stick.", "Every miss is a lesson. Check these out.", "Study these and you'll nail them next time."]) : "Perfect! You nailed every single one.", { hold: 0 });
+  }
+
   // Shared with Versus mode (js/versus.js).
-  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult, levelOf };
+  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult, levelOf, isUnlocked };
 
   /* ---------- Boot ---------- */
   function boot() {

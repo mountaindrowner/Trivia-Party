@@ -27,6 +27,7 @@ window.THP = window.THP || {};
     let names = saved.names.slice(0, MAX_PLAYERS);
     while (names.length < 2) names.push("");
     let lvl = saved.lvl, rounds = saved.rounds;
+    if (lvl === 7 && !G().isUnlocked()) lvl = 2;
     const node = el("section", { class: "vs-setup" });
 
     const readNames = () => { names = $$(".vs-name", node).map((i) => i.value); };
@@ -51,7 +52,8 @@ window.THP = window.THP || {};
         el("p", { class: "sub" }, "Everyone plays the same challenge with different questions. Pass the device between turns. Most points wins."),
         el("div", { class: "vs-players" }, ...rows,
           names.length < MAX_PLAYERS ? el("button", { class: "btn btn-ghost vs-add", id: "vs-add", onclick: () => { S("tap"); readNames(); names.push(""); render(); } }, "+ Add player") : null),
-        seg("Level", [[1, "Lambs"], [2, "Warriors"], [3, "Legends"]], lvl, (v) => (lvl = v)),
+        seg("Level", [[1, "Lambs"], [2, "Warriors"], [3, "Legends"], [4, "Parables"], [5, "Prophecy"], [6, "Scholars"]]
+          .concat(G().isUnlocked() ? [[7, "Holy of Holies"]] : []), lvl, (v) => (lvl = v)),
         seg("Rounds", [[3, "3"], [5, "5"], [7, "7"]], rounds, (v) => (rounds = v)),
         el("div", { class: "btn-row" },
           el("button", { class: "btn btn-go", id: "vs-start", "data-primary": true, onclick: () => { readNames(); begin(names, lvl, rounds); } }, "Start match"),
@@ -115,7 +117,7 @@ window.THP = window.THP || {};
   }
 
   function drawQuestions(m, n) {
-    const near = m.lvl === 1 ? [2] : m.lvl === 2 ? [1, 3] : [2];
+    const near = G().LEVELS[m.lvl].near;
     let pool = shuffle(THP.QUESTIONS.filter((q) => q.lvl === m.lvl && !m.usedQ.has(q)));
     if (pool.length < n) pool = pool.concat(shuffle(THP.QUESTIONS.filter((q) => near.includes(q.lvl) && !m.usedQ.has(q))));
     if (pool.length < n) { m.usedQ.clear(); pool = shuffle(THP.QUESTIONS.filter((q) => q.lvl === m.lvl)); }
