@@ -608,7 +608,7 @@ window.THP = window.THP || {};
   /* ---------------- 13. Verse Builder — put the memory verse in order ---------------- */
   const VERSES = {
     1: [["God is love", "1 John 4:8"], ["The LORD is my shepherd", "Psalm 23:1"], ["Rejoice in the Lord always", "Philippians 4:4"], ["Be kind to one another", "Ephesians 4:32"], ["Love one another", "John 13:34"], ["Let your light shine", "Matthew 5:16"]],
-    2: [["Trust in the LORD with all your heart", "Proverbs 3:5"], ["Your word is a lamp for my feet", "Psalm 119:105"], ["Be strong and courageous. Do not be afraid", "Joshua 1:9"], ["This is the day the LORD has made", "Psalm 118:24"], ["I can do all this through him who gives me strength", "Philippians 4:13"], ["The LORD is my light and my salvation", "Psalm 27:1"]],
+    2: [["Trust in the LORD with all your heart", "Proverbs 3:5"], ["Your word is a lamp for my feet", "Psalm 119:105"], ["Be strong and courageous. Do not be afraid", "Joshua 1:9"], ["This is the day that the LORD has made", "Psalm 118:24"], ["I can do all this through him who gives me strength", "Philippians 4:13"], ["The LORD is my light and my salvation", "Psalm 27:1"]],
   };
   const verseBuilder = {
     id: "verse", name: "Verse Builder", icon: "🧱",
@@ -1085,7 +1085,7 @@ window.THP = window.THP || {};
       ["Creation week", ["☀️ Light", "☁️ Sky", "🌱 Land, seas & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"],
       ["Books of the Law", ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"], "Genesis–Deuteronomy"],
       ["New Testament start", ["Matthew", "Mark", "Luke", "John", "Acts", "Romans"], "Matthew–Romans"],
-      ["First plagues of Egypt", ["🌊 Water to blood", "🐸 Frogs", "🦟 Gnats", "🪰 Flies", "🐄 Livestock", "🤕 Boils"], "Exodus 7–9"],
+      ["First plagues of Egypt", ["🩸 Blood", "🐸 Frogs", "🦟 Gnats", "🪰 Flies", "🐄 Livestock", "🤕 Boils"], "Exodus 7–9"],
     ],
   };
   const inOrder = {
@@ -1126,7 +1126,7 @@ window.THP = window.THP || {};
   const lookBack = {
     id: "lookback", name: "Don't Look Back", icon: "🏃",
     verse: "Genesis 19:17, 26",
-    howto: (lvl) => `The angels told Lot's family: run and don't look back! Tap RUN wherever it pops up, ${lvl === 1 ? 10 : 14} times. Never tap LOOK BACK${lvl === 1 ? " (you get one warning)" : ""}.`,
+    howto: (lvl) => `Run from Sodom! Tap RUN wherever it pops up, ${lvl === 1 ? 10 : 14} times. Never tap LOOK BACK${lvl === 1 ? " (you get one warning)" : ""}, or you turn into a pillar of salt!`,
     async play(body, lvl) {
       const need = lvl === 1 ? 10 : 14;
       let warnings = lvl === 1 ? 1 : 0;
@@ -1161,7 +1161,7 @@ window.THP = window.THP || {};
             deal();
           } else if (c.dataset.kind === "look") {
             if (warnings > 0) { warnings--; S("wrong"); THP.ui.popText("DON'T LOOK!", "bad", c); deal(); return; }
-            S("wrong"); c.textContent = "OOPS! YOU LOOKED"; c.classList.add("salt"); end(false);
+            S("crumble"); c.textContent = "🧂"; c.classList.add("salt"); end(false);
           }
         }));
       });

@@ -173,6 +173,59 @@ Future: Barnabas voice lines (recorded or text-to-speech), more moods (surprised
   animated lamp flames in the HUD, a 3-2-1 countdown before every trial, and a roulette that picks the trial.
 - **Sound:** synthesized with Web Audio, so there are no audio files. There's a mute toggle and the setting is remembered.
 
+### Soundtrack: five jazz-funk tracks
+
+`js/music.js` plays live-synthesized music through the same AudioContext as the sound effects, at a level that sits
+under them. A lookahead scheduler runs a swung 16th-note grid. The band:
+- **Drums:** kick, snare with ghost notes, closed/open hats, ride, clap.
+- **Bass:** a filtered saw-and-sub bass that walks the chords with approach notes and dead-note "slaps."
+- **Keys and comping:** FM Rhodes, clav, a tonewheel-style organ.
+- **Melody:** a brass section and a square-wave lead.
+
+Arrangement:
+- The first pass has no melody.
+- Every other pass ends in a snare fill.
+- Every fourth pass is a drums-and-bass breakdown.
+- A generated room reverb and a compressor glue it together.
+
+| # | Track | Feel | Plays during |
+|---|---|---|---|
+| 1 | Manna Groove | 98 bpm D Dorian, Dm9–G13 vamp, clav and flute-ish lead | Title, menus, How to play, review |
+| 2 | Jericho Jump | 152 bpm triplet swing, F major ii–V, walking bass and trumpets | Questions, Versus pass screen |
+| 3 | Red Sea Shuffle | 126 bpm 12-bar A-minor blues shuffle on the organ | Trial Room, countdown, minigames |
+| 4 | Narrow Gate Breakdown | 116 bpm E-minor 16th-note funk, clav and horn hits | The final race |
+| 5 | Hallelujah Strut | 104 bpm Bb I–vi–ii–V strut with a horn hook | Results, scoreboards, champion |
+
+Behavior:
+- **Switching:** each screen picks its track in `THP.ui.show()` by the screen's class, and a change crossfades.
+- **Starting:** music begins on the first tap or key press, because browsers block sound before that.
+- **Pausing:** it pauses while the tab is hidden.
+- **Controls:**
+  - 🔊 mutes everything.
+  - 🎵 in the HUD turns music alone on or off (saved as `thp-music`).
+  - The title's **🎵 Music** button opens the Jukebox, which lists all five tracks to play.
+
+### Mode borders: easiest to hardest
+
+The title lists modes from easiest to hardest: Little Lambs, Mighty Warriors, Legends, Challenge Modes, then Versus.
+Every mode button wears a frame that gets grittier with difficulty (`css/grit.css`, loaded after every skin):
+
+| Grit | Mode | Frame |
+|---|---|---|
+| 1 | Little Lambs | Clean, rounded, thin |
+| 2 | Mighty Warriors | Slightly wobbly line, light grain |
+| 3 | Legends | Rougher line, tighter corners, grain and a little dirt |
+| 4 | Parable Pros | Thicker warped line, scratches |
+| 5 | Prophecy Hunters, Challenge Modes button | Heavy grain, scratches, first hairline cracks |
+| 6 | Scholars, Versus button | Square corners, strong warp, cracks from the corners |
+| 7 | Holy of Holies | Thickest, gold-tinged, most warped, cracked and scorched at the edges |
+
+How it's built:
+- **Frame line:** a pseudo-element, warped by SVG `feTurbulence` + `feDisplacementMap` filters in `index.html`.
+  Their strength grows with the grit level.
+- **Texture:** layered noise, dirt and scratch textures from data URIs.
+- **Skins:** the frame insets further in Victory Lobby, whose cards have angled corners.
+
 ### Victory Lobby skin (current default, preteen gamer)
 
 `css/loot.css`, layered over Holy Fire like Neon City. A bright video-game lobby: daylight-blue sky with drifting clouds,
@@ -230,7 +283,8 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 
 ## 7. Content guidelines
 
-- Questions come straight from the text, and each one carries a **reference** that someone has checked.
+- Questions come straight from the text, and each one carries a **reference** that someone has checked. Every item has
+  been through a two-pass fact check (see [CONTENT-SAFETY.md](CONTENT-SAFETY.md#fact-check)).
 - Translation-neutral wording (it works with NIV, ESV, NIrV, CSB, and KJV readers).
 - Avoid denominationally contested trivia (canon counts beyond the 27 New Testament books, dates, theology debates).
 - Distractors can be silly for Lambs ("Pizza") but plausible for Warriors.
@@ -248,6 +302,7 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
   or host the folder anywhere (GitHub Pages works). Scripts are classic (not modules), so the game even runs from `file://`.
   - `js/data.js`: questions, final prompts, host lines, verses
   - `js/audio.js`: synthesized sound effects
+  - `js/music.js`: the five-track synthesized soundtrack and Jukebox data
   - `js/core.js`: DOM helpers, host speech, timers, confetti, TV-remote navigation
   - `js/minigames.js`: Trial Room games (each is `play(container, level) → Promise<boolean>`)
   - `js/game.js`: the game flow
@@ -267,6 +322,6 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 |---|---|
 | **M0: Sketch** (done) | Full loop playable, 24 minigames, 3 levels, 140 questions, 50 final prompts, pass-and-play Versus |
 | M1: Content | 300+ questions reviewed by a children's ministry lead; fact cards with illustrations |
-| M2: Polish | Character animation pass, voice lines, music loop, 4 more minigames, Blessing Wheel |
+| M2: Polish | Character animation pass, voice lines, ~~music loop~~ (done: five tracks), 4 more minigames, Blessing Wheel |
 | M3: Ship | PWA/offline, read-aloud mode, parent page, app store builds |
 | M4: Party | Multiplayer with phones as controllers |

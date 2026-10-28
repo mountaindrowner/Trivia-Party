@@ -12,8 +12,18 @@
   <link rel="stylesheet" href="css/edge.css">
   <link rel="stylesheet" href="css/cyber.css" id="skin-cyber">
   <link rel="stylesheet" href="css/loot.css" id="skin-loot">
+  <link rel="stylesheet" href="css/grit.css">
 </head>
 <body>
+  <!-- Rough-edge filters for the mode borders (css/grit.css): more warp as the modes get harder. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="gf2" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="6"/><feDisplacementMap in="SourceGraphic" scale="1.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="gf3" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="9"/><feDisplacementMap in="SourceGraphic" scale="2.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="gf4" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="12"/><feDisplacementMap in="SourceGraphic" scale="3.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="gf5" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="3" seed="15"/><feDisplacementMap in="SourceGraphic" scale="4.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="gf6" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.14" numOctaves="3" seed="18"/><feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="gf7" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="3" seed="21"/><feDisplacementMap in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </svg>
   <div id="app">
     <div class="sky" aria-hidden="true"><div class="rays"></div><div class="glass"></div></div>
 
@@ -26,6 +36,7 @@
       <div class="hud-group">
         <span class="hud-pill" id="progress">1 / 8</span>
         <span class="hud-pill coin"><span class="coin-dot" aria-hidden="true"></span><span id="score">0</span></span>
+        <button class="hud-btn" id="music" aria-label="Music off">🎵</button>
         <button class="hud-btn" id="mute" aria-label="Mute">🔊</button>
       </div>
     </header>
@@ -80,6 +91,7 @@
   <script src="js/data.js"></script>
   <script src="js/data-modes.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/music.js"></script>
   <script src="js/core.js"></script>
   <script src="js/minigames.js"></script>
   <script src="js/game.js"></script>

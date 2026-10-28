@@ -1,139 +1,117 @@
 # Content Safety Review
 
-Trivia Holy Party is played by children from about 5 to 14+ in homes and churches. This file records the safety and
-appropriateness review of every piece of player-facing text, what changed, and what still needs a decision from a
-pastor or children's ministry leader.
+Trivia Holy Party is played by children from about 5 to 14+ in homes and churches. This file records the review
+of every piece of player-facing text: the content decisions, the theology and fact fixes, and the things a church may
+want to know before using it.
 
-## How the review was done
+## Decisions from the project owner
 
-1. Every child-facing string was extracted into one file. That covered:
-   - all 385 questions, with **every** wrong answer, Bible reference and lesson
-   - the 60 final-round prompts
-   - Barnabas's lines in all four voices, Versus lines and mode intros
-   - results verses, minigame instructions, stamps and button text
-2. Two independent full reads were done against the checklist below: one by the author, and one by a separate reviewer
-   that had only the text and the checklist (not the author's findings).
-3. Findings were merged. Facts and references were checked against the Bible text before changing anything.
-4. The text was re-extracted and scanned again for every flagged term after the fixes.
+After the first review, the owner made these calls. The game follows them:
 
-### Checklist
+- **Bible stories are told as the Bible tells them.** Ehud, Samson's jawbone and lion, Elisha and the bears, the plague
+  of blood, Lot's wife and martyrdom questions are all in the game. They aren't graphic, and they are part of the text.
+- **Barnabas teases the player.** Lines like "Too slow! Even a tortoise would have tapped by now" and "Don't choke" are
+  part of the host's personality. The DEFEATED and TOO SLOW stamps stay too.
+- **No extra child-protection notes on lessons.** The lessons for "turn the other cheek," "love your enemies" and
+  "keep forgiving" state what Jesus taught, with no added commentary.
+- **Theology and accuracy fixes stay** (below), including the change to the secret-mode unlock text.
 
-- **Violence, death, fear.** Fit the tone and detail to the age of the level. Note that the secret *Holy of Holies* mode can be
-  unlocked by a player of any age.
-- **Encouragement.** The host never mocks or shames a child for a wrong or slow answer. Teasing stays on the cartoon goat.
-- **Language.** No crude or double-meaning slang, nothing that shuts out girls (for example "bro"), no gambling terms.
-- **No teasing about bodies or looks.**
-- **Sexual content.** None, and no questions that point young kids toward passages they'd need an adult to explain.
-- **Alcohol and substances.** Flagged as judgment calls.
-- **Theology and respect.** No contested doctrine stated as fact, nothing irreverent, nothing that blames or stereotypes
-  Jewish people or other faiths.
-- **Accuracy.** A wrong "right answer," a misquote or an invented "fact" is treated as a safety problem, because the game teaches.
-- **Child protection.** Teachings like "turn the other cheek" must never read as "put up with being hurt."
+## Theology (acceptable across traditions)
 
-## What changed
-
-### Child protection
-- **"Turn the other cheek," "love your enemies," "keep forgiving."** Each lesson now adds that loving or forgiving someone
-  never means letting them keep hurting you, and to tell a trusted grown-up.
-
-### Violence, fear and death
-- **Removed:**
-  - Ehud's hidden-sword assassination of Eglon.
-  - Samson killing 1,000 Philistines with a jawbone, which had been played as a donkey joke.
-  - The Elisha "bald" question. It was a looks-based joke ("don't roast the prophet") about a passage that ends with bears
-    mauling 42 youths.
-- **Replaced with:**
-  - The prophetess Huldah.
-  - The angel announcing Samson's birth.
-  - Elisha and the widow's oil.
-- **Softened:**
-  - The Lambs lesson "Samson tore apart a lion" now says his strength came from God.
-  - Violent wrong answers ("Peter cutting off an ear," "Stephen being stoned") were replaced.
-  - "Killed for his faith" became "gave his life for his faith."
-  - "Even while dying" became "Even on the cross."
-- **Don't Look Back minigame:**
-  - The "turn into a pillar of salt" game-over and the salt-shaker icon are gone.
-  - The instructions now say: "The angels told Lot's family: run and don't look back!"
-- **Lose stamp:** "DEFEATED" is now "SO CLOSE!"
-- **Plagues ordering game:** the blood emoji is gone ("🌊 Water to blood").
-
-### Host lines that put kids down
-- **Replaced:**
-  - "Not even close, my guy."
-  - "That answer needs to be held accountable."
-  - "The clock beat you. Even the clock."
-  - "Frozen like Lot's wife," a joke about her death.
-  - "Don't choke," three times.
-  - "Too slow! Even a tortoise would have tapped by now."
-  - "Close! Well, not that close."
-  - "Keep up."
-  - "You *actually* did it" and the other "actually" lines, which imply the player wasn't expected to win.
-  - "Not Barnabas? Rude."
-- **Stamp:** "TOO SLOW" is now "TIME'S UP."
-
-### Slang
-- **"Bro":** four lines, all changed. Girls play too, and Victory Lobby is the default skin, so its voice is what 5–8-year-olds hear.
-- **"Sweaty"** (gamer slang that reads as a body comment): changed in two lines.
-- **"Cracked"** (it has a drug double meaning to parents): changed in two lines.
-- **"Took the L":** changed.
-- **"Legendary pull":** it's loot-box gambling language, now "Legendary answer."
-- **"No mercy":** now "No hints, no help."
-
-### Looks, bodies and sensitive topics
-- **Zacchaeus:** "Which short man climbed a tree" became "Who climbed a tree to see Jesus over the crowd?"
-- **Hosea:** "Which prophet was told to marry Gomer?" (an unfaithful-wife passage) was replaced with Hosea 11, God teaching
-  His child to walk.
-- **Hannah:** "the priest thought she was drunk" became "the priest misunderstood her."
-- **Nebuchadnezzar:** "lost his mind" became "When God humbled King Nebuchadnezzar."
-- **Wording:**
-  - "The disabled" became "people with disabilities."
-  - "Humbles himself" became "is humble."
-  - "Fishers of Men" became "Fishers of People," which matches the game's own answer.
-
-### Theology (made acceptable across traditions)
 - **Baptism:** no longer says it only "pictures" salvation. It now follows Peter's own wording (1 Peter 3:21).
-- **Isaiah 53:** the lesson now quotes Isaiah and Peter instead of stating one theory of the atonement.
-- **The secret-mode unlock** no longer suggests that winning games "opens the way to God." It now says the way is open
-  "because of Jesus, not because of anything we do."
-- **Lost Sheep lines:** the Shepherd comes looking for you, and answering only "gets you back in the game." Rescue is no
-  longer something you earn.
-- **Lesser fixes:**
+- **Isaiah 53:** the lesson quotes Isaiah and Peter instead of stating one theory of the atonement.
+- **The secret-mode unlock** no longer suggests that winning games "opens the way to God." The way is open
+  "because of Jesus, not because of anything we do" (Hebrews 10:19–20).
+- **Lost Sheep lines:** the Shepherd comes looking for you, and answering only "gets you back in the game." Rescue is
+  never something you earn.
+- **Smaller fixes:**
   - "Jesus is the Lion King" became "Jesus is that King."
   - "Matthew wrote for Jewish readers," stated as fact, was softened.
   - "Malachi is the last book" now says "in Christian Bibles."
   - "Respected fathers didn't run" now says "in that culture."
   - Purim: "attack the Jews" became "harm the Jewish people. Esther's courage saved them."
-  - Jacob's favoritism toward Rachel's sons is now named as the cause of jealousy, instead of presented approvingly.
+  - Jacob's favoritism toward Rachel's sons is named as the cause of the brothers' jealousy.
 
-### Accuracy fixes
+## Wording kept from the first review
+
+- **Gamer slang:**
+  - "Bro," "sweaty" and "cracked" were swapped for words that work for every player.
+  - "Legendary pull" became "Legendary answer."
+  - "No mercy" became "No hints, no help."
+- **Zacchaeus, Hannah, Nebuchadnezzar:**
+  - Zacchaeus: "Who climbed a tree to see Jesus over the crowd?"
+  - Hannah: "the priest misunderstood her."
+  - Nebuchadnezzar: "When God humbled King Nebuchadnezzar."
+- **Hosea:** the question about Hosea 11 (God teaching His child to walk) replaced the one about Gomer.
+- **Other wording:**
+  - "People with disabilities" replaced "the disabled."
+  - "Fishers of People" replaced "Fishers of Men."
+  - Name fields say "Nickname or first name."
+
+## Fact check
+
+Every question, wrong answer, reference, lesson, final-round option, verse and minigame list was checked against the
+Bible text (NIV/ESV) in two passes. The first pass was by the author. The second was by four independent reviewers, one
+per section of the content. Each had only the text, with this rule: the right answer must be right, no wrong answer can
+be arguably right, the reference must contain the fact, and lessons and quotes must be accurate.
+
+**First pass:**
 - **David** was the youngest of Jesse's eight sons. The game had said "of eight brothers," but he had seven.
-- **Day Jesus rose:** a Warriors question listed "the first day" as a wrong answer, which contradicted a Lambs question.
-  The wrong answer is now "the second day."
-- **Creation week:** the seas are gathered on day 3, not day 2.
+- **Day Jesus rose:** a wrong answer said "the first day," which is actually right. It's now "the second day."
+- **Creation week:** the seas are gathered on day 3.
 - **Daniel** was taken to Babylon years before 586 BC.
 - **The Septuagint** was begun about 250 years before Jesus.
-- **Age 30:** priests began serving at 30 (Numbers 4:3) and David became king at 30. There was no "kings at 30" rule.
-- **Levi:** the tribe "served God at the tabernacle." Only Aaron's family were priests.
 - **The two good spies** were the only two *from their generation* to enter the land.
-- **Moses** appeared with Jesus at the Transfiguration. The claim that he "stood in the land" was an inference and was removed.
-- **Esther** is now asked "Which of these books never mentions God?", since Song of Songs doesn't either.
-- **A wrong answer that was arguably true** ("That He was a servant forever") was replaced.
-- **Eutychus:** "when Paul preached too long" became "while Paul preached late into the night."
+- **Moses** appeared with Jesus at the Transfiguration. The claim that he "stood in the land" was removed.
+- **Esther** is now "Which of these books never mentions God?", because Song of Songs doesn't either.
+- **Eutychus** fell asleep "while Paul preached late into the night."
+- **Ehud's** lesson matches Judges 3:16: a short sword strapped to his right thigh, under his clothes.
 
-## Kept on purpose (please review)
+**Second pass:**
 
-These are biblical and handled gently, but a pastor may decide differently for their kids:
-
-| Item | Where | Why it was kept |
+| Where | Was | Now |
 |---|---|---|
-| Water into wine | Little Lambs | It is Jesus' first miracle, and most curricula teach it. Some families may prefer it in 9–12. |
-| "Well done, good and faithful servant!" for winning a race | All voices | It's a happy, well-known phrase, but it comes from a parable about faithfulness and judgment. |
-| Stephen's stoning, James giving his life, Belshazzar's kingdom falling | Legends / secret mode | Kept non-graphic and true to Scripture. |
-| Rahab in Jesus' family tree; "acts of the flesh" (Galatians 5) | Secret mode | The text itself is clean. A curious kid who looks them up will find adult topics. The secret mode realistically needs Scholars (14+) beaten first. |
-| Lot escaping Sodom; Delilah; Nathan confronting David | Legends / Warriors / Prophecy | No details are given. Same look-it-up consideration. |
-| "Virgin" in Isaiah 7:14 prophecy questions | Prophecy Hunters (12+) | Standard Christmas teaching. |
-| Battle-royale / video-game look (Victory Lobby) | Default skin | Generic, with no brand names, but some families restrict those games. The Holy Fire and Neon City skins are a tap away. |
-| Mild gamer slang ("no cap," "W," "GG," "AFK," "sheesh") | Lobby / Neon City voices | Clean and common with preteens. Easy to swap in `js/data.js`. |
+| Legends | "Annas" was a wrong answer for "high priest at Jesus' trial," but Luke 3:2 and Acts 4:6 call Annas high priest too | Gamaliel |
+| Legends | "Pray continually." and "Rejoice always." are two-word verses, so they competed with "Jesus wept." for shortest verse | Longer verses as the wrong answers |
+| Scholars | "Priests began serving at 30" (Numbers 4:3 is about Levites) | "Levites began serving at the tabernacle at 30" |
+| Holy of Holies | "Abraham had no children yet" when renamed (Ishmael was 13) | "Isaac, the promised son, hadn't been born yet" |
+| Holy of Holies | "Titus" was a wrong answer for "my true son in the faith" (Titus 1:4 says nearly the same) | The question names 1 Timothy; the wrong answer is Apollos |
+| Holy of Holies | "Paul and Barnabas" → "Zeus and Hermes" (reversed: Barnabas was Zeus) | "Barnabas and Paul" |
+| Holy of Holies | Josiah "found" the Book of the Law (Hilkiah found it) | "in whose reign the Book of the Law was found" |
+| Holy of Holies | Wrong answer "His father worshiped Baal" was partly true (Judges 6:25) | "He was a priest of Baal" |
+| Warriors | Samson's strength "came from his vow" (he was set apart from birth) | "set apart to God from birth … His strength came from God" |
+| Warriors | Mordecai "said she became queen for such a time as this" (he asked it as a question) | His actual question, quoted |
+| Prophecy | "The Bible ends with 'Come, Lord Jesus'" (a blessing follows) | "Right before its final blessing…" |
+| Scholars | Nineveh called "Assyria's capital" in Jonah's day (it became the capital later) | "a great Assyrian city" |
+| Lambs | Jesus walked on water "in the middle of the night" (Matthew: shortly before dawn) | "during the night, just before dawn" |
+| Lambs | The disciples asking how to pray is in Luke, not Matthew | Both references, with the request quoted |
+| Results verse | Psalm 119:105 had an extra "and" | Matches the NIV |
+
+**References** were widened where a lesson quoted the next verse:
+- 1 Kings 3:9–13 (Solomon's riches)
+- 1 Samuel 18:1–4 (Jonathan's robe)
+- 1 Samuel 17:4–5 (Goliath's armor)
+- Acts 18:3 with 1 Thessalonians 2:9 (Paul's tentmaking)
+- Luke 2:42–49 (Jesus in the temple)
+- Deuteronomy 34:1–6 (Moses' unknown grave)
+- Lamentations 1:1 with 2 Chronicles 35:25 (Jeremiah's authorship)
+
+**Quotes:**
+- Mark 10:27 now matches the NIV: "All things are possible with God."
+- Psalm 118:24 in the verse builder now matches the ESV.
+
+## Things a church may want to know
+
+These are all biblical and non-graphic. Some families or churches may choose differently for their youngest kids:
+
+| Item | Where |
+|---|---|
+| Ehud and Eglon, Samson's jawbone, Elisha and the bears, Stephen's stoning, James killed by Herod | Warriors, Legends, secret mode |
+| Lot's wife and the pillar of salt, in Don't Look Back | Minigame, all ages |
+| Water into wine | Little Lambs |
+| Barnabas teasing slow or wrong answers | All voices |
+| Battle-royale video-game look (Victory Lobby, the default skin) | Holy Fire and Neon City are a tap away |
+| Mild gamer slang ("no cap," "W," "GG," "AFK," "sheesh," "took the L") | Lobby and Neon City voices, editable in `js/data.js` |
 
 ## Privacy
 
@@ -154,13 +132,11 @@ These are biblical and handled gently, but a pastor may decide differently for t
 - **Flicker:** flickering effects (the Trial Room sign, the hologram host, the logo glitch) flash fewer than 3 times per
   second, under the usual photosensitivity threshold. They should still be checked by someone familiar with
   photosensitive kids before wide use.
-- **Sound:** every sound can be turned off with the mute button, and the setting is remembered.
+- **Sound:** the mute button silences everything, sound effects and music, and the setting is remembered. The 🎵 button
+  (and the Jukebox) turns off just the music.
 
 ## Adding content later
 
-Follow the checklist above. In particular:
-- Every question needs a reference and a lesson that is true to the text.
+- Every question needs a reference that contains the fact, and a lesson that is true to the text.
 - Wrong answers must be clearly wrong, never "arguably right."
-- Host lines encourage the player and never mock them.
-- Anything violent stays non-graphic and fits the level's ages.
 - Test any new mode at phone width before shipping.

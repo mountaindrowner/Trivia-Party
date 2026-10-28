@@ -114,13 +114,15 @@ window.THP = window.THP || {};
 
   /* ---------- Title ---------- */
   /** One row in the Game Modes menu: icon, name, age line and a plain one-line description of what it is. */
-  function modeRow(cls, onclick, icon, name, sub, desc) {
-    return el("button", { class: cls + " mode-row", onclick },
+  function modeRow(cls, onclick, icon, name, sub, desc, grit) {
+    return el("button", { class: cls + " mode-row grit grit-" + grit, onclick }, grime(),
       el("span", { class: "level-icon", "aria-hidden": "true" }, icon),
       el("span", { class: "row-text" },
         el("span", { class: "row-head" }, el("strong", {}, name), el("small", {}, sub)),
         el("span", { class: "card-desc" }, desc)));
   }
+  /** Texture layer for a .grit frame. Borders get grittier as the modes get harder (css/grit.css). */
+  const grime = () => el("span", { class: "grime", "aria-hidden": "true" });
   function titleScreen() {
     $("#hud").hidden = true;
     setMood("happy");
@@ -130,7 +132,7 @@ window.THP = window.THP || {};
     const levelBtn = (lvl) => {
       const cfg = LEVELS[lvl];
       return modeRow("level-card lvl-" + lvl, () => start(lvl, nameInput.value.trim()), cfg.icon, cfg.name,
-        cfg.ages + (done.has(lvl) ? " · ✓ Beaten" : ""), cfg.desc);
+        cfg.ages + (done.has(lvl) ? " · ✓ Beaten" : ""), cfg.desc, lvl);
     };
     const beatenCount = UNLOCK_NEEDS.filter((l) => done.has(l)).length;
     // Two groups so big screens can lay the title out side by side: brand on the left, play options on the right.
@@ -145,26 +147,28 @@ window.THP = window.THP || {};
         loot: "8 questions · 24 trials · 1 gate · Get the Victory",
       })[THP.ui.skin()] || "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       xpCard(store.get("thp-xp", 0)),
-      el("div", { class: "name-row" }, nameInput)),
+      el("div", { class: "name-row" }, nameInput),
+      best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null),
       el("div", { class: "title-play" },
       el("h2", { class: "section-label" }, "Game Modes"),
       el("p", { class: "section-help" }, "Every game: 8 Bible questions, a minigame when you miss, and a final race. Pick one:"),
-      el("div", { class: "mode-list" }, levelBtn(3), levelBtn(2), levelBtn(1),
+      // Easiest to hardest, top to bottom.
+      el("div", { class: "mode-list" }, levelBtn(1), levelBtn(2), levelBtn(3),
         modeRow("versus-card challenge-card", () => modesScreen(nameInput.value.trim()), isUnlocked() ? "✨" : "🎯", "Challenge Modes",
           isUnlocked() ? "Holy of Holies unlocked!" : `Ages 10+ · secret mode ${beatenCount}/6 🔒`,
-          "Harder kinds of questions: what Jesus taught, prophecy and Bible history."),
+          "Harder kinds of questions: what Jesus taught, prophecy and Bible history.", 5),
         modeRow("versus-card", () => THP.versus.setup(), "⚔️", "Versus", "2–4 players · one device",
-          "Take turns on the same challenge with your friends. Highest score wins.")),
+          "Take turns on the same challenge with your friends. Highest score wins.", 6)),
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
+        el("button", { class: "btn btn-ghost", onclick: jukebox }, "🎵 Music"),
         el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look", onclick: () => {
           S("tap");
           THP.ui.applySkin(THP.ui.nextSkin());
           THP.state = null; // title lines follow the skin, not the last game's level
           titleScreen();
           $("#skin-btn").focus();
-        } }, "Skin: " + THP.ui.skinName()),
-        best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null)));
+        } }, "Skin: " + THP.ui.skinName()))));
     show(node, { scene: "title" });
     $(".level-card", node).setAttribute("data-autofocus", "");
     THP.ui.focusFirst(node);
@@ -191,6 +195,41 @@ window.THP = window.THP || {};
     titleScreen();
   }
 
+  /* ---------- Jukebox ---------- */
+  function jukebox() {
+    S("tap");
+    THP.Music.unlock();
+    const M = THP.Music;
+    const rows = M.TRACKS.map((tr, i) => el("button", {
+      class: "track-row" + (M.playing() === tr.id ? " on" : ""), "data-track": tr.id,
+      onclick: () => {
+        if (!M.isOn()) M.toggle();
+        M.play(tr.id);
+        sync();
+        say(`Now playing: ${tr.name}. ${tr.vibe}!`);
+      },
+    },
+      el("span", { class: "track-num", "aria-hidden": "true" }, String(i + 1)),
+      el("span", { class: "track-text" }, el("strong", {}, tr.name), el("small", {}, `${tr.vibe} · ${tr.bpm} bpm · plays during: ${tr.plays}`)),
+      el("span", { class: "track-eq", "aria-hidden": "true" }, el("i"), el("i"), el("i"), el("i"))));
+    const toggle = el("button", { class: "btn btn-ghost", onclick: () => { M.toggle(); sync(); $("#music").classList.toggle("off", !M.isOn()); } });
+    const note = el("p", { class: "fine" });
+    function sync() {
+      toggle.textContent = M.isOn() ? "Music: On" : "Music: Off";
+      rows.forEach((r) => r.classList.toggle("on", M.isOn() && M.playing() === r.dataset.track));
+      note.textContent = THP.Sound.isMuted() ? "Sound is muted. Unmute (🔊) during a game to hear the music." : "Each part of the game has its own track. Tap one to play it.";
+    }
+    const node = el("section", { class: "jukebox" },
+      el("p", { class: "eyebrow" }, "Original soundtrack"),
+      el("h2", { class: "screen-title" }, "Jukebox"),
+      el("div", { class: "track-list" }, ...rows),
+      note,
+      el("div", { class: "btn-row" }, toggle, el("button", { class: "btn btn-ghost", onclick: titleScreen }, "Back")));
+    sync();
+    show(node, { scene: "title" });
+    say("Funky! Pick a track.");
+  }
+
   /* ---------- Challenge Modes ---------- */
   function modesScreen(name) {
     S("tap");
@@ -203,7 +242,7 @@ window.THP = window.THP || {};
       const [got, total] = learnedCount(lvl);
       const locked = cfg.secret && !open;
       return el("button", {
-        class: "mode-card mode-" + lvl + (locked ? " locked" : "") + (done.has(lvl) ? " beaten" : ""),
+        class: "mode-card mode-" + lvl + " grit grit-" + lvl + (locked ? " locked" : "") + (done.has(lvl) ? " beaten" : ""),
         "aria-disabled": locked ? "true" : null,
         onclick: () => {
           if (!locked) return start(lvl, name);
@@ -211,6 +250,7 @@ window.THP = window.THP || {};
           say(`Locked! Win the Narrow Gate in all six modes to open it. You've beaten ${UNLOCK_NEEDS.filter((l) => done.has(l)).length} of 6.`, { mood: "worried" });
         },
       },
+        grime(),
         el("span", { class: "mode-icon", "aria-hidden": "true" }, locked ? "🔒" : cfg.icon),
         el("span", { class: "mode-body" },
           el("strong", {}, locked ? "??? Secret Mode" : cfg.name),
@@ -336,7 +376,7 @@ window.THP = window.THP || {};
       if (st.streak >= 2) popText("STREAK LOST", "bad", $("#streak"));
       st.streak = 0;
       renderHud();
-      stamp(chosen < 0 ? "TIME'S UP" : "MISS", "bad");
+      stamp(chosen < 0 ? "TOO SLOW" : "MISS", "bad");
       setMood("worried");
     }
 
@@ -542,7 +582,7 @@ window.THP = window.THP || {};
     }
 
     const won = you >= GATE;
-    if (won) { addScore(2000); stamp("VICTORY", "good"); } else stamp("SO CLOSE!", "bad");
+    if (won) { addScore(2000); stamp("VICTORY", "good"); } else stamp("DEFEATED", "bad");
     await sleep(900);
     await results(won);
   }
@@ -636,9 +676,16 @@ window.THP = window.THP || {};
   function boot() {
     const mute = $("#mute");
     const sync = () => { mute.textContent = THP.Sound.isMuted() ? "🔇" : "🔊"; mute.setAttribute("aria-label", THP.Sound.isMuted() ? "Unmute" : "Mute"); };
-    mute.addEventListener("click", () => { THP.Sound.toggle(); sync(); });
+    mute.addEventListener("click", () => { THP.Sound.toggle(); sync(); THP.Music.refresh(); });
     sync();
-    document.addEventListener("pointerdown", () => THP.Sound.unlock(), { once: true });
+    const music = $("#music");
+    const syncMusic = () => { music.classList.toggle("off", !THP.Music.isOn()); music.setAttribute("aria-label", THP.Music.isOn() ? "Music off" : "Music on"); };
+    music.addEventListener("click", () => { THP.Music.toggle(); syncMusic(); });
+    syncMusic();
+    // Browsers only allow sound after the player interacts with the page.
+    const unlock = () => { THP.Sound.unlock(); THP.Music.unlock(); };
+    document.addEventListener("pointerdown", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
     THP.ui.applySkin(THP.ui.skin());
     THP.ui.embers();
     THP.ui.cityscape();

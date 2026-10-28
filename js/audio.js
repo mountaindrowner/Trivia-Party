@@ -91,6 +91,8 @@ THP.Sound = (function () {
   return {
     play(name) { try { fx[name] && fx[name](); } catch (e) {} },
     unlock() { ac(); },
+    /** The shared AudioContext (created on first use), so the music can play through it too. */
+    context: () => ac(),
     isMuted: () => muted,
     toggle() {
       muted = !muted;

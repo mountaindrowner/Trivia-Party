@@ -146,7 +146,7 @@ body { font-weight: 700; }
 .howto-list strong { font-size: 1.5rem; color: var(--amber); }
 .title-screen { gap: 0.8rem; }
 .title-foot { gap: 0.6rem; }
-.title-foot .btn { font-size: 1.1rem; min-height: 2.3rem; padding: 0.35rem 1.2rem 0.3rem; }
+.title-foot .btn { font-size: 1rem; min-height: 2.2rem; padding: 0.3rem 0.9rem 0.25rem; }
 .skin-btn { font-size: 1.05rem !important; }
 
 /* XP card */

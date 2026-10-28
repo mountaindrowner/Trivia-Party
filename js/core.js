@@ -45,6 +45,7 @@ THP.ui = (function () {
     s.replaceChildren(node);
     s.scrollTop = 0; // every screen starts at the top
     s.dataset.scene = (opts && opts.scene) || "";
+    if (THP.Music) THP.Music.forNode(node); // each screen picks its track
     node.classList.add("enter");
     requestAnimationFrame(() => focusFirst(node));
     return node;

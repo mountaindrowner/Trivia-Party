@@ -16,7 +16,8 @@ python3 -m http.server 8000
 
 ## What's in the sketch
 
-- 3 levels: **Legends** (13+), **Mighty Warriors** (ages 9–12) and **Little Lambs** (ages 5–8)
+- 3 levels, listed easiest to hardest: **Little Lambs** (ages 5–8), **Mighty Warriors** (ages 9–12) and **Legends** (13+).
+  Each mode's border gets grittier as the difficulty rises (`css/grit.css`).
 - 8 questions per game from a bank of 385, each with a scripture reference and a lesson
 - **Challenge Modes** with harder kinds of questions: Parable Pros (what Jesus' teachings mean, 64), Prophecy Hunters
   (promise → fulfillment, 60), Scholars (languages, places, history, 60), plus the secret **Holy of Holies** (61),
@@ -35,10 +36,13 @@ python3 -m http.server 8000
 - Three skins, cycled on the title screen: **Victory Lobby** video-game lobby (`css/loot.css`, default, rarity colors and a
   kid-gamer host), **Neon City** cyberpunk (`css/cyber.css`) and **Holy Fire** esports (`css/edge.css`)
 - XP, levels and ranks (Bronze → Champion) that build up across solo games
-- Synthesized sound, responsive phone and TV layouts, best score saved on the device
+- Five synthesized jazz-funk tracks: Manna Groove, Jericho Jump, Red Sea Shuffle, Narrow Gate Breakdown and Hallelujah
+  Strut. Each part of the game has its own, and the Jukebox on the title screen plays any of them. 🎵 toggles music,
+  and 🔊 mutes everything.
+- Synthesized sound effects, responsive phone and TV layouts, best score saved on the device
 
-All player-facing text has been through a child-safety review; see [CONTENT-SAFETY.md](CONTENT-SAFETY.md) for what was checked,
-what changed, and the judgment calls left for a pastor or children's ministry leader.
+All player-facing text has been through a content review and a two-pass fact check against the Bible text. See
+[CONTENT-SAFETY.md](CONTENT-SAFETY.md) for the decisions, every fix, and notes for churches.
 
 See [DESIGN.md](DESIGN.md) for the full game design, the mapping from *Trivia Murder Party*, the art direction, and the roadmap.
 
