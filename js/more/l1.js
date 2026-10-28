@@ -113,14 +113,14 @@ THP.QUESTIONS.push(
   { lvl: 1, cat: "Jesus Said", q: "Jesus said, \"Come to me... and I will give you...\"", a: ["rest", "homework", "chores", "a haircut"], ref: "Matthew 11:28–29", fact: "Jesus said He is gentle and humble in heart." },
 
   // ---------- Easter Week ----------
-  { lvl: 1, cat: "Easter Week", q: "At the Last Supper, Jesus shared bread and a...", a: ["cup", "kite", "cookie", "shoe"], ref: "Luke 22:19–20", fact: "Jesus said, \"Do this in remembrance of me.\"" },
+  { lvl: 1, cat: "Easter Week", q: "At the Last Supper, Jesus shared bread and a...", a: ["cup", "kite", "ball", "shoe"], ref: "Luke 22:19–20", fact: "Jesus said, \"Do this in remembrance of me.\"" },
   { lvl: 1, cat: "Easter Week", q: "Who rolled the stone away from Jesus' tomb?", a: ["An angel", "A strong soldier", "A big elephant", "A shepherd boy"], ref: "Matthew 28:2, 6", fact: "The angel said, \"He is not here; he has risen, just as he said.\"" },
   { lvl: 1, cat: "Easter Week", q: "Near the empty tomb, who thought Jesus was the gardener?", a: ["Mary Magdalene", "Pontius Pilate", "Zacchaeus", "Goliath"], ref: "John 20:14–16", fact: "When Jesus said her name, \"Mary,\" she knew it was Him!" },
   { lvl: 1, cat: "Easter Week", q: "After He rose, what did Jesus cook for His friends by the lake?", a: ["Fish and bread", "Pancakes", "Hot dogs", "Spaghetti"], ref: "John 21:9–12", fact: "Jesus said, \"Come and have breakfast.\"" },
 
   // ---------- Jesus' Friends ----------
   { lvl: 1, cat: "Jesus' Friends", q: "After meeting Jesus, what did Zacchaeus give to the poor?", a: ["Half of what he owned", "One old sock", "His tree", "A single penny"], ref: "Luke 19:8–9", fact: "He also promised to pay back four times what he had cheated anyone." },
-  { lvl: 1, cat: "Jesus' Friends", q: "What did Mary pour on Jesus' feet?", a: ["Perfume", "Lemonade", "Sand", "Paint"], ref: "John 12:3", fact: "The whole house was filled with the sweet smell." },
+  { lvl: 1, cat: "Jesus' Friends", q: "What did Mary, the sister of Lazarus, pour on Jesus' feet?", a: ["Perfume", "Lemonade", "Sand", "Paint"], ref: "John 12:3", fact: "The whole house was filled with the sweet smell." },
 
   // ---------- Church Begins ----------
   { lvl: 1, cat: "Church Begins", q: "What flashed around Saul on the road to Damascus?", a: ["A light from heaven", "A big dragon", "A parade", "A swarm of bees"], ref: "Acts 9:3–6", fact: "Jesus spoke to Saul, and Saul's life was changed forever." },

@@ -138,6 +138,54 @@ Bible are hedged with "about" or attributed to a source:
 - The Taylor Prism.
 - Translation dates (Wycliffe, Tyndale, Erasmus, Luther).
 
+## Second full safety review (all 1,150 questions and every line of text)
+
+After the expansion, every player-facing line was re-read for safety and appropriateness by eight reviewers working in
+parallel: one per mode, plus one for the final-race prompts, host lines, Story Scene script, Daily Challenge and
+Holiday Rush text. Each worked from the owner's decisions above, so the cases already ruled fine were not re-flagged:
+biblical violence told plainly, Barnabas's teasing, and no added child-protection notes.
+
+**Result:**
+- **Must fix:** nothing. A keyword sweep for sexual, gory, crude and insulting terms found nothing either.
+- **Applied:** 45 smaller fixes.
+
+**Fairness to Jewish people:**
+- Good Samaritan: "the religious leaders kept their distance" became "a priest and a Levite walked past."
+- The tenants parable: the lesson now names the listeners (Matthew 21:45) and widens the warning to everyone.
+- Stephen: "the people's ancestors" became "the council's ancestors." The lesson notes Stephen was a Jewish believer
+  speaking like the prophets.
+- Two wrong answers that made Jewish observance look trivial (handwashing, Sabbath walking) were replaced.
+- "So they will follow strict rules" is no longer a decoy for Jesus' "life to the full."
+
+**Across traditions:**
+- Disputed dates are hedged: Isaiah 53 "centuries before," Isaiah naming Cyrus, Psalm 22.
+- Mark's authorship is "early church tradition."
+- "His brothers" is no longer a decoy at the cross (it touches Catholic and Orthodox belief about Mary).
+- Catholic and Orthodox Old Testament counts are mentioned.
+- The Dead Sea Scrolls question is limited to the Hebrew Bible.
+- "Juice" is no longer a wrong answer at Cana.
+- "A crowd cheering us on" became the actual words of Hebrews 12:1.
+
+**Reverence and age:**
+- "Cookie" next to the Last Supper bread is now "ball."
+- Joseph and Mary are no longer offered as the lying couple of Acts 5.
+- "Undergarment" became "tunic."
+- A clue describing how King Zimri took his own life was replaced.
+- A question that sent kids to the childbirth-purification law now asks about Mary and Joseph's offering in Luke 2.
+- The "sons of David" prompt (seen from age 9) swaps Amnon for Adonijah.
+- Thanksgiving's "Rolling your eyes at Mom" became "at a grown-up," so it doesn't assume a family.
+
+**Trick wrong answers:**
+- "Eating vegetables" for Daniel (he did, Daniel 1).
+- "King" and "Teacher" for "I am the Good ___."
+- Moses as "not Abraham's family" (he's a descendant).
+- "The Samaritans" for "didn't believe in resurrection" (arguably true).
+
+**Kept on purpose (owner's decisions):**
+- Samson "tore apart a lion" (Lambs).
+- Elisha "don't roast the prophet" (Legends).
+- "Not even close, my guy." It's the one host line that uses a gendered address; swap it in `js/data.js` if you'd like.
+
 ## Things a church may want to know
 
 These are all biblical and non-graphic. Some families or churches may choose differently for their youngest kids:
@@ -150,6 +198,15 @@ These are all biblical and non-graphic. Some families or churches may choose dif
 | Barnabas teasing slow or wrong answers | All voices |
 | Battle-royale video-game look (Victory Lobby, the default skin) | Holy Fire and Neon City are a tap away |
 | Mild gamer slang ("no cap," "W," "GG," "AFK," "sheesh," "took the L") | Lobby and Neon City voices, editable in `js/data.js` |
+| Wine at Cana is the right answer | Little Lambs |
+| Translations differ: Isaiah 7:14 "virgin" vs "young woman"; NIV vs ESV wording in a few answers | Prophecy Hunters and others |
+| Baptism (1 Peter 3:21) and "born again" are quoted, not explained; traditions explain them differently | Prophecy Hunters, Parable Pros |
+| Galatians 4's Hagar and Sarah allegory, historically misused for "replacement" teaching | Prophecy Hunters |
+| Pharisees appear often as Jesus' opponents; some followed Him (Nicodemus, Acts 15:5) | Parable Pros |
+| "Many are invited, but few are chosen"; Malachi's tithe promise | Parable Pros, Legends |
+| Elijah's "I have had enough" (1 Kings 19:4, where he asks to die) | Legends |
+| Some reference ranges include harder verses a curious teen may read: Saul in the cave (1 Samuel 24:3), David dancing (2 Samuel 6:20), Herod "eaten by worms" (Acts 12:23), the tassels law (Numbers 15:39) | All levels |
+| Giant Problem plays Goliath's fall as slapstick ("TIMBERRR") and leaves out the beheading (1 Samuel 17:51) | Story Scenes |
 
 ## Privacy
 

@@ -54,7 +54,7 @@ THP.Holiday = (function () {
 
   /* ---------- Thanksgiving: Goodbye, Grumbles! (Philippians 2:14; 1 Thessalonians 5:18) ---------- */
   const THANKFUL = ["Saying thank you for dinner", "Thanking God for a sunny day", "Writing a thank-you note", "Praying \"Thank you, God!\"", "Sharing your snack", "Singing a praise song", "Cheering when a friend wins", "Thanking your teacher", "Helping clean up with a smile", "Thanking God for your family"];
-  const GRUMBLY = ["Whining about chores", "Complaining about dinner", "Pouting when you lose", "Grumbling about the rain", "Rolling your eyes at Mom", "Moaning about homework", "Sulking in the car", "Saying \"That's not fair!\" all day", "Huffing when it's bedtime"];
+  const GRUMBLY = ["Whining about chores", "Complaining about dinner", "Pouting when you lose", "Grumbling about the rain", "Rolling your eyes at a grown-up", "Moaning about homework", "Sulking in the car", "Saying \"That's not fair!\" all day", "Huffing when it's bedtime"];
   const grumbles = {
     id: "grumbles", name: "Goodbye, Grumbles!", icon: "🐐", verse: "1 Thessalonians 5:18",
     howto: (lvl) => `Grumbles the Goat loves complaining. Sort each one: THANKFUL or GRUMBLY? Get ${lvl === 1 ? 6 : 8} right. 3 mistakes and Grumbles wins.`,
