@@ -433,21 +433,52 @@ THP.Scenes = (function () {
     D.next();
   }
 
+  /* ---------- Milestones ----------
+     Scene 1 hooks a new player on their first win. After that, every new rank unlocks the next scene, so they come
+     quickly at first and then spread out (about 1,000 XP per solo game):
+     Silver L5 ≈ game 3 · Gold L10 ≈ game 8 · Platinum L15 ≈ game 16 · Diamond L20 ≈ game 27 · Champion L30 ≈ game 57.
+     Every scene gets its own art style. Milestones without a finished scene show as "in production". */
   const LIST = [
-    { id: "giant", ep: 1, title: "Giant Problem", sub: "David and Goliath", ref: "1 Samuel 17", icon: "🪨", wins: 1,
+    { id: "giant", ep: 1, need: { wins: 1 }, style: "Saturday-morning cartoon",
+      title: "Giant Problem", sub: "David and Goliath", ref: "1 Samuel 17", icon: "🪨",
       lesson: "David wasn't brave because he was big. He knew God was bigger.", verse: ["The battle is the LORD's.", "1 Samuel 17:47"], play: giant },
+    { id: "s2", ep: 2, need: { lvl: 5, rank: "Silver" }, style: "Paper cut-out" },
+    { id: "s3", ep: 3, need: { lvl: 10, rank: "Gold" }, style: "8-bit pixel art" },
+    { id: "s4", ep: 4, need: { lvl: 15, rank: "Platinum" }, style: "Clay stop-motion" },
+    { id: "s5", ep: 5, need: { lvl: 20, rank: "Diamond" }, style: "Neon anime" },
+    { id: "s6", ep: 6, need: { lvl: 30, rank: "Champion" }, style: "Stained glass" },
   ];
+  const ready = (s) => typeof s.play === "function";
 
   /* ---------- Unlocks ---------- */
   const wins = () => store.get("thp-wins", 0);
-  const isOpen = (s) => wins() >= s.wins;
-  /** Count a solo win and return any scenes it just unlocked. */
-  function recordWin() {
-    const before = wins();
-    store.set("thp-wins", before + 1);
-    return LIST.filter((s) => before < s.wins && before + 1 >= s.wins);
+  const xp = () => store.get("thp-xp", 0);
+  /** Total XP needed to reach a level (level n needs 500 + 100·(n−1) more than the one before; see js/game.js). */
+  const xpFor = (lvl) => 500 * (lvl - 1) + 50 * (lvl - 1) * (lvl - 2);
+  const level = () => (THP.game && THP.game.levelOf ? THP.game.levelOf(xp()).lvl : 1);
+  const reached = (s) => (s.need.wins ? wins() >= s.need.wins : level() >= s.need.lvl);
+  const isOpen = (s) => ready(s) && reached(s);
+  const needText = (s) => (s.need.wins ? `Win ${s.need.wins} game${s.need.wins === 1 ? "" : "s"}` : `Reach ${s.need.rank} rank (Level ${s.need.lvl})`);
+
+  /** Count a solo win. */
+  function recordWin() { store.set("thp-wins", wins() + 1); }
+  /** Scenes that became watchable since the last check (call after XP and wins are saved). */
+  function newlyUnlocked() {
+    const seen = new Set(store.get("thp-scenes-seen", []));
+    const fresh = LIST.filter((s) => isOpen(s) && !seen.has(s.id));
+    fresh.forEach((s) => seen.add(s.id));
+    store.set("thp-scenes-seen", [...seen]);
+    return fresh;
+  }
+  /** The next milestone still to reach, and how far away it is. */
+  function nextMilestone() {
+    const m = LIST.find((s) => !reached(s));
+    if (!m) return null;
+    if (m.need.wins) return { scene: m, text: `${m.need.wins - wins()} more win${m.need.wins - wins() === 1 ? "" : "s"}` };
+    return { scene: m, text: `${(xpFor(m.need.lvl) - xp()).toLocaleString()} XP to ${m.need.rank}` };
   }
   const unlockedCount = () => LIST.filter(isOpen).length;
+  const readyCount = () => LIST.filter(ready).length;
 
   /* ---------- Player ---------- */
   function play(id) {
@@ -504,33 +535,35 @@ THP.Scenes = (function () {
     S("tap");
     $("#hud").hidden = true;
     THP.ui.setMood("happy");
-    const n = wins();
     const card = (s) => {
-      const open = isOpen(s);
+      const open = isOpen(s), got = reached(s);
+      const status = open ? `${s.sub}. Tap to watch.` : got ? "Milestone reached! This scene is still being animated." : `${needText(s)} to unlock.`;
       return el("button", {
-        class: "scene-card" + (open ? "" : " locked"), "aria-disabled": open ? null : "true",
+        class: "scene-card" + (open ? "" : " locked") + (ready(s) ? "" : " soon"), "aria-disabled": open ? null : "true",
         onclick: async () => {
-          if (!open) { S("wrong"); THP.ui.say(`Locked! ${s.wins - n} more win${s.wins - n === 1 ? "" : "s"} to unlock it.`, { mood: "worried" }); return; }
-          S("tap");
-          await play(s.id);
+          if (open) { S("tap"); await play(s.id); return; }
+          S("wrong");
+          const nx = nextMilestone();
+          THP.ui.say(got ? "You made it! The animators are still drawing this one." : `Locked! ${needText(s)}.${nx && nx.scene === s ? ` ${nx.text} to go.` : ""}`, { mood: "worried" });
         },
       },
-        el("span", { class: "scene-thumb", "aria-hidden": "true" }, open ? s.icon : "🔒"),
+        el("span", { class: "scene-thumb", "aria-hidden": "true" }, open ? s.icon : got ? "🎨" : "🔒"),
         el("span", { class: "scene-text" },
-          el("small", {}, `Scene ${s.ep} · ${s.ref}`),
-          el("strong", {}, open ? s.title : "??? Locked scene"),
-          el("span", {}, open ? `${s.sub}. Tap to watch.` : `Win ${s.wins} game${s.wins === 1 ? "" : "s"} to unlock. (You have ${n}.)`)));
+          el("small", {}, `Scene ${s.ep}${s.ref && open ? " · " + s.ref : ""} · ${s.style}`),
+          el("strong", {}, open ? s.title : "??? Mystery scene"),
+          el("span", {}, status)));
     };
+    const nx = nextMilestone();
     const node = el("section", { class: "scenes-screen" },
       el("p", { class: "eyebrow" }, "Rewards"),
       el("h2", { class: "screen-title" }, "Story Scenes"),
-      el("p", { class: "section-help" }, "Animated Bible stories. Win games to unlock them."),
+      el("p", { class: "section-help" }, "Animated Bible stories, each in its own art style. Win games and rank up to unlock them."),
+      nx ? el("p", { class: "scene-next" }, `🎬 Next: Scene ${nx.scene.ep} · ${nx.text}`) : null,
       el("div", { class: "scene-list" }, ...LIST.map(card)),
-      el("p", { class: "fine" }, "More scenes coming soon."),
       el("div", { class: "btn-row" }, el("button", { class: "btn btn-ghost", onclick: back }, "Back")));
     THP.ui.show(node, { scene: "title" });
     THP.ui.say(unlockedCount() ? "Grab some popcorn. Well, manna." : "Win a game to unlock your first scene!");
   }
 
-  return { LIST, play, screen, recordWin, unlockedCount, isOpen };
+  return { LIST, play, screen, recordWin, newlyUnlocked, nextMilestone, unlockedCount, readyCount, isOpen };
 })();

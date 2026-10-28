@@ -207,9 +207,24 @@ Behavior:
 
 ### Story Scenes (rewards)
 
-Short animated cartoons of Bible stories, unlocked by winning games (`thp-wins`). Each scene has its own unlock count,
-and the results screen shows a "New Story Scene unlocked" banner with a Watch now button. The title's 🎬 Story Scenes
-button opens the gallery, where locked scenes show how many more wins they need.
+Short animated cartoons of Bible stories, earned at milestones, each drawn in its own art style.
+
+| Scene | Unlocks at | About when (≈1,000 XP per solo game) | Style |
+|---|---|---|---|
+| 1 Giant Problem | First win | Game 1–2 | Saturday-morning cartoon |
+| 2 | Silver rank (Level 5) | Game 3 | Paper cut-out |
+| 3 | Gold (Level 10) | Game 8 | 8-bit pixel art |
+| 4 | Platinum (Level 15) | Game 16 | Clay stop-motion |
+| 5 | Diamond (Level 20) | Game 27 | Neon anime |
+| 6 | Champion (Level 30) | Game 57 | Stained glass |
+
+They come quickly at first to hook a new player, then spread out.
+
+- **Results screen:** a newly unlocked scene gets a fanfare, a "NEW SCENE!" stamp and a banner with Watch now.
+  The XP card always shows the distance to the next one ("1,250 XP to Silver").
+- **Gallery:** the title's 🎬 Story Scenes button opens it. Locked cards show their milestone and art style.
+  A milestone reached before its scene is finished reads "still being animated."
+- **Storage:** wins are saved as `thp-wins`, and scenes already announced as `thp-scenes-seen`.
 
 - **Built in `js/scenes.js` and `css/scenes.css`.** Characters and backgrounds are inline SVG. A small director drives
   them with the Web Animations API: actors that walk, a camera that pans and zooms, typed narration, speech bubbles,

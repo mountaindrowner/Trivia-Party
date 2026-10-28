@@ -128,6 +128,8 @@ window.THP = window.THP || {};
     setMood("happy");
     const best = store.get("thp-best", 0);
     const nameInput = el("input", { id: "player-name", maxlength: 14, placeholder: "Nickname", value: store.get("thp-name", ""), autocomplete: "off", "aria-label": "Your name" });
+    // Save as they type, so switching skins or visiting another screen doesn't wipe it.
+    nameInput.addEventListener("input", () => store.set("thp-name", nameInput.value.trim()));
     const done = beatenSet();
     const levelBtn = (lvl) => {
       const cfg = LEVELS[lvl];
@@ -186,6 +188,7 @@ window.THP = window.THP || {};
       ["🚪", "Race to the Narrow Gate", "Tap every answer that fits to move forward. Beat Grumbles the Goat to the gate to win!"],
       ["🎯", "Challenge Modes", "Harder questions about what Jesus taught, prophecy and Bible history. Win in all six modes to unlock a secret one."],
       ["📖", "Learn as you go", "Every answer comes with a verse and a lesson. After each game, review what you missed."],
+      ["🎬", "Unlock Story Scenes", "Win your first game, then rank up (Silver, Gold and beyond) to unlock animated Bible cartoons."],
     ];
     const node = el("section", { class: "howto" },
       el("h2", { class: "screen-title" }, "How to Play"),
@@ -615,7 +618,9 @@ window.THP = window.THP || {};
     const firstBeat = won && !beatenBefore.has(st.lvl);
     if (won) { beatenBefore.add(st.lvl); store.set("thp-beaten", [...beatenBefore]); }
     const justUnlocked = !wasOpen && isUnlocked();
-    const newScenes = won ? THP.Scenes.recordWin() : [];
+    if (won) THP.Scenes.recordWin();
+    const newScenes = THP.Scenes.newlyUnlocked();
+    const nextScene = THP.Scenes.nextMilestone();
     const beatenNow = UNLOCK_NEEDS.filter((l) => beatenBefore.has(l)).length;
     won ? (S("win"), confetti(160)) : S("lose");
     const [verse, ref] = pick(THP.VERSES);
@@ -632,7 +637,8 @@ window.THP = window.THP || {};
       el("div", { class: "xp-earned" },
         el("p", { class: "xp-gain" }, `+${earned.toLocaleString()} XP`, leveled ? el("em", {}, `LEVEL UP! LVL ${after.lvl}`) : null),
         el("ul", { class: "xp-list" }, ...gains.map(([label, n]) => el("li", {}, el("span", {}, label), el("b", {}, "+" + n)))),
-        xpCard(xpBefore + earned, leveled ? 0 : Math.round((before.into / before.need) * 100))),
+        xpCard(xpBefore + earned, leveled ? 0 : Math.round((before.into / before.need) * 100)),
+        nextScene ? el("p", { class: "scene-next" }, `🎬 Next Story Scene: ${nextScene.text}`) : null),
       justUnlocked
         ? el("div", { class: "unlock-banner" },
             el("p", { class: "eyebrow" }, "New mode unlocked"),
@@ -655,6 +661,7 @@ window.THP = window.THP || {};
     show(node, { scene: won ? "found" : "trial" });
     if (leveled) setTimeout(() => { stamp(after.rank !== before.rank ? after.rank.toUpperCase() + "!" : "LEVEL UP!", "good rarity-legendary"); confetti(80); }, 900);
     if (justUnlocked) setTimeout(() => { S("fanfare"); stamp("UNLOCKED!", "good rarity-legendary"); confetti(200); }, leveled ? 2200 : 900);
+    else if (newScenes.length) setTimeout(() => { S("fanfare"); stamp("NEW SCENE!", "good rarity-epic"); confetti(120); }, leveled ? 2200 : 900);
     await say(pick(won ? L.win : L.lose), { mood: won ? "happy" : "worried" });
   }
 

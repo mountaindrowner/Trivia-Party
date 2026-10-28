@@ -95,3 +95,6 @@ body.scene-open { overflow: hidden; }
   .sp-end { gap: 1.2cqh; padding: 2cqh; }
   .sp-end .btn { font-size: 0.85rem; min-height: 2rem; padding: 0.2rem 0.8rem; }
 }
+.scene-card.soon:not(.locked) { opacity: 1; }
+.scene-card.locked.soon .scene-thumb { filter: grayscale(0.3); }
+.scene-next { margin: 0; font-weight: 800; font-size: 0.9rem; color: var(--amber, #ffc53d); }

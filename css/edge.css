@@ -399,3 +399,8 @@ body { font-weight: 600; }
   .hud-pill { font-size: 1.25rem; padding-inline: 0.8rem; }
   .streak { font-size: 1.1rem; padding-inline: 0.6rem; }
 }
+/* Don't Look Back on phones: keep the big display type inside the three lanes. */
+@media (max-width: 440px) {
+  .run-cell { font-size: 1.05rem; }
+  .run-cell.go { font-size: 1.3rem; }
+}

@@ -227,7 +227,7 @@ THP.LINES = {
     "Tap EVERY answer that fits. Each right tap moves you forward. Each wrong tap moves you back!",
     "Every drop of oil you saved gives you a head start. Grumbles the Goat is already complaining. Go!",
   ],
-  category: ["Category: {cat}!", "Here comes a {cat} question!", "{cat}! Ooh, I love this one.", "Ready? It's {cat}!", "Ooh, {cat}! Think hard!", "{cat} time! You've got this!"],
+  category: ["Category: {cat}!", "Here comes a question about {cat}!", "{cat}! Ooh, I love this one.", "Ready? It's {cat}!", "Ooh, {cat}! Think hard!", "{cat} time! You've got this!"],
   goat: ["Grumbles: \"Baaah, this is too hard!\"", "Grumbles: \"Hmph! I'm coming for you!\"", "Grumbles: \"Grumble grumble grumble...\"", "Grumbles: \"Are we there yet?\"", "Grumbles: \"Nobody told me there'd be running!\"", "Grumbles: \"I'm not grumpy, YOU'RE grumpy.\"", "Grumbles: \"Baaa-humbug!\"", "Grumbles: \"My hooves hurt.\""],
   win: ["You made it through the Narrow Gate! Well done, good and faithful servant!", "You did it! Through the gate! Barnabas is doing his victory bray! HEE-HAW!"],
   lose: ["Grumbles got there first... but don't worry. God's mercies are new every morning. Try again!", "Grumbles snuck past you this time! Every champion gets back up. Play again!"],
