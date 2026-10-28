@@ -120,6 +120,7 @@ THP.ui = (function () {
   /** Countdown timer. Calls onTick(remainingSec, fraction) every frame-ish; resolves 'timeout'. */
   function timer(seconds, onTick) {
     let stopped = false;
+    let endAt = 0; // when the timer stopped, so elapsed() freezes at the moment play ended
     let resolveFn;
     const start = performance.now();
     let lastWhole = Math.ceil(seconds);
@@ -133,11 +134,16 @@ THP.ui = (function () {
         lastWhole = whole;
         if (whole <= 3 && whole > 0) THP.Sound.play("tick");
       }
-      if (left <= 0) { stopped = true; resolveFn("timeout"); return; }
+      if (left <= 0) { stopped = true; endAt = endAt || now; resolveFn("timeout"); return; }
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    return { done: p, stop() { stopped = true; }, elapsed: () => (performance.now() - start) / 1000 };
+    return {
+      done: p,
+      seconds,
+      stop() { stopped = true; endAt = endAt || performance.now(); },
+      elapsed: () => Math.min(seconds, ((endAt || performance.now()) - start) / 1000),
+    };
   }
 
   /** Circular candle-flame timer widget. */

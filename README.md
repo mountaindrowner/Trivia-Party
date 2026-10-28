@@ -18,9 +18,13 @@ python3 -m http.server 8000
 
 - 3 levels: **Legends** (13+), **Mighty Warriors** (ages 9–12) and **Little Lambs** (ages 5–8)
 - 8 questions per game from a bank of 140 (48 / 48 / 44 per level), each with a scripture reference and a fun fact
-- 14 Trial Room minigames: Loaves & Fishes, Noah's Pairs, Walls of Jericho, David's Sling,
+- 24 Trial Room minigames: Loaves & Fishes, Noah's Pairs, Walls of Jericho, David's Sling,
   Gideon's Fleece, Scroll Scramble, Find the Lost Sheep, Manna Catch, Red Sea Run, Build the Ark,
-  Lions' Den Tiptoe, Fishers of Men, Verse Builder, Joseph's Dreams
+  Lions' Den Tiptoe, Fishers of Men, Verse Builder, Joseph's Dreams, Soak the Altar, Jacob's Ladder,
+  Scroll Sorter, Abraham's Stars, The Lost Coin, Hide the Spies, Paul's Shipwreck, Naaman's Seven Dips,
+  In Order!, Don't Look Back
+- **Versus mode**: pass-and-play for 2–4 players. Same challenge each round, different questions and a
+  freshly shuffled minigame for every player, scoreboard after each round, double points in the final
 - The Lost Sheep mechanic: lose all your oil and the Good Shepherd can still find you
 - Final race, **The Narrow Gate**: "tap every one that fits" against Grumbles the Goat (50 prompts)
 - Streak multiplier (x1.5, then x2 "ON FIRE"), slam-in stamps, cracked-glass hits

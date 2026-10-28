@@ -271,3 +271,18 @@ THP.VERSES = [
   ["Don't let anyone look down on you because you are young.", "1 Timothy 4:12"],
   ["For God so loved the world that he gave his one and only Son.", "John 3:16"],
 ];
+
+/* Versus mode host lines. {name} and {game} are filled in. */
+THP.VS_LINES = {
+  intro: ["Welcome to VERSUS! Everyone plays the same challenge, but with different questions. Pass the device, no peeking, and may the best Bible scholar win!"],
+  pass: ["Pass it to {name}! No peeking!", "{name}, you're up! Everybody else, hands off!", "Hand it over to {name}. Show 'em how it's done!", "{name}'s turn. Deep breath. You've got this."],
+  roundTrivia: ["Trivia Blitz! Three questions each. Faster answers score more!", "Trivia Blitz! Same level, different questions. Speed counts!"],
+  roundTrial: ["Trial time! Everybody plays {game}. Highest score takes the round!", "It's {game}! Same game for everyone, but it shuffles every time."],
+  finalRound: ["FINAL ROUND! Double points! Anything can happen!"],
+  roundWin: ["{name} takes the round!", "Round goes to {name}! Hee-HAW!", "{name} wins that one. Respect."],
+  roundTie: ["A tie! Even Solomon couldn't split this one."],
+  roundNone: ["Nobody scored that round! Tough crowd. On to the next one!"],
+  lead: ["{name} is in the lead!", "{name} is on top... for now.", "Everyone's chasing {name}!"],
+  champion: ["{name} is the CHAMPION! Well played, everybody!", "{name} wins it all! \"Run in such a way as to get the prize.\" 1 Corinthians 9:24!"],
+  tieChampion: ["It's a TIE! Everybody gets bragging rights. Rematch?"],
+};

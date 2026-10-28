@@ -42,7 +42,9 @@ window.THP = window.THP || {};
     streak.hidden = st.streak < 2;
     streak.textContent = `x${streakMult(st.streak)} ${st.streak >= 3 ? "ON FIRE" : "STREAK"}`;
     streak.classList.toggle("hot", st.streak >= 3);
-    $("#progress").textContent = st.phase === "final" ? "FINAL" : `${Math.min(st.qi + 1, QUESTIONS_PER_GAME)} / ${QUESTIONS_PER_GAME}`;
+    $("#lamps").hidden = st.mode === "versus";
+    $("#progress").textContent = st.mode === "versus" ? st.hudLabel
+      : st.phase === "final" ? "FINAL" : `${Math.min(st.qi + 1, QUESTIONS_PER_GAME)} / ${QUESTIONS_PER_GAME}`;
   }
 
   function addScore(n, anchor) {
@@ -69,9 +71,13 @@ window.THP = window.THP || {};
         el("span", { class: "logo-1" }, "TRIVIA"),
         el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
         el("span", { class: "logo-3" }, "PARTY")),
-      el("p", { class: "tagline" }, "Eight questions. Fourteen trials. One gate. Survive the Bible trivia gauntlet."),
+      el("p", { class: "tagline" }, "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       el("div", { class: "name-row" }, nameInput),
       el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
+      el("button", { class: "versus-card", onclick: () => THP.versus.setup() },
+        el("span", { class: "level-icon", "aria-hidden": "true" }, "⚔️"),
+        el("strong", {}, "Versus"),
+        el("small", {}, "Pass & play · 2–4 players")),
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
         best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null));
@@ -251,21 +257,7 @@ window.THP = window.THP || {};
     reel.classList.add("landed");
     S("fanfare");
     await sleep(500);
-    node.append(
-      el("p", { class: "howto-line" }, game.howto(Math.min(st.lvl, 2))),
-      el("p", { class: "eyebrow small" }, "Read about it: " + game.verse));
-    await waitButton(node, "I'm ready!");
-
-    // 3-2-1
-    for (const n of ["3", "2", "1"]) {
-      show(el("section", { class: "countdown" }, el("span", {}, n)), { scene: "trial" });
-      S("tick");
-      await sleep(550);
-    }
-
-    const body = el("section", { class: "minigame mg-" + game.id }, el("h2", { class: "mg-title" }, game.icon + " " + game.name));
-    show(body, { scene: "trial" });
-    const won = await game.play(body, Math.min(st.lvl, 2));
+    const won = await runMinigame(game, st.lvl, node);
     st.trialsPlayed++;
 
     let msg;
@@ -286,6 +278,25 @@ window.THP = window.THP || {};
       renderHud();
     }
     await resultCard(won, won ? "Trial passed!" : st.lost ? "Lamp out!" : "Oil spilled!", msg);
+  }
+
+  /** Show a minigame's instructions inside `node`, count down, play it. Resolves true on a win. */
+  async function runMinigame(game, lvl, node) {
+    node.append(
+      el("p", { class: "howto-line" }, game.howto(Math.min(lvl, 2))),
+      el("p", { class: "eyebrow small" }, "Read about it: " + game.verse));
+    await waitButton(node, "I'm ready!");
+
+    // 3-2-1
+    for (const n of ["3", "2", "1"]) {
+      show(el("section", { class: "countdown" }, el("span", {}, n)), { scene: "trial" });
+      S("tick");
+      await sleep(550);
+    }
+
+    const body = el("section", { class: "minigame mg-" + game.id }, el("h2", { class: "mg-title" }, game.icon + " " + game.name));
+    show(body, { scene: "trial" });
+    return game.play(body, Math.min(lvl, 2));
   }
 
   async function resultCard(won, title, line) {
@@ -424,6 +435,9 @@ window.THP = window.THP || {};
     show(node, { scene: won ? "found" : "trial" });
     await say(pick(won ? L.win : L.lose), { mood: won ? "happy" : "worried" });
   }
+
+  // Shared with Versus mode (js/versus.js).
+  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult };
 
   /* ---------- Boot ---------- */
   function boot() {

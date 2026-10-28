@@ -1,6 +1,8 @@
 /* The Trial Room — minigames you play after a wrong answer.
  * Each game: { id, name, icon, verse, howto(level), play(body, level) => Promise<boolean> }
  * `level` is 1 (Little Lambs) or 2 (Mighty Warriors). Every game cleans up its own listeners.
+ * Games report partial progress with prog(0..1); THP.mgScore(won) turns a finished game into points
+ * so Versus mode can compare two players on the same kind of game.
  */
 window.THP = window.THP || {};
 
@@ -8,9 +10,20 @@ window.THP = window.THP || {};
   const { el, $, $$, sleep, pick, rand, shuffle, barTimer } = THP.ui;
   const S = (n) => THP.Sound.play(n);
 
+  // The game currently being played: its timer and how far the player got.
+  let cur = { t: null, progress: 0 };
+  const prog = (v) => { cur.progress = Math.max(0, Math.min(1, v)); };
+
+  /** Points for the game that just ended: a win earns 1000 plus up to 500 for time left; a loss earns up to 700 for progress. */
+  THP.mgScore = (won) => {
+    const left = cur.t ? Math.max(0, 1 - cur.t.elapsed() / cur.t.seconds) : 0;
+    return won ? 1000 + Math.round(500 * left) : Math.round(700 * cur.progress);
+  };
+
   /** Standard minigame header: short instruction + bar timer. */
   function frame(body, text, seconds) {
     const t = barTimer(seconds);
+    cur = { t, progress: 0 };
     body.append(el("div", { class: "mg-head" }, el("p", { class: "mg-instr" }, text), t.node));
     const area = el("div", { class: "mg-area" });
     body.append(area);
@@ -48,7 +61,7 @@ window.THP = window.THP || {};
             row.append(el("button", { class: "btn chip-btn", onclick: (e) => {
               if (over) return;
               if (n === answer) {
-                S("correct"); solved++;
+                S("correct"); solved++; prog(solved / 3);
                 THP.ui.popText("+1", "good", e.currentTarget);
                 if (solved >= 3) end(true); else round();
               } else { S("wrong"); e.currentTarget.classList.add("nope"); e.currentTarget.disabled = true; end(false); }
@@ -86,6 +99,7 @@ window.THP = window.THP || {};
       THP.ui.focusFirst(grid);
       const t2 = barTimer(lvl === 1 ? 35 : 40);
       t.node.replaceWith(t2.node);
+      cur.t = t2;
 
       return new Promise((resolve) => {
         let open = [], matched = 0, over = false, busy = false;
@@ -98,7 +112,7 @@ window.THP = window.THP || {};
           const [a, b] = open; open = [];
           if (a.dataset.a === b.dataset.a) {
             a.classList.add("got"); b.classList.add("got"); a.disabled = b.disabled = true;
-            S("correct"); matched++;
+            S("correct"); matched++; prog(matched / animals.length);
             if (matched === animals.length) end(true);
           } else {
             busy = true; misses--; status.textContent = `Misses left: ${misses}`;
@@ -137,7 +151,7 @@ window.THP = window.THP || {};
         };
         const hit = () => {
           if (over) return;
-          taps++; S("tap");
+          taps++; S("tap"); prog(taps / need);
           count.textContent = `${taps} / ${need}`;
           horn.classList.remove("blow"); void horn.offsetWidth; horn.classList.add("blow");
           const gone = Math.floor((taps / need) * bricks.length);
@@ -260,7 +274,7 @@ window.THP = window.THP || {};
           if (over) return;
           if (b.textContent === word[at]) {
             S("step"); slots.children[at].textContent = b.textContent; slots.children[at].classList.add("in");
-            b.disabled = true; b.classList.add("used"); at++;
+            b.disabled = true; b.classList.add("used"); at++; prog(at / word.length);
             const nextBtn = $("button:not([disabled])", tiles); if (nextBtn) nextBtn.focus();
             if (at === word.length) { S("correct"); end(true); }
           } else {
@@ -364,7 +378,7 @@ window.THP = window.THP || {};
               it.n.remove(); items.splice(i, 1);
               if (it.bad) { got = Math.max(0, got - 1); S("wrong"); field.classList.remove("ouch"); void field.offsetWidth; field.classList.add("ouch"); }
               else { got++; S("step"); }
-              count.textContent = `${got} / ${need}`;
+              count.textContent = `${got} / ${need}`; prog(got / need); prog(got / need);
               if (got >= need) { S("correct"); end(true); return; }
             } else if (it.y > 104) { it.n.remove(); items.splice(i, 1); }
           }
@@ -420,7 +434,7 @@ window.THP = window.THP || {};
               w.hit = true; lives--; S("wrong");
               field.classList.remove("ouch"); void field.offsetWidth; field.classList.add("ouch");
               status.textContent = "Splashes left: " + Math.max(0, lives - 1);
-              if (lives <= 0) { end(false); return; }
+              if (lives <= 0) { prog(t.elapsed() / 12); end(false); return; }
             }
             if (w.y > 110) { w.n.remove(); waves.splice(i, 1); }
           }
@@ -479,7 +493,7 @@ window.THP = window.THP || {};
           S(w > top.width - 1.5 ? "correct" : "step");
           if (w > top.width - 1.5) THP.ui.popText("PERFECT", "good", moving);
           top = { left: l, width: w };
-          count.textContent = `${placed} / ${need}`;
+          count.textContent = `${placed} / ${need}`; prog(placed / need);
           if (placed >= need) { S("crumble"); end(true); return; }
           speed *= 1.1; x = 0; dir = 1;
           moving = layer(0, top.width, placed + 1, "moving");
@@ -539,7 +553,7 @@ window.THP = window.THP || {};
           if (now - lastStep < gap) return;
           lastStep = now;
           steps++; S("tap");
-          count.textContent = `${steps} / ${need}`;
+          count.textContent = `${steps} / ${need}`; prog(steps / need);
           me.style.left = (steps / need) * 88 + "%";
           if (steps >= need) { S("correct"); end(true); }
         });
@@ -584,7 +598,7 @@ window.THP = window.THP || {};
           delete c.dataset.kind; c.classList.remove("up");
           if (kind === "fish") { got++; S("step"); THP.ui.popText("+1", "good", c); }
           else { got = Math.max(0, got - 1); S("wrong"); c.classList.remove("nope"); void c.offsetWidth; c.classList.add("nope"); }
-          count.textContent = `${got} / ${need}`;
+          count.textContent = `${got} / ${need}`; prog(got / need);
           if (got >= need) { S("correct"); end(true); }
         }));
       });
@@ -622,7 +636,7 @@ window.THP = window.THP || {};
           if (b.textContent === words[at]) {
             S("step");
             built.children[at].textContent = b.textContent; built.children[at].classList.add("in");
-            b.disabled = true; b.classList.add("used"); at++;
+            b.disabled = true; b.classList.add("used"); at++; prog(at / words.length);
             const nextBtn = $("button:not([disabled])", bank); if (nextBtn) nextBtn.focus();
             if (at === words.length) { S("correct"); end(true); }
           } else {
@@ -687,6 +701,7 @@ window.THP = window.THP || {};
           if (input === seq.length) {
             accepting = false;
             if (seq.length >= target) { S("correct"); end(true); return; }
+            prog((seq.length - 2) / (target - 2));
             seq.push(rand(0, 3));
             await sleep(400);
             show();
@@ -696,5 +711,465 @@ window.THP = window.THP || {};
     },
   };
 
-  THP.MINIGAMES = [loaves, pairs, jericho, sling, fleece, scroll, lostSheep, manna, redSea, ark, lions, fishers, verseBuilder, dreams];
+  /* ---------------- 15. Soak the Altar — hold to pour, release on the line ---------------- */
+  const altar = {
+    id: "altar", name: "Soak the Altar", icon: "🏺",
+    verse: "1 Kings 18:33–35",
+    howto: (lvl) => `Elijah wants the altar soaked! HOLD the button to pour, and let go when the water is in the gold band. Fill 3 jars${lvl === 1 ? " (one miss allowed)" : ""}. Don't overflow!`,
+    async play(body, lvl) {
+      const band = lvl === 1 ? 20 : 12, rate = lvl === 1 ? 38 : 55;
+      let misses = lvl === 1 ? 1 : 0, filled = 0;
+      const { area, t } = frame(body, "Hold to pour...", 22);
+      const count = el("p", { class: "mg-count" }, "Jars: 0 / 3");
+      const water = el("div", { class: "jar-water" });
+      const target = el("div", { class: "jar-band" });
+      const jar = el("div", { class: "jar" }, target, water);
+      const pour = el("button", { class: "btn btn-go pour-btn", "data-primary": true }, "HOLD TO POUR");
+      area.append(count, jar, pour);
+      pour.focus();
+      return new Promise((resolve) => {
+        let level = 0, lo = 0, holding = false, over = false, last = 0, raf;
+        const newJar = () => {
+          level = 0; lo = rand(35, 85 - band);
+          target.style.bottom = lo + "%"; target.style.height = band + "%";
+          water.style.height = "0%"; jar.classList.remove("good", "bad");
+        };
+        newJar();
+        const end = (ok) => {
+          if (over) return; over = true; t.stop(); cancelAnimationFrame(raf); pour.disabled = true;
+          window.removeEventListener("keydown", kd, true); window.removeEventListener("keyup", ku, true);
+          setTimeout(() => resolve(ok), 700);
+        };
+        t.done.then(() => end(false));
+        const judge = () => {
+          const ok = level >= lo && level <= lo + band;
+          jar.classList.add(ok ? "good" : "bad");
+          if (ok) { filled++; S("correct"); count.textContent = `Jars: ${filled} / 3`; prog(filled / 3); }
+          else { S("wrong"); misses--; THP.ui.popText(level > lo + band ? "TOO MUCH" : "NOT ENOUGH", "bad", jar); }
+          if (filled >= 3) return end(true);
+          if (misses < 0) return end(false);
+          setTimeout(() => { if (!over) newJar(); }, 550);
+        };
+        const loop = (now) => {
+          if (over || !holding) return;
+          const dt = Math.min(0.05, (now - last) / 1000); last = now;
+          level += rate * dt;
+          water.style.height = Math.min(level, 100) + "%";
+          if (level >= 100) { holding = false; pour.classList.remove("held"); judge(); return; }
+          raf = requestAnimationFrame(loop);
+        };
+        const down = () => {
+          if (over || holding || jar.classList.contains("good") || jar.classList.contains("bad")) return;
+          holding = true; pour.classList.add("held"); S("whoosh"); last = performance.now(); raf = requestAnimationFrame(loop);
+        };
+        const up = () => { if (!holding) return; holding = false; pour.classList.remove("held"); cancelAnimationFrame(raf); judge(); };
+        pour.addEventListener("pointerdown", (e) => { e.preventDefault(); pour.setPointerCapture && pour.setPointerCapture(e.pointerId); down(); });
+        pour.addEventListener("pointerup", up);
+        pour.addEventListener("pointercancel", up);
+        pour.addEventListener("contextmenu", (e) => e.preventDefault());
+        const kd = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); if (!e.repeat) down(); } };
+        const ku = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); up(); } };
+        window.addEventListener("keydown", kd, true);
+        window.addEventListener("keyup", ku, true);
+      });
+    },
+  };
+
+  /* ---------------- 16. Jacob's Ladder — alternate hands to climb ---------------- */
+  const ladder = {
+    id: "ladder", name: "Jacob's Ladder", icon: "🪜",
+    verse: "Genesis 28:12",
+    howto: (lvl) => `Climb by tapping LEFT, RIGHT, LEFT, RIGHT. Same hand twice and you slip! Reach rung ${lvl === 1 ? 20 : 30} before time runs out.`,
+    async play(body, lvl) {
+      const need = lvl === 1 ? 20 : 30;
+      const { area, t } = frame(body, "Left, right, left, right!", 10);
+      const count = el("p", { class: "mg-count" }, `0 / ${need}`);
+      const climber = el("span", { class: "climber" }, "🧗");
+      const rail = el("div", { class: "ladder" }, el("span", { class: "ladder-top" }, "👼"), climber);
+      const L = el("button", { class: "btn hand", "aria-label": "Left hand" }, "✋ L");
+      const R = el("button", { class: "btn hand", "aria-label": "Right hand" }, "R 🤚");
+      area.append(count, rail, el("div", { class: "steer-row" }, L, R));
+      L.focus();
+      return new Promise((resolve) => {
+        let rung = 0, lastHand = null, over = false;
+        const end = (ok) => { if (over) return; over = true; t.stop(); unbind(); L.disabled = R.disabled = true; setTimeout(() => resolve(ok), 700); };
+        t.done.then(() => end(false));
+        const grab = (hand) => {
+          if (over) return;
+          if (hand === lastHand) {
+            rung = Math.max(0, rung - 2); S("wrong");
+            rail.classList.remove("slip"); void rail.offsetWidth; rail.classList.add("slip");
+          } else { rung++; S("step"); }
+          lastHand = hand;
+          count.textContent = `${rung} / ${need}`; prog(rung / need);
+          climber.style.bottom = (rung / need) * 82 + "%";
+          if (rung >= need) { S("correct"); end(true); }
+        };
+        L.addEventListener("pointerdown", (e) => { e.preventDefault(); grab("L"); });
+        R.addEventListener("pointerdown", (e) => { e.preventDefault(); grab("R"); });
+        const unbind = keys({ ArrowLeft: () => grab("L"), ArrowRight: () => grab("R"), Enter: () => grab(document.activeElement === R ? "R" : "L") });
+      });
+    },
+  };
+
+  /* ---------------- 17. Scroll Sorter — Old Testament or New? ---------------- */
+  const OT = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Songs", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi"];
+  const NT = ["Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"];
+  const OT_EASY = ["Genesis", "Exodus", "Joshua", "Ruth", "Esther", "Psalms", "Proverbs", "Isaiah", "Daniel", "Jonah", "1 Samuel", "Job"];
+  const NT_EASY = ["Matthew", "Mark", "Luke", "John", "Acts", "Romans", "James", "Revelation", "1 Peter", "Hebrews"];
+  const sorter = {
+    id: "sorter", name: "Scroll Sorter", icon: "📚",
+    verse: "2 Timothy 3:16",
+    howto: (lvl) => `A book of the Bible pops up. Is it in the OLD Testament or the NEW? Sort ${lvl === 1 ? 8 : 12} fast. Three wrong and you're out.`,
+    async play(body, lvl) {
+      const need = lvl === 1 ? 8 : 12;
+      const pool = shuffle((lvl === 1 ? OT_EASY : OT).map((b) => [b, "old"]).concat((lvl === 1 ? NT_EASY : NT).map((b) => [b, "new"])));
+      const { area, t } = frame(body, "Old or New?", lvl === 1 ? 20 : 18);
+      let mistakes = 3;
+      const count = el("p", { class: "mg-count" }, `0 / ${need} · Mistakes left: 3`);
+      const card = el("div", { class: "book-card" });
+      const oldB = el("button", { class: "btn sort-btn sort-old" }, "◀ OLD");
+      const newB = el("button", { class: "btn sort-btn sort-new" }, "NEW ▶");
+      area.append(count, card, el("div", { class: "steer-row" }, oldB, newB));
+      oldB.focus();
+      return new Promise((resolve) => {
+        let i = 0, done = 0, over = false;
+        const show = () => { card.textContent = pool[i % pool.length][0]; card.classList.remove("in"); void card.offsetWidth; card.classList.add("in"); };
+        show();
+        const end = (ok) => { if (over) return; over = true; t.stop(); unbind(); oldB.disabled = newB.disabled = true; setTimeout(() => resolve(ok), 700); };
+        t.done.then(() => end(false));
+        const answer = (side) => {
+          if (over) return;
+          const right = pool[i % pool.length][1] === side;
+          if (right) { done++; S("step"); prog(done / need); }
+          else { mistakes--; S("wrong"); THP.ui.popText(pool[i % pool.length][1] === "old" ? "OLD!" : "NEW!", "bad", card); }
+          count.textContent = `${done} / ${need} · Mistakes left: ${Math.max(0, mistakes)}`;
+          if (done >= need) { S("correct"); return end(true); }
+          if (mistakes <= 0) return end(false);
+          i++; show();
+        };
+        oldB.addEventListener("click", () => answer("old"));
+        newB.addEventListener("click", () => answer("new"));
+        const unbind = keys({ ArrowLeft: () => answer("old"), ArrowRight: () => answer("new") });
+      });
+    },
+  };
+
+  /* ---------------- 18. Abraham's Stars — count the flash ---------------- */
+  const stars = {
+    id: "stars", name: "Abraham's Stars", icon: "✨",
+    verse: "Genesis 15:5",
+    howto: (lvl) => `Stars flash in the night sky for just a moment. How many were there? Get 3 right${lvl === 1 ? " (one miss allowed)" : ""}.`,
+    async play(body, lvl) {
+      const { area, t } = frame(body, "Count the stars!", 30);
+      let misses = lvl === 1 ? 1 : 0, right = 0;
+      const count = el("p", { class: "mg-count" }, "0 / 3");
+      const sky = el("div", { class: "night-sky" });
+      const row = el("div", { class: "mg-choices" });
+      area.append(count, sky, row);
+      return new Promise((resolve) => {
+        let over = false;
+        const end = (ok) => { if (over) return; over = true; t.stop(); $$("button", row).forEach((b) => (b.disabled = true)); setTimeout(() => resolve(ok), 700); };
+        t.done.then(() => end(false));
+        const round = async () => {
+          row.replaceChildren();
+          const n = lvl === 1 ? rand(3, 8) : rand(7, 14);
+          // Spread stars on a jittered grid so they never overlap.
+          const cells = shuffle(Array.from({ length: 24 }, (_, i) => i)).slice(0, n);
+          sky.replaceChildren(...cells.map((c) => {
+            const s = el("i", { class: "star" }, "⭐");
+            s.style.left = (c % 6) * 16 + 4 + Math.random() * 8 + "%";
+            s.style.top = Math.floor(c / 6) * 24 + 4 + Math.random() * 10 + "%";
+            return s;
+          }));
+          sky.classList.add("lit"); S("flip");
+          await sleep(lvl === 1 ? 1700 : 1300);
+          if (over) return;
+          sky.classList.remove("lit");
+          const opts = new Set([n]);
+          while (opts.size < 3) { const d = n + pick([-2, -1, 1, 2]); if (d > 0) opts.add(d); }
+          shuffle([...opts]).forEach((v) => row.append(el("button", { class: "btn chip-btn", onclick: (e) => {
+            if (over) return;
+            $$("button", row).forEach((b) => (b.disabled = true));
+            sky.classList.add("lit");
+            if (v === n) { right++; S("correct"); prog(right / 3); count.textContent = `${right} / 3`; if (right >= 3) return end(true); }
+            else { misses--; S("wrong"); e.currentTarget.classList.add("nope"); THP.ui.popText(`It was ${n}`, "bad", sky); if (misses < 0) return end(false); }
+            setTimeout(() => { if (!over) round(); }, 900);
+          } }, String(v))));
+          THP.ui.focusFirst(row);
+        };
+        round();
+      });
+    },
+  };
+
+  /* ---------------- 19. The Lost Coin — sweep with hot / cold clues ---------------- */
+  const coin = {
+    id: "coin", name: "The Lost Coin", icon: "🪙",
+    verse: "Luke 15:8–9",
+    howto: (lvl) => `A coin is hidden somewhere in the house. Each tile you sweep tells you how many steps away it is. Find it in ${lvl === 1 ? 7 : 6} sweeps!`,
+    async play(body, lvl) {
+      const N = lvl === 1 ? 5 : 6;
+      let sweeps = lvl === 1 ? 7 : 6;
+      const { area, t } = frame(body, "Sweep the house!", 30);
+      const count = el("p", { class: "mg-count" }, `Sweeps left: ${sweeps}`);
+      const goal = rand(0, N * N - 1);
+      const gx = goal % N, gy = Math.floor(goal / N);
+      const maxD = 2 * (N - 1);
+      const grid = el("div", { class: "floor", style: { "--cols": N } });
+      const tiles = Array.from({ length: N * N }, (_, i) => el("button", { class: "floor-tile", "aria-label": `Tile ${i + 1}` }, ""));
+      grid.append(...tiles);
+      area.append(count, grid, el("p", { class: "fine" }, "🔥 1 step · 🌡️ 2–3 steps · ❄️ far away"));
+      tiles[Math.floor(N * N / 2)].focus();
+      return new Promise((resolve) => {
+        let over = false, best = maxD;
+        const end = (ok) => { if (over) return; over = true; t.stop(); tiles[goal].textContent = "🪙"; tiles[goal].classList.add("found"); tiles.forEach((b) => (b.disabled = true)); setTimeout(() => resolve(ok), 900); };
+        t.done.then(() => end(false));
+        tiles.forEach((b, i) => b.addEventListener("click", () => {
+          if (over || b.disabled) return;
+          b.disabled = true;
+          if (i === goal) { S("correct"); prog(1); return end(true); }
+          const d = Math.abs((i % N) - gx) + Math.abs(Math.floor(i / N) - gy);
+          best = Math.min(best, d); prog(0.9 * (1 - (best - 1) / maxD));
+          b.textContent = d === 1 ? "🔥" : d <= 3 ? "🌡️" : "❄️";
+          b.dataset.d = d;
+          b.classList.add(d === 1 ? "hot" : d <= 3 ? "warm" : "cold");
+          b.append(el("small", {}, String(d)));
+          S(d === 1 ? "step" : "tap");
+          sweeps--; count.textContent = `Sweeps left: ${sweeps}`;
+          if (sweeps <= 0) { S("wrong"); end(false); }
+        }));
+      });
+    },
+  };
+
+  /* ---------------- 20. Hide the Spies — follow the bundle ---------------- */
+  const spies = {
+    id: "spies", name: "Hide the Spies", icon: "🌾",
+    verse: "Joshua 2:6",
+    howto: (lvl) => `Rahab hid the spies under bundles of flax. Watch which bundle the spy is under while they shuffle ${lvl === 1 ? "" : "fast "}— then pick it!`,
+    async play(body, lvl) {
+      const n = lvl === 1 ? 3 : 4, swaps = lvl === 1 ? 5 : 8, speed = lvl === 1 ? 520 : 360;
+      const { area, t } = frame(body, "Keep your eyes on the spy!", 25);
+      const stagebox = el("div", { class: "shell-row", style: { "--n": n } });
+      let slots = Array.from({ length: n }, (_, i) => i); // slots[bundle] = position
+      const spy = rand(0, n - 1);
+      const bundles = slots.map((_, b) => el("button", { class: "shell", "aria-label": "Bundle " + (b + 1) }, el("span", { class: "shell-spy" }, b === spy ? "🕵️" : ""), el("span", { class: "shell-cover" }, "🌾")));
+      const place = () => bundles.forEach((b, i) => { b.style.left = `calc(${slots[i]} * (100% / ${n}))`; });
+      place();
+      stagebox.append(...bundles);
+      area.append(stagebox);
+      bundles.forEach((b) => (b.disabled = true));
+      return new Promise(async (resolve) => {
+        let over = false;
+        const end = (ok) => { if (over) return; over = true; t.stop(); bundles.forEach((b) => { b.disabled = true; b.classList.add("open"); }); setTimeout(() => resolve(ok), 1000); };
+        t.done.then(() => end(false));
+        bundles[spy].classList.add("open");
+        await sleep(1100);
+        bundles[spy].classList.remove("open");
+        await sleep(400);
+        stagebox.style.setProperty("--speed", speed + "ms");
+        for (let k = 0; k < swaps && !over; k++) {
+          let a = rand(0, n - 1), b = rand(0, n - 1);
+          while (b === a) b = rand(0, n - 1);
+          [slots[a], slots[b]] = [slots[b], slots[a]];
+          place(); S("whoosh");
+          await sleep(speed + 60);
+        }
+        if (over) return;
+        $(".mg-instr", body).textContent = "Where's the spy?";
+        // Keyboard order should follow screen order after the shuffle.
+        bundles.slice().sort((x, y) => slots[bundles.indexOf(x)] - slots[bundles.indexOf(y)]).forEach((b) => stagebox.append(b));
+        bundles.forEach((b, i) => {
+          b.disabled = false;
+          b.addEventListener("click", () => { if (over) return; const ok = i === spy; S(ok ? "correct" : "wrong"); if (ok) prog(1); end(ok); });
+        });
+        THP.ui.focusFirst(stagebox);
+      });
+    },
+  };
+
+  /* ---------------- 21. Paul's Shipwreck — keep the boat level ---------------- */
+  const ship = {
+    id: "ship", name: "Paul's Shipwreck", icon: "⛵",
+    verse: "Acts 27:41–44",
+    howto: () => "The storm is rocking the ship! Tap ◀ and ▶ to lean against the waves and keep it from tipping over for 12 seconds.",
+    async play(body, lvl) {
+      const { area, t } = frame(body, "Keep it level!", 12);
+      const boat = el("div", { class: "boat" }, "⛵");
+      const meter = el("div", { class: "tilt-meter" }, el("span", { class: "tilt-safe" }), el("i", { class: "tilt-needle" }));
+      const needle = meter.lastChild;
+      const sea = el("div", { class: "sea" }, boat);
+      let v = 0;
+      const push = (d) => { v += d * (lvl === 1 ? 70 : 80); S("tap"); };
+      area.append(sea, meter, steerButtons(() => push(-1), () => push(1)));
+      const unbind = keys({ ArrowLeft: () => push(-1), ArrowRight: () => push(1) });
+      return new Promise((resolve) => {
+        let tilt = 0, force = 0, nextGust = 0, over = false, last = performance.now(), raf;
+        const end = (ok) => { if (over) return; over = true; t.stop(); unbind(); cancelAnimationFrame(raf); if (ok) S("correct"); setTimeout(() => resolve(ok), 700); };
+        t.done.then(() => end(true));
+        const loop = (now) => {
+          if (over) return;
+          const dt = Math.min(0.05, (now - last) / 1000); last = now;
+          if (now > nextGust) {
+            const strength = (lvl === 1 ? 55 : 80) + t.elapsed() * (lvl === 1 ? 4 : 7);
+            force = (Math.random() < 0.5 ? -1 : 1) * strength * (0.6 + Math.random() * 0.6);
+            nextGust = now + 700 + Math.random() * 700;
+          }
+          v += (force + tilt * 0.9) * dt;   // waves plus gravity pulling a leaning boat further over
+          v *= Math.pow(0.35, dt);          // water drag
+          tilt += v * dt;
+          boat.style.rotate = tilt * 0.45 + "deg";
+          needle.style.left = 50 + tilt / 2 + "%";
+          meter.classList.toggle("danger", Math.abs(tilt) > 70);
+          if (Math.abs(tilt) >= 100) { S("crumble"); boat.classList.add("sunk"); prog(t.elapsed() / 12); end(false); return; }
+          raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+      });
+    },
+  };
+
+  /* ---------------- 22. Naaman's Seven Dips — tap on the beat ---------------- */
+  const naaman = {
+    id: "naaman", name: "Naaman's Seven Dips", icon: "💧",
+    verse: "2 Kings 5:14",
+    howto: (lvl) => `Dip in the Jordan seven times! Tap DIP right when the ring closes onto the circle. You can miss ${lvl === 1 ? 3 : 2} beats.`,
+    async play(body, lvl) {
+      const period = lvl === 1 ? 1150 : 880, win = lvl === 1 ? 190 : 130;
+      let misses = lvl === 1 ? 3 : 2;
+      const { area, t } = frame(body, "Tap on the beat!", 18);
+      const count = el("p", { class: "mg-count" }, `Dips: 0 / 7 · Misses left: ${misses}`);
+      const ring = el("i", { class: "beat-ring" });
+      const pad = el("div", { class: "beat-pad" }, el("span", { class: "beat-core" }, "🧔"), ring);
+      const dip = el("button", { class: "btn btn-go", "data-primary": true }, "DIP!");
+      area.append(count, pad, dip);
+      dip.focus();
+      return new Promise((resolve) => {
+        let dips = 0, over = false, raf, handled = -1;
+        const t0 = performance.now() + 600;
+        const end = (ok) => { if (over) return; over = true; t.stop(); cancelAnimationFrame(raf); dip.disabled = true; setTimeout(() => resolve(ok), 700); };
+        t.done.then(() => end(false));
+        const status = () => { count.textContent = `Dips: ${dips} / 7 · Misses left: ${Math.max(0, misses)}`; };
+        const miss = () => { misses--; S("wrong"); pad.classList.remove("good"); pad.classList.add("bad"); setTimeout(() => pad.classList.remove("bad"), 250); status(); if (misses < 0) end(false); };
+        const loop = (now) => {
+          if (over) return;
+          const k = Math.max(1, Math.ceil((now - t0) / period)); // index of the next beat
+          const phase = 1 - (k * period + t0 - now) / period; // 0 → 1 as the ring closes
+          ring.style.scale = String(1 + 0.75 * (1 - Math.max(0, phase)));
+          // A beat that passed without a tap counts as a miss.
+          if (k - 1 > handled && k - 1 >= 1 && now - ((k - 1) * period + t0) > win) { handled = k - 1; miss(); }
+          raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+        dip.addEventListener("click", () => {
+          if (over) return;
+          const now = performance.now();
+          const nearest = Math.round((now - t0) / period);
+          const off = Math.abs(now - (nearest * period + t0));
+          if (nearest >= 1 && off <= win && nearest > handled) {
+            handled = nearest; dips++; S("step"); prog(dips / 7);
+            pad.classList.add("good"); setTimeout(() => pad.classList.remove("good"), 200);
+            status();
+            if (dips >= 7) { S("correct"); end(true); }
+          } else if (nearest > handled) { handled = nearest; miss(); }
+        });
+      });
+    },
+  };
+
+  /* ---------------- 23. In Order! — creation days, books of the Law, the Gospels ---------------- */
+  const ORDERS = {
+    1: [["Creation week", ["☀️ Light", "☁️ Sky & sea", "🌱 Land & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"]],
+    2: [
+      ["Creation week", ["☀️ Light", "☁️ Sky & sea", "🌱 Land & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"],
+      ["Books of the Law", ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"], "Genesis–Deuteronomy"],
+      ["New Testament start", ["Matthew", "Mark", "Luke", "John", "Acts", "Romans"], "Matthew–Romans"],
+      ["First plagues of Egypt", ["🩸 Blood", "🐸 Frogs", "🦟 Gnats", "🪰 Flies", "🐄 Livestock", "🤕 Boils"], "Exodus 7–9"],
+    ],
+  };
+  const inOrder = {
+    id: "order", name: "In Order!", icon: "🔢",
+    verse: "Genesis 1:31",
+    howto: () => "Tap the cards in the right order, first to last. Two mistakes allowed.",
+    async play(body, lvl) {
+      const [title, items, ref] = pick(ORDERS[lvl]);
+      const { area, t } = frame(body, `${title} · ${ref}`, lvl === 1 ? 25 : 18);
+      let mistakes = 3;
+      const count = el("p", { class: "mg-count" }, "Mistakes left: 2");
+      const grid = el("div", { class: "order-grid" });
+      shuffle(items.map((x, i) => [x, i])).forEach(([x, i]) => grid.append(el("button", { class: "order-card", "data-i": i }, el("b", {}, ""), el("span", {}, x))));
+      area.append(count, grid);
+      THP.ui.focusFirst(grid);
+      return new Promise((resolve) => {
+        let at = 0, over = false;
+        const end = (ok) => { if (over) return; over = true; t.stop(); $$("button", grid).forEach((b) => (b.disabled = true)); setTimeout(() => resolve(ok), 800); };
+        t.done.then(() => end(false));
+        $$("button", grid).forEach((b) => b.addEventListener("click", () => {
+          if (over) return;
+          if (+b.dataset.i === at) {
+            at++; S("step"); prog(at / items.length);
+            b.disabled = true; b.classList.add("done"); b.firstChild.textContent = String(at);
+            const nextBtn = $("button:not([disabled])", grid); if (nextBtn) nextBtn.focus();
+            if (at === items.length) { S("correct"); end(true); }
+          } else {
+            mistakes--; S("wrong"); count.textContent = `Mistakes left: ${Math.max(0, mistakes - 1)}`;
+            b.classList.remove("nope"); void b.offsetWidth; b.classList.add("nope");
+            if (mistakes <= 0) end(false);
+          }
+        }));
+      });
+    },
+  };
+
+  /* ---------------- 24. Don't Look Back — tap RUN, never LOOK ---------------- */
+  const lookBack = {
+    id: "lookback", name: "Don't Look Back", icon: "🏃",
+    verse: "Genesis 19:17, 26",
+    howto: (lvl) => `Run from Sodom! Tap RUN wherever it pops up, ${lvl === 1 ? 10 : 14} times. Never tap LOOK BACK${lvl === 1 ? " (you get one warning)" : ""}, or you turn into a pillar of salt!`,
+    async play(body, lvl) {
+      const need = lvl === 1 ? 10 : 14;
+      let warnings = lvl === 1 ? 1 : 0;
+      const { area, t } = frame(body, "RUN! Don't look back!", 13);
+      const count = el("p", { class: "mg-count" }, `0 / ${need}`);
+      const grid = el("div", { class: "run-grid" });
+      const cells = Array.from({ length: 9 }, () => el("button", { class: "run-cell", tabindex: "-1" }, ""));
+      grid.append(...cells);
+      area.append(count, grid);
+      return new Promise((resolve) => {
+        let steps = 0, over = false, iv;
+        const end = (ok) => { if (over) return; over = true; t.stop(); clearInterval(iv); cells.forEach((c) => (c.disabled = true)); setTimeout(() => resolve(ok), 800); };
+        t.done.then(() => end(false));
+        const deal = () => {
+          const order = shuffle(cells.map((_, i) => i));
+          const temptations = lvl === 1 ? rand(1, 2) : rand(2, 4);
+          cells.forEach((c) => { c.className = "run-cell"; c.textContent = ""; c.dataset.kind = ""; c.tabIndex = -1; });
+          const go = cells[order[0]];
+          go.dataset.kind = "go"; go.textContent = "RUN ▶"; go.classList.add("go"); go.tabIndex = 0;
+          order.slice(1, 1 + temptations).forEach((i) => { const c = cells[i]; c.dataset.kind = "look"; c.textContent = "👀 LOOK BACK"; c.classList.add("look"); c.tabIndex = 0; });
+          if (document.activeElement && grid.contains(document.activeElement) && !document.activeElement.dataset.kind) go.focus();
+        };
+        deal();
+        cells[0].focus();
+        iv = setInterval(() => { if (!over) deal(); }, lvl === 1 ? 1500 : 1050);
+        cells.forEach((c) => c.addEventListener("click", () => {
+          if (over) return;
+          if (c.dataset.kind === "go") {
+            steps++; S("step"); prog(steps / need);
+            count.textContent = `${steps} / ${need}`;
+            if (steps >= need) { S("correct"); return end(true); }
+            deal();
+          } else if (c.dataset.kind === "look") {
+            if (warnings > 0) { warnings--; S("wrong"); THP.ui.popText("DON'T LOOK!", "bad", c); deal(); return; }
+            S("crumble"); c.textContent = "🧂"; c.classList.add("salt"); end(false);
+          }
+        }));
+      });
+    },
+  };
+
+  THP.MINIGAMES = [
+    loaves, pairs, jericho, sling, fleece, scroll, lostSheep, manna, redSea, ark, lions, fishers, verseBuilder, dreams,
+    altar, ladder, sorter, stars, coin, spies, ship, naaman, inOrder, lookBack,
+  ];
 })();

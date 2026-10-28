@@ -70,7 +70,7 @@ Each game takes 6 questions from your level and 2 from the other, so Lambs get a
 
 ## 4. The Trial Room: minigames
 
-Built in the prototype (14):
+Built in the prototype (24):
 
 | # | Minigame | Story | Skill | TMP analogue |
 |---|---|---|---|---|
@@ -88,6 +88,18 @@ Built in the prototype (14):
 | 12 | **Fishers of Men** | John 21 | Whack-a-fish, avoid old boots | Reflex |
 | 13 | **Verse Builder** | various | Tap memory-verse words in order (12 verses) | Word order |
 | 14 | **Joseph's Dreams** | Genesis 37 | Repeat a growing sun/moon/star/wheat pattern | Simon says |
+| 15 | **Soak the Altar** | 1 Kings 18 | Hold to pour, release inside the gold band, 3 jars | Hold and release |
+| 16 | **Jacob's Ladder** | Genesis 28 | Alternate left/right taps to climb; same hand twice slips | Alternating mash |
+| 17 | **Scroll Sorter** | 2 Timothy 3 | Old Testament or New? Sort books against the clock | Sorting |
+| 18 | **Abraham's Stars** | Genesis 15 | Stars flash for a moment, pick how many | Flash count |
+| 19 | **The Lost Coin** | Luke 15 | Sweep tiles; each shows distance to the coin (hot/cold deduction) | Deduction |
+| 20 | **Hide the Spies** | Joshua 2 | Follow the bundle hiding the spy through a shuffle | Shell game |
+| 21 | **Paul's Shipwreck** | Acts 27 | Lean against gusts to keep the ship from capsizing for 12 s | Balance |
+| 22 | **Naaman's Seven Dips** | 2 Kings 5 | Tap when the ring closes, 7 times | Rhythm |
+| 23 | **In Order!** | Genesis 1 and more | Creation days, books of the Law, first Gospels, first plagues in order | Sequencing |
+| 24 | **Don't Look Back** | Genesis 19 | Tap RUN wherever it appears, never LOOK BACK | Go / no-go |
+
+Every minigame also reports a score through `THP.mgScore(won)`: a win earns 1,000 plus up to 500 for time left, and a loss earns up to 700 for progress. Single-player only uses win/lose; Versus uses the score.
 
 Backlog ideas:
 
@@ -95,6 +107,18 @@ Backlog ideas:
 - **Blessing Wheel** (TMP2 "Wheel of Enormous Proportions"): bonus spin after a streak of 3.
 
 ---
+
+## 4b. Versus mode (pass & play)
+
+- 2–4 players on one device, with a name and color each. Pick a level (Lambs / Warriors / Legends) and 3, 5 or 7 rounds.
+- Rounds alternate: **Trivia Blitz** (3 questions each, all different, drawn without repeats across the match) and
+  **Trial Room** (a roulette picks one minigame and everyone plays it; it reshuffles for each player).
+- A "Pass to {name}, no peeking!" screen sits between turns. The first player rotates each round so nobody always sets the bar.
+- Scores: trivia uses the normal speed + streak scoring; minigames use `THP.mgScore` ×2 so the two round types weigh about the same.
+  The last round is worth double.
+- After each round there's a scoreboard with round winner crowns, bars and shared ranks for ties; at the end a champion
+  screen with Rematch / Change players / Title.
+- Code: `js/versus.js`, using `THP.game.askQuestion` and `THP.game.runMinigame` from `js/game.js`.
 
 ## 5. Characters
 
@@ -173,7 +197,7 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
   1. PWA manifest + service worker → install to home screen, play offline.
   2. Content pipeline: questions in JSON/CSV so teachers and parents can add packs ("Christmas pack", "Easter pack", curriculum tie-ins).
   3. Accessibility pass: read-aloud mode (Web Speech API) for pre-readers, high-contrast option, longer-timer option.
-  4. Couch party mode: TV as the board, phones as controllers (the real TMP model), still with no accounts.
+  4. Couch party mode: TV as the board, phones as controllers (the real TMP model), still with no accounts. Pass-and-play Versus is the first step.
   5. Native wrappers (Capacitor) for app stores, and a Fire TV / Android TV build that maps the D-pad to arrows.
 
 ---
@@ -182,7 +206,7 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
 
 | Milestone | Scope |
 |---|---|
-| **M0: Sketch** (done) | Full loop playable, 14 minigames, 3 levels, 140 questions, 50 final prompts |
+| **M0: Sketch** (done) | Full loop playable, 24 minigames, 3 levels, 140 questions, 50 final prompts, pass-and-play Versus |
 | M1: Content | 300+ questions reviewed by a children's ministry lead; fact cards with illustrations |
 | M2: Polish | Character animation pass, voice lines, music loop, 4 more minigames, Blessing Wheel |
 | M3: Ship | PWA/offline, read-aloud mode, parent page, app store builds |
