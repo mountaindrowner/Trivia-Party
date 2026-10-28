@@ -164,8 +164,22 @@ button:disabled { cursor: default; }
 /* ---------- Title ---------- */
 .title-screen { gap: 1rem; }
 .title-brand, .title-play { display: flex; flex-direction: column; align-items: center; gap: inherit; width: 100%; }
-.extra-row { display: grid; gap: inherit; width: min(34rem, 100%); }
-.extra-row .versus-card { width: 100%; }
+.section-label { margin: 0.2rem 0 0; font-family: var(--display); font-weight: 400; font-size: 1.5rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.section-help { margin: -0.3rem 0 0.1rem; max-width: 30rem; font-size: 0.85rem; line-height: 1.35; opacity: 0.9; text-wrap: balance; }
+.card-desc { display: block; font-family: var(--body); font-weight: 700; font-style: normal; font-size: 0.78rem; line-height: 1.3; text-transform: none;
+  letter-spacing: 0; opacity: 0.95; max-width: 22rem; text-wrap: balance; }
+/* Game Modes menu: one row per mode. These rules beat each skin's poster-card layout on purpose. */
+.mode-list { display: grid; gap: 0.5rem; width: min(36rem, 100%); }
+.title-play .mode-row { display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-start; gap: 0.8rem;
+  width: 100%; min-height: 0; padding: 0.55rem 1.2rem !important; text-align: left; grid-column: auto; }
+.title-play .mode-row .level-icon { font-size: 1.7rem !important; flex: none; width: 2.2rem; text-align: center; }
+.row-text { display: grid; gap: 0.15rem; min-width: 0; }
+.row-head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.6rem; }
+.title-play .mode-row .row-head strong { font-size: 1.35rem !important; line-height: 1.05; }
+.title-play .mode-row .row-head small { font-size: 0.7rem; }
+.title-play .mode-row .card-desc { max-width: none; text-wrap: pretty; }
+.title-foot .btn { font-size: 1rem; min-height: 2.3rem; padding: 0.35rem 1.1rem; }
+.title-foot { flex-wrap: nowrap; }
 .logo { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-weight: 400; line-height: 0.9; }
 .logo-1, .logo-3 { font-size: 2.3rem; letter-spacing: 0.08em; color: var(--white); text-shadow: 0 0.22rem 0 var(--ink); }
 .logo-1 { rotate: -3deg; }
@@ -255,7 +269,7 @@ button:disabled { cursor: default; }
 .reel-name { font-family: var(--display); font-size: 1.5rem; }
 .reel.landed { animation: pulse 0.5s 2; background: var(--amber); }
 .howto-line { margin: 0; max-width: 30rem; font-size: 1.05rem; line-height: 1.4; text-wrap: balance; }
-.countdown span { font-family: var(--display); font-size: 9rem; color: var(--amber); text-shadow: 0 0.4rem 0 var(--ink); animation: zoom 0.55s ease-out both; }
+.countdown span { display: inline-block; padding: 0 0.18em; font-family: var(--display); font-size: min(9rem, 42vmin); line-height: 1; color: var(--amber); text-shadow: 0 0.4rem 0 var(--ink); animation: zoom 0.55s ease-out both; }
 @keyframes zoom { from { scale: 2.2; opacity: 0; } }
 
 /* ---------- Minigames ---------- */
@@ -609,8 +623,9 @@ button:disabled { cursor: default; }
   #bubble-text { font-size: 1.05rem; min-height: 4em; }
   #stage > section.title-screen { flex-direction: row; align-items: center; max-width: 66rem; gap: 2.5rem; }
   .title-brand, .title-play { flex: 1; min-width: 0; gap: 0.9rem; }
-  .extra-row { grid-template-columns: 1fr 1fr; width: min(36rem, 100%); }
-  .extra-row .versus-card { flex-direction: column; gap: 0.2rem; text-align: center; }
+  .title-play { gap: 0.55rem; }
+  .mode-list { gap: 0.4rem; }
+  .title-play .mode-row { padding-block: 0.45rem !important; }
 }
 
 /* ---------- Small phones ---------- */

@@ -85,7 +85,7 @@ Built in the prototype (24):
 | 9 | **Red Sea Run** | Exodus 14 | Switch lanes to dodge waves for 12 s | Dodge / survive |
 | 10 | **Build the Ark** | Genesis 6 | Drop sliding beams; overhang gets trimmed (stacker) | Timing |
 | 11 | **Lions' Den Tiptoe** | Daniel 6 | Step while the lion sleeps, freeze when it wakes | Red light, green light |
-| 12 | **Fishers of Men** | John 21 | Whack-a-fish, avoid old boots | Reflex |
+| 12 | **Fishers of People** | John 21 | Whack-a-fish, avoid old boots | Reflex |
 | 13 | **Verse Builder** | various | Tap memory-verse words in order (12 verses) | Word order |
 | 14 | **Joseph's Dreams** | Genesis 37 | Repeat a growing sun/moon/star/wheat pattern | Simon says |
 | 15 | **Soak the Altar** | 1 Kings 18 | Hold to pour, release inside the gold band, 3 jars | Hold and release |

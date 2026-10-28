@@ -208,8 +208,7 @@ body { font-weight: 600; }
 .reel-name { font-size: 2.6rem; padding-top: 0.2rem; }
 .reel.landed { animation: rightPop 0.4s 2; background: var(--steel-2); box-shadow: inset 0 0 0 0.2rem var(--amber); }
 .howto-line { font-weight: 600; }
-.countdown span { font-family: var(--display); font-weight: 700; font-size: 14rem; line-height: 0.8; color: transparent; background: var(--flame); -webkit-background-clip: text; background-clip: text;
-  text-shadow: none; filter: drop-shadow(0 0 2rem rgba(255, 90, 31, 0.7)); }
+.countdown span { font-family: var(--display); font-weight: 700; font-size: min(14rem, 48vmin); line-height: 0.9; color: var(--amber); background: none; text-shadow: 0 0 0.25em var(--fire), 0 0.04em 0 var(--ruby); filter: none; }
 
 /* ---------- Minigames ---------- */
 .mg-title { font-size: 2.8rem; text-shadow: var(--glitch); }
@@ -375,6 +374,9 @@ body { font-weight: 600; }
 .verse { font-weight: 500; }
 .verse cite { font-family: var(--body); font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.72rem; }
 
+.section-label { font-family: var(--display); font-weight: 600; font-size: 2rem; line-height: 1; color: var(--amber); }
+.section-help { font-family: var(--body); }
+.card-desc { font-family: var(--body); font-weight: 600; }
 @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
   .title-screen { gap: 0.7rem; }
   .logo-2 b { font-size: 6.4rem; }

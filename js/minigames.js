@@ -561,9 +561,9 @@ window.THP = window.THP || {};
     },
   };
 
-  /* ---------------- 12. Fishers of Men — whack-a-fish ---------------- */
+  /* ---------------- 12. Fishers of People — whack-a-fish ---------------- */
   const fishers = {
-    id: "fishers", name: "Fishers of Men", icon: "🐟",
+    id: "fishers", name: "Fishers of People", icon: "🐟",
     verse: "John 21:6",
     howto: (lvl) => `Cast your net! Tap ${lvl === 1 ? 8 : 12} fish when they jump. Old boots 👢 cost you a fish.`,
     async play(body, lvl) {
@@ -1080,12 +1080,12 @@ window.THP = window.THP || {};
 
   /* ---------------- 23. In Order! — creation days, books of the Law, the Gospels ---------------- */
   const ORDERS = {
-    1: [["Creation week", ["☀️ Light", "☁️ Sky & sea", "🌱 Land & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"]],
+    1: [["Creation week", ["☀️ Light", "☁️ Sky", "🌱 Land, seas & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"]],
     2: [
-      ["Creation week", ["☀️ Light", "☁️ Sky & sea", "🌱 Land & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"],
+      ["Creation week", ["☀️ Light", "☁️ Sky", "🌱 Land, seas & plants", "🌙 Sun, moon & stars", "🐟 Fish & birds", "🦁 Animals & people"], "Genesis 1"],
       ["Books of the Law", ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"], "Genesis–Deuteronomy"],
       ["New Testament start", ["Matthew", "Mark", "Luke", "John", "Acts", "Romans"], "Matthew–Romans"],
-      ["First plagues of Egypt", ["🩸 Blood", "🐸 Frogs", "🦟 Gnats", "🪰 Flies", "🐄 Livestock", "🤕 Boils"], "Exodus 7–9"],
+      ["First plagues of Egypt", ["🌊 Water to blood", "🐸 Frogs", "🦟 Gnats", "🪰 Flies", "🐄 Livestock", "🤕 Boils"], "Exodus 7–9"],
     ],
   };
   const inOrder = {
@@ -1126,7 +1126,7 @@ window.THP = window.THP || {};
   const lookBack = {
     id: "lookback", name: "Don't Look Back", icon: "🏃",
     verse: "Genesis 19:17, 26",
-    howto: (lvl) => `Run from Sodom! Tap RUN wherever it pops up, ${lvl === 1 ? 10 : 14} times. Never tap LOOK BACK${lvl === 1 ? " (you get one warning)" : ""}, or you turn into a pillar of salt!`,
+    howto: (lvl) => `The angels told Lot's family: run and don't look back! Tap RUN wherever it pops up, ${lvl === 1 ? 10 : 14} times. Never tap LOOK BACK${lvl === 1 ? " (you get one warning)" : ""}.`,
     async play(body, lvl) {
       const need = lvl === 1 ? 10 : 14;
       let warnings = lvl === 1 ? 1 : 0;
@@ -1161,7 +1161,7 @@ window.THP = window.THP || {};
             deal();
           } else if (c.dataset.kind === "look") {
             if (warnings > 0) { warnings--; S("wrong"); THP.ui.popText("DON'T LOOK!", "bad", c); deal(); return; }
-            S("crumble"); c.textContent = "🧂"; c.classList.add("salt"); end(false);
+            S("wrong"); c.textContent = "OOPS! YOU LOOKED"; c.classList.add("salt"); end(false);
           }
         }));
       });

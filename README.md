@@ -24,7 +24,7 @@ python3 -m http.server 8000
 - Teaching built in: a lesson after every answer, an answer review after every game, and a "learned" count per mode
 - 24 Trial Room minigames: Loaves & Fishes, Noah's Pairs, Walls of Jericho, David's Sling,
   Gideon's Fleece, Scroll Scramble, Find the Lost Sheep, Manna Catch, Red Sea Run, Build the Ark,
-  Lions' Den Tiptoe, Fishers of Men, Verse Builder, Joseph's Dreams, Soak the Altar, Jacob's Ladder,
+  Lions' Den Tiptoe, Fishers of People, Verse Builder, Joseph's Dreams, Soak the Altar, Jacob's Ladder,
   Scroll Sorter, Abraham's Stars, The Lost Coin, Hide the Spies, Paul's Shipwreck, Naaman's Seven Dips,
   In Order!, Don't Look Back
 - **Versus mode**: pass-and-play for 2–4 players. Same challenge each round, different questions and a
@@ -36,6 +36,9 @@ python3 -m http.server 8000
   kid-gamer host), **Neon City** cyberpunk (`css/cyber.css`) and **Holy Fire** esports (`css/edge.css`)
 - XP, levels and ranks (Bronze → Champion) that build up across solo games
 - Synthesized sound, responsive phone and TV layouts, best score saved on the device
+
+All player-facing text has been through a child-safety review; see [CONTENT-SAFETY.md](CONTENT-SAFETY.md) for what was checked,
+what changed, and the judgment calls left for a pastor or children's ministry leader.
 
 See [DESIGN.md](DESIGN.md) for the full game design, the mapping from *Trivia Murder Party*, the art direction, and the roadmap.
 

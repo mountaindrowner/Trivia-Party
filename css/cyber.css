@@ -228,7 +228,7 @@ body { font-weight: 600; letter-spacing: 0.01em; }
 .reel { box-shadow: inset 0 -2px 0 var(--fire), 0 0 1.4rem rgba(255, 43, 214, 0.18); }
 .reel-name { font-size: 1.6rem; }
 .reel.landed { box-shadow: inset 0 0 0 1px var(--amber), 0 0 1.8rem rgba(244, 255, 58, 0.4); background: var(--brackets), var(--steel-2); }
-.countdown span { font-size: 10rem; background: linear-gradient(180deg, #fff, var(--sapphire) 55%, var(--fire)); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 1.6rem rgba(0, 240, 255, 0.7)); }
+.countdown span { font-size: min(10rem, 42vmin); color: #e8fdff; background: none; text-shadow: var(--glitch), 0 0 0.3em var(--sapphire), 0 0 0.6em rgba(0, 240, 255, 0.5); filter: none; }
 
 /* ---------- Minigames ---------- */
 .mg-title { font-size: 1.75rem; text-shadow: var(--glitch), var(--glow-c); }
@@ -326,6 +326,11 @@ body { font-weight: 600; letter-spacing: 0.01em; }
 .review-list li.miss { border-left-color: var(--fire); }
 .review-fact .ref { color: var(--amber); }
 
+.section-label { font-family: var(--mono); font-size: 1.05rem; letter-spacing: 0.4em; color: var(--sapphire); text-shadow: var(--glow-c); }
+.section-label::before { content: "// "; color: var(--fire); }
+.section-help { font-family: var(--body); }
+.card-desc { font-family: var(--body); font-weight: 600; font-size: 0.8rem; }
+.title-play .mode-row .row-head strong { font-size: 1.15rem !important; } /* wide display face: keep name and age on one line */
 @media (max-width: 420px) {
   .logo-2 b { font-size: 4.4rem; }
   .logo-1 { font-size: 1.1rem; }
@@ -342,6 +347,5 @@ body { font-weight: 600; letter-spacing: 0.01em; }
   .vs-champ .vs-pass-name { font-size: 2.3rem; }
   .final-score { font-size: 3.3rem; }
   .reel-name { font-size: 1.25rem; }
-  .countdown span { font-size: 8rem; }
   .answer { font-size: 1.1rem; }
 }

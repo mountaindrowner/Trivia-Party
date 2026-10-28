@@ -146,7 +146,7 @@ body { font-weight: 700; }
 .howto-list strong { font-size: 1.5rem; color: var(--amber); }
 .title-screen { gap: 0.8rem; }
 .title-foot { gap: 0.6rem; }
-.title-foot .btn { font-size: 1.25rem; min-height: 2.6rem; padding: 0.4rem 1.4rem 0.35rem; }
+.title-foot .btn { font-size: 1.1rem; min-height: 2.3rem; padding: 0.35rem 1.2rem 0.3rem; }
 .skin-btn { font-size: 1.05rem !important; }
 
 /* XP card */
@@ -212,12 +212,12 @@ body { font-weight: 700; }
 #stage[data-scene="trial"] { background: radial-gradient(70% 55% at 50% 40%, rgba(155, 44, 255, 0.35), transparent 70%); }
 .trial-intro::before, .trial-intro::after { height: 1rem; background: repeating-linear-gradient(-45deg, #fff 0 0.8rem, var(--storm) 0.8rem 1.6rem); box-shadow: 0 0 1.2rem rgba(155, 44, 255, 0.6); }
 .trial-title { font-size: 4.4rem; color: #fff; text-shadow: 0 0.06em 0 var(--storm), 0 0.12em 0 var(--ink), 0 0 1.6rem rgba(155, 44, 255, 0.9); animation: none; }
-.trial-title.gold { color: transparent; background: linear-gradient(180deg, #fffbe0, var(--amber) 50%, #ff9d1a); -webkit-background-clip: text; background-clip: text;
+.trial-title.gold { padding-inline: 0.1em 0.2em; color: transparent; background: linear-gradient(180deg, #fffbe0, var(--amber) 50%, #ff9d1a); -webkit-background-clip: text; background-clip: text;
   text-shadow: none; filter: drop-shadow(0 0.06em 0 var(--ink)); }
 .reel { box-shadow: var(--bevel); }
 .reel-name { font-size: 2.2rem; text-shadow: var(--poster); }
 .reel.landed { background: var(--r-legendary); box-shadow: var(--bevel), inset 0 0 0 3px #fff; }
-.countdown span { font-size: 13rem; color: transparent; background: var(--flame); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0.05em 0 var(--ink)); }
+.countdown span { font-size: min(13rem, 48vmin); color: var(--amber); background: none; -webkit-text-stroke: 0.04em var(--ink); paint-order: stroke fill; text-shadow: 0 0.06em 0 var(--ink), 0 0 0.4em rgba(255, 255, 255, 0.6); filter: none; }
 
 /* ---------- Minigames ---------- */
 .mg-title { font-size: 2.5rem; color: #fff; text-shadow: var(--poster); }
@@ -283,7 +283,7 @@ body { font-weight: 700; }
 .pick[aria-pressed="true"] { background: var(--card) !important; color: #fff; box-shadow: var(--bevel), inset 0 0 0 4px #fff; transform: translateY(0.15rem); }
 
 /* ---------- Results & Versus ---------- */
-.results.won .screen-title { font-size: 4rem; color: transparent; background: var(--flame); -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 0.05em 0 var(--ink)); }
+.results.won .screen-title { font-size: 4rem; padding-inline: 0.1em 0.2em; color: transparent; background: var(--flame); -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 0.05em 0 var(--ink)); }
 .final-score { font-size: 5rem; color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; text-shadow: var(--poster); filter: none; }
 .final-score small { color: var(--amber); -webkit-text-fill-color: var(--amber); font-family: var(--display); font-style: italic; }
 .new-best { color: var(--emerald); -webkit-text-fill-color: var(--emerald); }
@@ -331,6 +331,9 @@ body { font-weight: 700; }
 .review-fact .ref { color: var(--steel); }
 .beat-note { text-shadow: var(--poster); }
 
+.section-label { font-family: var(--display); font-style: italic; font-size: 2rem; color: #fff; text-shadow: var(--poster); }
+.section-help { font-family: var(--body); font-weight: 700; font-style: italic; text-shadow: 0 2px 0 rgba(10, 15, 58, 0.4); }
+.card-desc { font-family: var(--body); font-weight: 700; font-style: italic; text-shadow: 0 1px 0 rgba(10, 15, 58, 0.55); }
 @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
   .logo-2 b { font-size: 5rem; }
   .logo-1 { font-size: 1.6rem; }

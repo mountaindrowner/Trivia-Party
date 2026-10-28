@@ -44,7 +44,7 @@ window.THP = window.THP || {};
       const focusId = document.activeElement && document.activeElement.id;
       const rows = names.map((n, i) => el("div", { class: "vs-player", style: { "--pc": `var(--p${i})` } },
         el("span", { class: "vs-icon", "aria-hidden": "true" }, PLAYER_ICONS[i]),
-        el("input", { class: "vs-name", id: "vs-name-" + i, maxlength: 12, placeholder: `Player ${i + 1}`, value: n, autocomplete: "off", "aria-label": `Player ${i + 1} name` }),
+        el("input", { class: "vs-name", id: "vs-name-" + i, maxlength: 12, placeholder: `Player ${i + 1} nickname`, value: n, autocomplete: "off", "aria-label": `Player ${i + 1} name` }),
         names.length > 2 ? el("button", { class: "vs-remove", id: "vs-remove-" + i, "aria-label": `Remove player ${i + 1}`, onclick: () => { S("tap"); readNames(); names.splice(i, 1); render(); } }, "✕") : null));
       node.replaceChildren(
         el("p", { class: "eyebrow" }, "Pass & play"),

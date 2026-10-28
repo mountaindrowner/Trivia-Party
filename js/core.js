@@ -215,7 +215,7 @@ THP.ui = (function () {
     setTimeout(() => app.classList.remove(cls), 700);
   }
 
-  /** Big slam-in word across the screen ("NAILED IT", "TOO SLOW"). */
+  /** Big slam-in word across the screen ("NAILED IT", "TIME'S UP"). */
   function stamp(text, cls) {
     const layer = $("#fx");
     const n = el("div", { class: "stamp " + (cls || "") }, text);
