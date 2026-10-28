@@ -615,7 +615,8 @@ window.THP = window.THP || {};
     verse: "Psalm 119:11",
     howto: () => "A memory verse got scrambled! Tap the words in the right order. 3 mistakes and you're out.",
     async play(body, lvl) {
-      const [text, ref] = pick(VERSES[lvl]);
+      // A Holiday Rush can swap in its own verses (THP.mgTheme, set by js/holiday.js).
+      const [text, ref] = pick((THP.mgTheme && THP.mgTheme.verses) || VERSES[lvl]);
       const words = text.split(" ");
       let order = shuffle(words.map((w, i) => i));
       while (order.every((v, i) => v === i)) order = shuffle(order);
@@ -1093,7 +1094,7 @@ window.THP = window.THP || {};
     verse: "Genesis 1:31",
     howto: () => "Tap the cards in the right order, first to last. Two mistakes allowed.",
     async play(body, lvl) {
-      const [title, items, ref] = pick(ORDERS[lvl]);
+      const [title, items, ref] = pick((THP.mgTheme && THP.mgTheme.orders) || ORDERS[lvl]);
       const { area, t } = frame(body, `${title} · ${ref}`, lvl === 1 ? 25 : 18);
       let mistakes = 3;
       const count = el("p", { class: "mg-count" }, "Mistakes left: 2");
@@ -1167,6 +1168,10 @@ window.THP = window.THP || {};
       });
     },
   };
+
+  // Shared with the holiday minigames (js/holiday.js), so their timers and progress score the same way.
+  THP.mgFrame = frame;
+  THP.mgProg = prog;
 
   THP.MINIGAMES = [
     loaves, pairs, jericho, sling, fleece, scroll, lostSheep, manna, redSea, ark, lions, fishers, verseBuilder, dreams,

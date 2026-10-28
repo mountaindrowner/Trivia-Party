@@ -434,19 +434,19 @@ THP.Scenes = (function () {
   }
 
   /* ---------- Milestones ----------
-     Scene 1 hooks a new player on their first win. After that, every new rank unlocks the next scene, so they come
-     quickly at first and then spread out (about 1,000 XP per solo game):
-     Silver L5 ≈ game 3 · Gold L10 ≈ game 8 · Platinum L15 ≈ game 16 · Diamond L20 ≈ game 27 · Champion L30 ≈ game 57.
+     Scene 1 hooks a new player on their first win. After that a new scene comes every four levels, spaced to land
+     while the content still feels fresh (about 1,000 XP per solo game):
+     Level 6 ≈ game 4 · Level 10 ≈ game 8 · Level 14 ≈ game 14 · Level 18 ≈ game 22 · Level 22 ≈ game 32.
      Every scene gets its own art style. Milestones without a finished scene show as "in production". */
   const LIST = [
     { id: "giant", ep: 1, need: { wins: 1 }, style: "Saturday-morning cartoon",
       title: "Giant Problem", sub: "David and Goliath", ref: "1 Samuel 17", icon: "🪨",
       lesson: "David wasn't brave because he was big. He knew God was bigger.", verse: ["The battle is the LORD's.", "1 Samuel 17:47"], play: giant },
-    { id: "s2", ep: 2, need: { lvl: 5, rank: "Silver" }, style: "Paper cut-out" },
-    { id: "s3", ep: 3, need: { lvl: 10, rank: "Gold" }, style: "8-bit pixel art" },
-    { id: "s4", ep: 4, need: { lvl: 15, rank: "Platinum" }, style: "Clay stop-motion" },
-    { id: "s5", ep: 5, need: { lvl: 20, rank: "Diamond" }, style: "Neon anime" },
-    { id: "s6", ep: 6, need: { lvl: 30, rank: "Champion" }, style: "Stained glass" },
+    { id: "s2", ep: 2, need: { lvl: 6 }, style: "Paper cut-out" },
+    { id: "s3", ep: 3, need: { lvl: 10 }, style: "8-bit pixel art" },
+    { id: "s4", ep: 4, need: { lvl: 14 }, style: "Clay stop-motion" },
+    { id: "s5", ep: 5, need: { lvl: 18 }, style: "Neon anime" },
+    { id: "s6", ep: 6, need: { lvl: 22 }, style: "Stained glass" },
   ];
   const ready = (s) => typeof s.play === "function";
 
@@ -458,7 +458,7 @@ THP.Scenes = (function () {
   const level = () => (THP.game && THP.game.levelOf ? THP.game.levelOf(xp()).lvl : 1);
   const reached = (s) => (s.need.wins ? wins() >= s.need.wins : level() >= s.need.lvl);
   const isOpen = (s) => ready(s) && reached(s);
-  const needText = (s) => (s.need.wins ? `Win ${s.need.wins} game${s.need.wins === 1 ? "" : "s"}` : `Reach ${s.need.rank} rank (Level ${s.need.lvl})`);
+  const needText = (s) => (s.need.wins ? `Win ${s.need.wins} game${s.need.wins === 1 ? "" : "s"}` : `Reach Level ${s.need.lvl}`);
 
   /** Count a solo win. */
   function recordWin() { store.set("thp-wins", wins() + 1); }
@@ -475,7 +475,7 @@ THP.Scenes = (function () {
     const m = LIST.find((s) => !reached(s));
     if (!m) return null;
     if (m.need.wins) return { scene: m, text: `${m.need.wins - wins()} more win${m.need.wins - wins() === 1 ? "" : "s"}` };
-    return { scene: m, text: `${(xpFor(m.need.lvl) - xp()).toLocaleString()} XP to ${m.need.rank}` };
+    return { scene: m, text: `${(xpFor(m.need.lvl) - xp()).toLocaleString()} XP to Level ${m.need.lvl}` };
   }
   const unlockedCount = () => LIST.filter(isOpen).length;
   const readyCount = () => LIST.filter(ready).length;

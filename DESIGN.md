@@ -136,6 +136,40 @@ when Jesus died (Matthew 27:51; Hebrews 10:19–20).
 
 Content totals: **385 questions** (48 / 48 / 44 / 64 / 60 / 60 / 61) and 60 final-round prompts.
 
+## 4c. Daily Challenge
+
+- **What it is:** 5 questions and 1 minigame at the player's age level (Lambs, Warriors or Legends), the same for
+  everyone that day, so friends and siblings can compare scores.
+- **Picking questions:** a seeded shuffle of the level's pool, dealt 5 a day, so no question repeats until the whole
+  pool has been used. A new shuffle starts each lap.
+- **Streak:** 🔥 grows by one for each day in a row. The daily screen and results show a 7-day check row.
+- **XP:** 50, plus 40 per right answer, plus 75 for passing the trial, plus a streak bonus of 20 × days (up to 10 days).
+- **Replays** the same day are practice only: no XP, and the streak doesn't change.
+- **Title screen:** the first button under the player card shows "🌅 Daily Challenge · NEW" or "✓ Daily done · 🔥 3".
+- **Code:** `js/daily.js`, stored as `thp-daily`.
+
+## 4d. Holiday Rush
+
+Six minigames back to back with three lives: lose a trial, lose a life.
+
+| Event | Featured | Trials |
+|---|---|---|
+| 🌾 Thanksgiving Rush | All of November | The One Who Came Back (Luke 17), Goodbye Grumbles!, Loaves & Fishes, Verse Builder with thank-you verses, then the two new ones again on hard |
+| 🎄 Christmas Rush | Dec 1 – Jan 6 (Epiphany) | Follow the Star (Matthew 2:9), Gifts for the King (Matthew 2:11), In Order! with the Christmas story, Verse Builder with Christmas verses, then the two new ones on hard |
+
+- **In season:** the event is featured on the title (LIVE badge) and earns double XP.
+- **The rest of the year:** both events stay playable from the Holiday Rush menu, without the bonus.
+- **Effects:** leaves or snow fall during a Rush.
+- **Records:** best scores are kept per event (`thp-rush-thanksgiving`, `thp-rush-christmas`).
+- **The four holiday minigames:**
+  - *The One Who Came Back:* tap the healed man who turns back to say thanks.
+  - *Goodbye, Grumbles!:* sort thankful from grumbly.
+  - *Follow the Star:* keep the camel under the moving star.
+  - *Gifts for the King:* tap only gold, frankincense and myrrh.
+- **Where they live:** the holiday games are in `js/holiday.js`, outside `THP.MINIGAMES`, so the regular Trial Room
+  and Versus don't change. They share `THP.mgFrame`, `THP.mgProg` and `THP.mgScore` with the other games.
+  Verse Builder and In Order! read `THP.mgTheme` for holiday lists.
+
 ## 4b. Versus mode (pass & play)
 
 - 2–4 players on one device, with a name and color each. Pick a level (Lambs / Warriors / Legends) and 3, 5 or 7 rounds.
@@ -212,16 +246,17 @@ Short animated cartoons of Bible stories, earned at milestones, each drawn in it
 | Scene | Unlocks at | About when (≈1,000 XP per solo game) | Style |
 |---|---|---|---|
 | 1 Giant Problem | First win | Game 1–2 | Saturday-morning cartoon |
-| 2 | Silver rank (Level 5) | Game 3 | Paper cut-out |
-| 3 | Gold (Level 10) | Game 8 | 8-bit pixel art |
-| 4 | Platinum (Level 15) | Game 16 | Clay stop-motion |
-| 5 | Diamond (Level 20) | Game 27 | Neon anime |
-| 6 | Champion (Level 30) | Game 57 | Stained glass |
+| 2 | Level 6 | Game 4 | Paper cut-out |
+| 3 | Level 10 | Game 8 | 8-bit pixel art |
+| 4 | Level 14 | Game 14 | Clay stop-motion |
+| 5 | Level 18 | Game 22 | Neon anime |
+| 6 | Level 22 | Game 32 | Stained glass |
 
-They come quickly at first to hook a new player, then spread out.
+They come quickly at first to hook a new player, then spread out. Daily Challenges and Holiday Rushes also earn
+XP, so they count toward the milestones too.
 
 - **Results screen:** a newly unlocked scene gets a fanfare, a "NEW SCENE!" stamp and a banner with Watch now.
-  The XP card always shows the distance to the next one ("1,250 XP to Silver").
+  The XP card always shows the distance to the next one ("1,250 XP to Level 6").
 - **Gallery:** the title's 🎬 Story Scenes button opens it. Locked cards show their milestone and art style.
   A milestone reached before its scene is finished reads "still being animated."
 - **Storage:** wins are saved as `thp-wins`, and scenes already announced as `thp-scenes-seen`.

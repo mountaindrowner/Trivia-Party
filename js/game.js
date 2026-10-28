@@ -101,8 +101,9 @@ window.THP = window.THP || {};
     streak.hidden = st.streak < 2;
     streak.textContent = `x${streakMult(st.streak)} ${st.streak >= 3 ? "ON FIRE" : "STREAK"}`;
     streak.classList.toggle("hot", st.streak >= 3);
-    $("#lamps").hidden = st.mode === "versus";
-    $("#progress").textContent = st.mode === "versus" ? st.hudLabel
+    $("#lamps").hidden = st.mode === "versus" || st.mode === "daily";
+    // Versus, the Daily Challenge and Holiday Rush put their own label in the progress pill.
+    $("#progress").textContent = st.hudLabel != null ? st.hudLabel
       : st.phase === "final" ? "FINAL" : `${Math.min(st.qi + 1, QUESTIONS_PER_GAME)} / ${QUESTIONS_PER_GAME}`;
   }
 
@@ -123,7 +124,21 @@ window.THP = window.THP || {};
   }
   /** Texture layer for a .grit frame. Borders get grittier as the modes get harder (css/grit.css). */
   const grime = () => el("span", { class: "grime", "aria-hidden": "true" });
+  /** Daily Challenge, Holiday Rush and Story Scenes: the reasons to come back, right under the player card. */
+  function quickRow() {
+    const daily = THP.Daily.status(), rush = THP.Holiday.live();
+    return el("div", { class: "quick-row" },
+      el("button", { class: "btn quick-btn daily-btn" + (daily.done ? " done" : " due"), onclick: () => THP.Daily.screen() },
+        el("span", {}, daily.done ? "✓ Daily done" : "🌅 Daily Challenge"),
+        daily.streak ? el("small", {}, `🔥 ${daily.streak}`) : el("small", {}, "NEW")),
+      el("button", { class: "btn quick-btn rush-btn" + (rush ? " live" : ""), onclick: () => THP.Holiday.screen() },
+        el("span", {}, rush ? `${rush.icon} ${rush.name}` : "🎉 Holiday Rush"), rush ? el("small", {}, "LIVE") : null),
+      el("button", { class: "btn quick-btn scenes-btn", onclick: () => THP.Scenes.screen(titleScreen) },
+        el("span", {}, "🎬 Story Scenes"), el("small", {}, `${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`)));
+  }
   function titleScreen() {
+    THP.mgTheme = null; // leaving a Holiday Rush
+    if (THP.Holiday) THP.Holiday.clearFx();
     $("#hud").hidden = true;
     setMood("happy");
     const best = store.get("thp-best", 0);
@@ -150,8 +165,7 @@ window.THP = window.THP || {};
       })[THP.ui.skin()] || "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       xpCard(store.get("thp-xp", 0)),
       el("div", { class: "name-row" }, nameInput),
-      el("button", { class: "btn btn-ghost scenes-btn", onclick: () => THP.Scenes.screen(titleScreen) },
-        `🎬 Story Scenes ${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`),
+      quickRow(),
       best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null),
       el("div", { class: "title-play" },
       el("h2", { class: "section-label" }, "Game Modes"),
@@ -188,7 +202,7 @@ window.THP = window.THP || {};
       ["🚪", "Race to the Narrow Gate", "Tap every answer that fits to move forward. Beat Grumbles the Goat to the gate to win!"],
       ["🎯", "Challenge Modes", "Harder questions about what Jesus taught, prophecy and Bible history. Win in all six modes to unlock a secret one."],
       ["📖", "Learn as you go", "Every answer comes with a verse and a lesson. After each game, review what you missed."],
-      ["🎬", "Unlock Story Scenes", "Win your first game, then rank up (Silver, Gold and beyond) to unlock animated Bible cartoons."],
+      ["🎬", "Unlock Story Scenes", "Win your first game, then level up to unlock more animated Bible cartoons, each in its own art style."],
     ];
     const node = el("section", { class: "howto" },
       el("h2", { class: "screen-title" }, "How to Play"),
@@ -685,7 +699,7 @@ window.THP = window.THP || {};
   }
 
   // Shared with Versus mode (js/versus.js).
-  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult, levelOf, isUnlocked };
+  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult, levelOf, isUnlocked, xpCard, review };
 
   /* ---------- Boot ---------- */
   function boot() {

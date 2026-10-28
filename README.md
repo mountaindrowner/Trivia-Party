@@ -40,8 +40,11 @@ python3 -m http.server 8000
   Strut. Each part of the game has its own, and the Jukebox on the title screen plays any of them. 🎵 toggles music,
   and 🔊 mutes everything.
 - **Story Scenes**: animated Bible cartoon rewards, each in its own art style. Scene 1, *Giant Problem* (David and
-  Goliath, 1 Samuel 17), unlocks on your first win; the next ones unlock at each new rank (Silver, Gold, Platinum,
-  Diamond, Champion). Watch from the results screen or 🎬 Story Scenes on the title.
+  Goliath, 1 Samuel 17), unlocks on your first win; the next ones unlock at Levels 6, 10, 14, 18 and 22. Watch from the
+  results screen or 🎬 Story Scenes on the title.
+- **🌅 Daily Challenge**: 5 questions and 1 minigame, the same for everyone each day, with a 🔥 day streak and bonus XP
+- **🎉 Holiday Rush**: six minigames back to back with three lives. Thanksgiving Rush (November) and Christmas Rush
+  (Dec 1 – Jan 6) come with four new holiday minigames and double XP in season.
 - Synthesized sound effects, responsive phone and TV layouts, best score saved on the device
 
 All player-facing text has been through a content review and a two-pass fact check against the Bible text. See
