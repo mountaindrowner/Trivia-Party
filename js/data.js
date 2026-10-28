@@ -286,3 +286,47 @@ THP.VS_LINES = {
   champion: ["{name} is the CHAMPION! Well played, everybody!", "{name} wins it all! \"Run in such a way as to get the prize.\" 1 Corinthians 9:24!"],
   tieChampion: ["It's a TIE! Everybody gets bragging rights. Rematch?"],
 };
+
+/* Neon City skin: Barnabas as BARNABAS.EXE, a hologram host with a cool preteen voice.
+ * Used for Lambs and Warriors while the cyber skin is on; Legends keep THP.LINES_TEEN. Missing keys fall back to THP.LINES. */
+THP.LINES_CYBER = {
+  title: ["Yo. BARNABAS.EXE online. Pick a level and let's run it.", "System ready. Choose your level, player.", "Neon City's waiting. Pick a level."],
+  intro: [
+    "System boot... complete. Sup, I'm Barnabas, your host. Yes, a donkey. A cyber donkey. Keep up.",
+    "Your lamp has 3 charges of oil. Miss a question and you get sent to the Trial Room. Fail the trial, lose a charge.",
+    "Survive all that, then race Grumbles the Goat to the Narrow Gate. Ready, {name}? Let's go.",
+  ],
+  category: ["Loading {cat}...", "Next file: {cat}.", "Category unlocked: {cat}.", "{cat}. You got this.", "{cat}. No pressure. Okay, a little pressure.", "Scanning {cat}..."],
+  correct: ["Correct. Easy.", "Yesss. That's a W.", "Access granted!", "Big brain energy.", "Clean. Super clean.", "Okay, you actually know your stuff.", "Upload complete: correct!", "Nailed it. Respect.", "You're kind of cracked at this.", "That's how it's done.", "Certified correct.", "W after W after W."],
+  wrong: ["Error 404: right answer not found.", "Oof. Nope.", "Glitch! That's not it.", "Close... ish.", "Wrong file.", "That one got you.", "Nah. You'll bounce back.", "Bug detected. In that answer."],
+  timeout: ["Connection timed out!", "Lag spike! Too slow.", "Buffering... aaand it's over.", "AFK? The clock didn't wait."],
+  trial: ["Trial Room. Time to prove it.", "You got sent to the Trial Room. Show me those skills.", "Trial incoming! James 1 says trials make you stronger. Level up.", "Uh oh. Trial Room. Don't panic.", "Trial loading... good luck. Jk, you got this.", "Trial time. Lock in."],
+  trialWin: ["Trial cleared! Oil's safe.", "GG. You survived.", "Clutch! Lamp still lit.", "Easy clear."],
+  trialLose: ["Oil leak detected. Minus one charge.", "Ouch. Lamp's getting dim.", "That trial won. Not the game though.", "Lost a charge. Shake it off."],
+  lost: ["Lamp offline. You're a Lost Sheep now. But the Shepherd always goes looking for the one. Get the next one right!", "Power's out. Lost Sheep mode. Don't log off, the Shepherd's coming for you."],
+  found: ["FOUND! The Shepherd found you. Lamp rebooted!", "You're back online! The lost sheep is found!"],
+  finalIntro: [
+    "Final level: THE NARROW GATE.",
+    "Tap EVERY answer that fits. Right taps move you forward. Wrong taps knock you back.",
+    "Every charge of oil you saved is a head start. Grumbles the Goat is already complaining. Go go go!",
+  ],
+  goat: ["Grumbles: \"Ugh, this game is rigged.\"", "Grumbles: \"My hooves have lag.\"", "Grumbles: \"I'm literally right behind you.\"", "Grumbles: \"Baaa. Whatever.\"", "Grumbles: \"Can we restart?\"", "Grumbles: \"This is so unfair.\"", "Grumbles: \"I wasn't even trying.\"", "Grumbles: \"Gate's mine, sheep.\""],
+  win: ["GATE UNLOCKED. You actually did it. \"Well done, good and faithful servant.\"", "You made it through the Narrow Gate! Hall of fame stuff."],
+  lose: ["Grumbles got there first. Rough. But God's mercies are new every morning. Run it back!", "Game over... for now. Hit Play Again and get your W."],
+};
+THP.LINES.title = ["Hee-HAW! Pick your level to start the party!", "Welcome, friend! Choose your level!"];
+THP.LINES_TEEN.title = ["Hee-HAW. Pick your level. Legends, the arena's waiting."];
+
+THP.VS_LINES_CYBER = {
+  intro: ["VERSUS MODE. Everyone gets the same challenge but different questions. Pass the device, no peeking, and may the best player win."],
+  pass: ["Pass it to {name}. No peeking!", "{name}, you're up. Everyone else, hands off.", "Handing control to {name}...", "{name}'s turn. Don't choke. Jk. Kinda."],
+  roundTrivia: ["Trivia Blitz! Three questions each. Faster answers score more.", "Trivia Blitz loading. Speed counts!"],
+  roundTrial: ["Trial round! Everybody plays {game}. Top score takes it.", "It's {game}! Same game for everyone, but it reshuffles every time."],
+  finalRound: ["FINAL ROUND. Double points. Anything can happen."],
+  roundWin: ["{name} takes the round!", "Round goes to {name}. GG.", "{name} wins that one. Respect."],
+  roundTie: ["It's a tie! Even Solomon couldn't split this one."],
+  roundNone: ["Nobody scored?! That trial was brutal. Next round."],
+  lead: ["{name} is in the lead!", "{name} is on top... for now.", "Everybody's chasing {name}."],
+  champion: ["{name} is the CHAMPION! GG everyone!", "{name} wins it all! \"Run in such a way as to get the prize.\" 1 Corinthians 9:24."],
+  tieChampion: ["It's a TIE! Everybody gets bragging rights. Rematch?"],
+};

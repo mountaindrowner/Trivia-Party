@@ -4,8 +4,15 @@ window.THP = window.THP || {};
 (function () {
   const { $, el, sleep, pick, shuffle, show, say, setMood, waitButton, ringTimer, confetti, popText, flash, stamp, crack } = THP.ui;
   const S = (n) => THP.Sound.play(n);
-  // Host lines: Legends get the hype-announcer set, everything else falls back to the default lines.
-  const L = new Proxy({}, { get: (_, k) => (THP.state && THP.state.lvl === 3 && THP.LINES_TEEN[k]) || THP.LINES[k] });
+  // Host lines: Legends get the hype-announcer set; with the Neon City skin on, everyone else gets the cyber preteen voice.
+  // Any key a set doesn't have falls back to the default lines.
+  const L = new Proxy({}, {
+    get: (_, k) => {
+      if (THP.state && THP.state.lvl === 3 && THP.LINES_TEEN[k]) return THP.LINES_TEEN[k];
+      if (THP.ui.skin() === "cyber" && THP.LINES_CYBER[k]) return THP.LINES_CYBER[k];
+      return THP.LINES[k];
+    },
+  });
 
   const QUESTIONS_PER_GAME = 8;
   const MAX_OIL = 3;
@@ -71,7 +78,9 @@ window.THP = window.THP || {};
         el("span", { class: "logo-1" }, "TRIVIA"),
         el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
         el("span", { class: "logo-3" }, "PARTY")),
-      el("p", { class: "tagline" }, "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
+      el("p", { class: "tagline" }, THP.ui.skin() === "cyber"
+        ? "8 questions. 24 trials. 1 gate. Survive the Bible trivia gauntlet."
+        : "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       el("div", { class: "name-row" }, nameInput),
       el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
       el("button", { class: "versus-card", onclick: () => THP.versus.setup() },
@@ -80,11 +89,18 @@ window.THP = window.THP || {};
         el("small", {}, "Pass & play · 2–4 players")),
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
+        el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look", onclick: () => {
+          S("tap");
+          THP.ui.applySkin(THP.ui.skin() === "cyber" ? "fire" : "cyber");
+          THP.state = null; // title lines follow the skin, not the last game's level
+          titleScreen();
+          $("#skin-btn").focus();
+        } }, "Skin: " + THP.ui.skinName()),
         best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null));
     show(node, { scene: "title" });
     $(".level-card", node).setAttribute("data-autofocus", "");
     THP.ui.focusFirst(node);
-    say("Hee-HAW. Pick your level. Legends, the arena's waiting.");
+    say(pick(L.title));
   }
 
   async function howTo() {
@@ -446,7 +462,9 @@ window.THP = window.THP || {};
     mute.addEventListener("click", () => { THP.Sound.toggle(); sync(); });
     sync();
     document.addEventListener("pointerdown", () => THP.Sound.unlock(), { once: true });
+    THP.ui.applySkin(THP.ui.skin());
     THP.ui.embers();
+    THP.ui.cityscape();
     titleScreen();
   }
 

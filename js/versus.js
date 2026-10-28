@@ -9,7 +9,7 @@ window.THP = window.THP || {};
   const S = (n) => THP.Sound.play(n);
   const G = () => THP.game;
   const fill = (line, vars) => line.replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null ? vars[k] : ""));
-  const line = (key, vars) => fill(pick(THP.VS_LINES[key]), vars);
+  const line = (key, vars) => fill(pick((THP.ui.skin() === "cyber" && THP.VS_LINES_CYBER[key]) || THP.VS_LINES[key]), vars);
 
   const MAX_PLAYERS = 4;
   const TRIVIA_PER_TURN = 3;

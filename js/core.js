@@ -271,6 +271,67 @@ THP.ui = (function () {
     sky.append(box);
   }
 
+  /** Neon City backdrop: a generated skyline (one tower carries a neon cross), a grid floor and rain. Hidden unless the cyber skin is on. */
+  function cityscape() {
+    const sky = $(".sky");
+    if (!sky || $(".city", sky)) return;
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const windows = ["rgba(0, 240, 255, 0.4)", "rgba(255, 43, 214, 0.35)", "rgba(244, 255, 58, 0.3)", "rgba(157, 92, 255, 0.4)"];
+    const signs = ["#ff2bd6", "#00f0ff", "#f4ff3a", "#9d5cff"];
+    const skyline = el("div", { class: "skyline" });
+    const count = 18;
+    const crossAt = pick([15, 16]); // a tall tower at the far right, clear of the logo, the question and the host column
+    for (let i = 0; i < count; i++) {
+      const tall = i === crossAt;
+      const b = el("div", { class: "bldg" + (!tall && Math.random() < 0.35 ? " far" : "") });
+      b.style.width = rand(4, 8) + "%";
+      b.style.height = (tall ? rand(78, 92) : rand(22, 70)) + "%";
+      b.style.setProperty("--win", pick(windows));
+      b.style.setProperty("--lit", (0.25 + Math.random() * 0.55).toFixed(2));
+      if (tall) b.append(el("span", { class: "neon-cross" }));
+      else if (Math.random() < 0.3) b.append(el("span", { class: "antenna" }));
+      if (!tall && Math.random() < 0.35) {
+        const sg = el("span", { class: "sign" });
+        sg.style.top = rand(12, 45) + "%";
+        sg.style.setProperty("--sc", pick(signs));
+        b.append(sg);
+      }
+      skyline.append(b);
+    }
+    const rain = el("div", { class: "rain" });
+    if (!calm) for (let i = 0; i < 46; i++) {
+      const d = el("i");
+      d.style.left = Math.random() * 110 + "%";
+      d.style.setProperty("--h", rand(30, 80) + "px");
+      d.style.animationDuration = 0.6 + Math.random() * 0.7 + "s";
+      d.style.animationDelay = -Math.random() * 2 + "s";
+      rain.append(d);
+    }
+    sky.prepend(el("div", { class: "city" }, skyline, el("div", { class: "grid-floor" }), rain));
+  }
+
+  /* ---------- Skins ---------- */
+  const SKINS = {
+    cyber: { name: "Neon City", host: "BARNABAS.EXE", color: "#05060f" },
+    fire: { name: "Holy Fire", host: "Barnabas", color: "#08080b" },
+  };
+  let skin = "cyber";
+  try { skin = localStorage.getItem("thp-skin") || "cyber"; } catch (e) {}
+  if (!SKINS[skin]) skin = "cyber";
+
+  /** Turn the cyber stylesheet on or off (Holy Fire is the layer underneath it). */
+  function applySkin(name) {
+    skin = SKINS[name] ? name : "cyber";
+    try { localStorage.setItem("thp-skin", skin); } catch (e) {}
+    document.documentElement.dataset.skin = skin;
+    const sheet = document.getElementById("skin-cyber");
+    if (sheet) sheet.disabled = skin !== "cyber";
+    const hostName = $(".host-name");
+    if (hostName) hostName.textContent = SKINS[skin].host;
+    const meta = $('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", SKINS[skin].color);
+  }
+
   /* ---------- Keyboard / TV-remote spatial navigation ---------- */
   function navTargets() {
     return $$("#stage button:not([disabled]), #stage input, #bubble-next:not([hidden]), #hud button").filter(
@@ -314,5 +375,9 @@ THP.ui = (function () {
     }
   });
 
-  return { $, $$, el, sleep, pick, rand, shuffle, show, focusFirst, say, setMood, waitButton, timer, ringTimer, barTimer, confetti, popText, flash, stamp, crack, embers };
+  return {
+    $, $$, el, sleep, pick, rand, shuffle, show, focusFirst, say, setMood, waitButton, timer, ringTimer, barTimer,
+    confetti, popText, flash, stamp, crack, embers, cityscape, applySkin,
+    skin: () => skin, skinName: (k) => SKINS[k || skin].name, SKINS,
+  };
 })();

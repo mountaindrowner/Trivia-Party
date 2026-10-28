@@ -57,6 +57,7 @@ button:disabled { cursor: default; }
   isolation: isolate;
 }
 
+.city { display: none; } /* drawn by the Neon City skin (css/cyber.css) */
 .sky { position: absolute; inset: 0; z-index: -1; overflow: hidden;
   background:
     radial-gradient(120% 70% at 50% 110%, #ff8a3d 0%, #ff3d7f 22%, transparent 55%),

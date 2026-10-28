@@ -145,7 +145,19 @@ Future: Barnabas voice lines (recorded or text-to-speech), more moods (surprised
   animated lamp flames in the HUD, a 3-2-1 countdown before every trial, and a roulette that picks the trial.
 - **Sound:** synthesized with Web Audio, so there are no audio files. There's a mute toggle and the setting is remembered.
 
-### Holy Fire theme (current default, aimed at teens)
+### Neon City skin (current default, cyberpunk, preteen voice)
+
+`css/cyber.css` sits on top of Holy Fire and is switched from the title screen ("Skin: Neon City / Holy Fire"; remembered
+on the device). Rainy night skyline generated on load (lit windows, neon signs, blinking antennas, one tower carrying
+a flickering neon cross), a scrolling perspective grid floor, scanlines, glass HUD panels with corner brackets,
+chromatic-glitch headlines, and Barnabas as a hologram (BARNABAS.EXE) in a magenta visor. Type: Oxanium (display),
+Rajdhani (body), Share Tech Mono (labels). Questions stay in sentence case so they read easily.
+
+Voice: with Neon City on, Lambs and Warriors hear `THP.LINES_CYBER` and Versus uses `THP.VS_LINES_CYBER`, a cool,
+techy preteen Barnabas ("Access granted!", "Error 404: right answer not found.", "Lag spike! Too slow."). Legends keep
+the teen announcer.
+
+### Holy Fire theme (aimed at teens)
 
 `css/edge.css` layers an esports-arena look on top of the base style: a black arena with rising embers, a fire
 glow and a vignette, cut-corner steel panels with colored edges, a flame-gradient "HOLY" logo, condensed

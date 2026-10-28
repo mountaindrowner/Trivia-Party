@@ -28,7 +28,9 @@ python3 -m http.server 8000
 - The Lost Sheep mechanic: lose all your oil and the Good Shepherd can still find you
 - Final race, **The Narrow Gate**: "tap every one that fits" against Grumbles the Goat (50 prompts)
 - Streak multiplier (x1.5, then x2 "ON FIRE"), slam-in stamps, cracked-glass hits
-- Holy Fire esports-style theme (`css/edge.css`), synthesized sound, responsive phone and TV layouts, best score saved on the device
+- Two skins, switched on the title screen: **Neon City** cyberpunk (`css/cyber.css`, default, with a preteen-voiced
+  hologram host) and **Holy Fire** esports (`css/edge.css`)
+- Synthesized sound, responsive phone and TV layouts, best score saved on the device
 
 See [DESIGN.md](DESIGN.md) for the full game design, the mapping from *Trivia Murder Party*, the art direction, and the roadmap.
 
