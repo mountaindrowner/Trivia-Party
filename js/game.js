@@ -148,6 +148,8 @@ window.THP = window.THP || {};
       })[THP.ui.skin()] || "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       xpCard(store.get("thp-xp", 0)),
       el("div", { class: "name-row" }, nameInput),
+      el("button", { class: "btn btn-ghost scenes-btn", onclick: () => THP.Scenes.screen(titleScreen) },
+        `🎬 Story Scenes ${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`),
       best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null),
       el("div", { class: "title-play" },
       el("h2", { class: "section-label" }, "Game Modes"),
@@ -162,13 +164,13 @@ window.THP = window.THP || {};
       el("div", { class: "title-foot" },
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
         el("button", { class: "btn btn-ghost", onclick: jukebox }, "🎵 Music"),
-        el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look", onclick: () => {
+        el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look (now " + THP.ui.skinName() + ")", onclick: () => {
           S("tap");
           THP.ui.applySkin(THP.ui.nextSkin());
           THP.state = null; // title lines follow the skin, not the last game's level
           titleScreen();
           $("#skin-btn").focus();
-        } }, "Skin: " + THP.ui.skinName()))));
+        } }, "🎨 " + THP.ui.skinName()))));
     show(node, { scene: "title" });
     $(".level-card", node).setAttribute("data-autofocus", "");
     THP.ui.focusFirst(node);
@@ -613,6 +615,7 @@ window.THP = window.THP || {};
     const firstBeat = won && !beatenBefore.has(st.lvl);
     if (won) { beatenBefore.add(st.lvl); store.set("thp-beaten", [...beatenBefore]); }
     const justUnlocked = !wasOpen && isUnlocked();
+    const newScenes = won ? THP.Scenes.recordWin() : [];
     const beatenNow = UNLOCK_NEEDS.filter((l) => beatenBefore.has(l)).length;
     won ? (S("win"), confetti(160)) : S("lose");
     const [verse, ref] = pick(THP.VERSES);
@@ -639,6 +642,11 @@ window.THP = window.THP || {};
         : firstBeat && UNLOCK_NEEDS.includes(st.lvl)
           ? el("p", { class: "beat-note" }, `✓ ${LEVELS[st.lvl].name} beaten! ${isUnlocked() ? "" : `${beatenNow}/6 toward the secret mode.`}`)
           : null,
+      ...newScenes.map((sc) => el("div", { class: "scene-banner" },
+        el("p", { class: "eyebrow" }, "New Story Scene unlocked"),
+        el("strong", {}, `🎬 ${sc.title}`),
+        el("span", {}, `${sc.sub} (${sc.ref}), animated.`),
+        el("button", { class: "btn btn-go", onclick: () => THP.Scenes.play(sc.id) }, "▶ Watch now"))),
       el("p", { class: "verse" }, `“${verse}”`, el("cite", {}, ref)),
       el("div", { class: "btn-row" },
         el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => start(st.lvl, st.name === "Pilgrim" ? "" : st.name) }, "Play again"),

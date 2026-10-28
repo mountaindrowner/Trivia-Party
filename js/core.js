@@ -201,8 +201,9 @@ THP.ui = (function () {
     const p = el("div", { class: "pop " + (cls || "") }, text);
     if (anchor) {
       const r = anchor.getBoundingClientRect();
-      p.style.left = r.left + r.width / 2 + "px";
-      p.style.top = r.top + "px";
+      // Keep it on screen: pops anchored to the HUD would otherwise float off the top or side.
+      p.style.left = Math.min(innerWidth - 48, Math.max(48, r.left + r.width / 2)) + "px";
+      p.style.top = Math.max(40, r.top) + "px";
     }
     layer.append(p);
     setTimeout(() => p.remove(), 1400);

@@ -89,7 +89,7 @@ button:disabled { cursor: default; }
 @keyframes flicker { from { scale: 0.9 1; } to { scale: 1.08 1.12; } }
 .lost-badge { font-family: var(--display); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
   background: var(--white); color: var(--ink); padding: 0.2rem 0.6rem; border-radius: 99rem; border: var(--line) solid var(--ink); animation: bob 1.4s ease-in-out infinite; }
-.hud-pill { font-family: var(--display); font-size: 1.05rem; background: rgba(26, 11, 61, 0.65); border: var(--line) solid var(--ink);
+.hud-pill { white-space: nowrap; font-family: var(--display); font-size: 1.05rem; background: rgba(26, 11, 61, 0.65); border: var(--line) solid var(--ink);
   padding: 0.25rem 0.75rem; border-radius: 99rem; display: inline-flex; align-items: center; gap: 0.4rem; font-variant-numeric: tabular-nums; }
 .coin-dot { width: 0.95rem; height: 0.95rem; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff3b0, var(--amber) 55%, #c98a00); border: 0.12rem solid var(--ink); }
 .hud-btn { background: rgba(26, 11, 61, 0.65); border: var(--line) solid var(--ink); border-radius: 50%; width: 2.4rem; height: 2.4rem; font-size: 1.05rem; display: grid; place-items: center; }
@@ -626,7 +626,7 @@ button:disabled { cursor: default; }
   .title-play { gap: 0.55rem; }
   .mode-list { gap: 0.4rem; }
   .title-play .mode-row { padding-block: 0.45rem !important; }
-  .title-foot { flex-wrap: nowrap; }
+  .title-foot { flex-wrap: wrap; }
   .title-foot .btn { font-size: 0.85rem !important; padding-inline: 0.7rem !important; white-space: nowrap; }
 }
 
@@ -642,6 +642,9 @@ button:disabled { cursor: default; }
   .donkey { width: 3.8rem; }
   .lamp { width: 1.9rem; }
   .hud-pill { font-size: 0.9rem; padding-inline: 0.55rem; }
+  .hud { gap: 0.35rem; }
+  .hud-btn { width: 2.1rem; height: 2.1rem; font-size: 0.95rem; }
+  .streak { white-space: nowrap; font-size: 0.85rem !important; }
   .lost-badge { font-size: 0.65rem; padding-inline: 0.45rem; }
   .hud-group { gap: 0.35rem; }
 }
@@ -682,4 +685,21 @@ button:disabled { cursor: default; }
   .jukebox { gap: 0.55rem; }
   .track-list { gap: 0.4rem; }
   .track-row { padding-block: 0.45rem; }
+}
+/* Never let the title footer run off the side: wrap instead. */
+.title-foot { max-width: 100%; }
+
+/* Phones: the HUD (lamps, streak, progress, score, music, mute) can't all fit beside each other once a streak and a
+   five-digit score show. Shrink the lamps, then let the right-hand group drop to a second row instead of running
+   off the screen. */
+@media (max-width: 520px) {
+  .hud { flex-wrap: wrap; row-gap: 0.3rem; }
+  .hud > .hud-group:last-child { margin-left: auto; }
+  .lamp { width: 1.55rem !important; }
+  .lamps { gap: 0.1rem; }
+}
+/* Versus setup: the six mode names share one row of segmented buttons, so keep them inside their buttons on phones. */
+@media (max-width: 440px) {
+  .seg:has(> :nth-child(4)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .seg-btn { font-size: 0.92rem !important; padding-inline: 0.3rem !important; letter-spacing: 0 !important; min-width: 0; }
 }

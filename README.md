@@ -39,6 +39,8 @@ python3 -m http.server 8000
 - Five synthesized jazz-funk tracks: Manna Groove, Jericho Jump, Red Sea Shuffle, Narrow Gate Breakdown and Hallelujah
   Strut. Each part of the game has its own, and the Jukebox on the title screen plays any of them. 🎵 toggles music,
   and 🔊 mutes everything.
+- **Story Scenes**: animated Bible cartoon rewards, unlocked by winning games. Scene 1, *Giant Problem* (David and
+  Goliath, 1 Samuel 17), unlocks on your first win. Watch it from the results screen or 🎬 Story Scenes on the title.
 - Synthesized sound effects, responsive phone and TV layouts, best score saved on the device
 
 All player-facing text has been through a content review and a two-pass fact check against the Bible text. See

@@ -70,7 +70,7 @@ body { font-weight: 700; }
   background-image: linear-gradient(180deg, #fffbe0 0%, var(--amber) 40%, #ff9d1a 75%, #e85d00 100%) !important;
   filter: drop-shadow(0 0.06em 0 var(--ink)) drop-shadow(0 0.1em 0.12em rgba(10, 15, 58, 0.5)); animation: hop 2.4s ease-in-out infinite; }
 .logo-3 { font-size: 2.8rem; letter-spacing: 0.25em; margin-right: -0.25em; color: #fff; -webkit-text-stroke: 0; rotate: 2deg;
-  background: var(--r-epic); padding: 0.1rem 0.8rem 0.15rem 1.05rem; clip-path: var(--slab-clip); text-shadow: var(--poster); }
+  background: var(--r-epic); padding: 0.1rem 1.35rem 0.15rem 1.05rem; clip-path: var(--slab-clip); /* extra right padding: the italic Y overhangs into the slanted corner */ text-shadow: var(--poster); }
 
 /* ---------- Panels: chunky slanted lobby cards ---------- */
 .q-card, .final-panel, .howto-list li, .scripture, .reel, .stat, .vs-row, .food-row, .scroll-paper, .field, .night-sky, .sea, .herd, .book-card, .xp-card {
@@ -109,7 +109,7 @@ body { font-weight: 700; }
 .lamp.lit .lamp-body { fill: var(--amber); }
 .lamp.lit .lamp-flame { fill: var(--fire); filter: drop-shadow(0 0 4px #fff3b0); }
 .lamp-body { fill: rgba(10, 15, 58, 0.5); stroke: var(--ink); }
-.streak { font-size: 1.2rem; background: rgba(10, 15, 58, 0.55); color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.streak { font-size: 1.2rem; padding-inline: 0.8rem 1.15rem; background: rgba(10, 15, 58, 0.55); color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
 .streak.hot { background: var(--r-legendary); color: #fff; text-shadow: var(--poster); }
 .lost-badge { background: var(--storm); }
 
@@ -120,7 +120,7 @@ body { font-weight: 700; }
 .btn-go { background: var(--flame); }
 .btn-warn { background: linear-gradient(180deg, #ff8aa0, var(--ruby)); color: #fff; text-shadow: var(--poster); }
 .btn-ghost { background: rgba(10, 15, 58, 0.45); color: #fff; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.2), inset 0 -4px 0 rgba(0, 0, 0, 0.25); }
-.cat-chip { clip-path: var(--slab-clip); background: var(--r-epic); color: #fff; font-size: 1.5rem; padding: 0.3rem 1.4rem; text-shadow: var(--poster); box-shadow: var(--bevel); }
+.cat-chip { clip-path: var(--slab-clip); background: var(--r-epic); color: #fff; font-size: 1.5rem; padding: 0.3rem 1.7rem 0.3rem 1.4rem; text-shadow: var(--poster); box-shadow: var(--bevel); }
 .q-num { color: #fff; opacity: 0.85; letter-spacing: 0.2em; }
 
 /* ---------- Title ---------- */
@@ -297,7 +297,7 @@ body { font-weight: 700; }
 .vs-name { clip-path: var(--slab-clip); border: 0; border-radius: 0; background: #fff; color: var(--ink); box-shadow: inset 0 -4px 0 var(--pc); font-family: var(--body); font-weight: 800; font-style: italic; }
 .vs-name::placeholder { color: rgba(10, 15, 58, 0.4); }
 .vs-remove { clip-path: none; border: 0; border-radius: 0.3rem; background: rgba(10, 15, 58, 0.45); }
-.seg-btn { font-size: 1.4rem; padding: 0.4rem 0.4rem 0.35rem; }
+.seg-btn { font-size: 1.4rem; padding: 0.4rem 0.75rem 0.35rem 0.55rem; }
 .seg-btn[aria-pressed="true"] { background: var(--flame); color: var(--ink); box-shadow: var(--bevel); }
 .vs-double { font-size: 1.9rem; color: var(--amber); background: none; -webkit-background-clip: border-box; background-clip: border-box; text-shadow: var(--poster); }
 .vs-pass-name { font-size: 5rem; color: #fff; text-shadow: 0 0.06em 0 var(--pc), 0 0.12em 0 var(--ink); }
@@ -359,7 +359,7 @@ body { font-weight: 700; }
   .level-card.lvl-3 strong { font-size: 2.6rem; }
   .level-card strong { font-size: 1.6rem; }
   .hud-pill { font-size: 1.1rem; padding-inline: 0.8rem; }
-  .streak { font-size: 0.95rem; padding-inline: 0.6rem; }
+  .streak { font-size: 0.95rem; padding-inline: 0.6rem 0.95rem; }
   .vs-pass-name { font-size: 3.6rem; }
   .vs-champ .vs-pass-name { font-size: 3rem; }
   .final-score { font-size: 3.8rem; }

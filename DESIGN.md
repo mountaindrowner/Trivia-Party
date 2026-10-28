@@ -205,6 +205,35 @@ Behavior:
   - 🎵 in the HUD turns music alone on or off (saved as `thp-music`).
   - The title's **🎵 Music** button opens the Jukebox, which lists all five tracks to play.
 
+### Story Scenes (rewards)
+
+Short animated cartoons of Bible stories, unlocked by winning games (`thp-wins`). Each scene has its own unlock count,
+and the results screen shows a "New Story Scene unlocked" banner with a Watch now button. The title's 🎬 Story Scenes
+button opens the gallery, where locked scenes show how many more wins they need.
+
+- **Built in `js/scenes.js` and `css/scenes.css`.** Characters and backgrounds are inline SVG. A small director drives
+  them with the Web Animations API: actors that walk, a camera that pans and zooms, typed narration, speech bubbles,
+  comic bursts, screen shake, slow motion and speed lines. The soundtrack switches tracks during the scene.
+- **Controls:** tap the picture (or Space/Enter) to rush the current beat; Skip or Esc jumps to the end card.
+- **Phones:** on short frames the dialogue moves into the caption bar, with a 💬 marker over the speaker.
+- **Voice:** Barnabas narrates with a little preteen flair ("Huge upgrade… except it does NOT fit."). What the
+  characters say is quoted from the text.
+
+**Scene 1, "Giant Problem" (1 Samuel 17), about 85 seconds.** It unlocks on the first win.
+1. Valley of Elah.
+2. Goliath stomps down the hill and gives his challenge (17:10).
+3. Forty days of it (17:16).
+4. David arrives with bread and cheese (17:17–18) and asks who defies the armies of the living God (17:26).
+5. Saul's armor doesn't fit (17:38–39).
+6. Five smooth stones (17:40).
+7. "Am I a dog…" (17:43) / "…in the name of the LORD Almighty" (17:45).
+8. David runs at him (17:48): a sling spin, a slow-motion stone, then BONK.
+9. He falls facedown (17:49), with dizzy cartoon stars and no injury shown.
+10. The Philistines run (17:51).
+11. David's shades drop: "The battle is the LORD's." (17:47)
+
+The end card gives the lesson: "David wasn't brave because he was big. He knew God was bigger."
+
 ### Mode borders: easiest to hardest
 
 The title lists modes from easiest to hardest: Little Lambs, Mighty Warriors, Legends, Challenge Modes, then Versus.
@@ -303,6 +332,7 @@ worried. Delete the stylesheet's `<link>` in `index.html` to go back to the soft
   - `js/data.js`: questions, final prompts, host lines, verses
   - `js/audio.js`: synthesized sound effects
   - `js/music.js`: the five-track synthesized soundtrack and Jukebox data
+  - `js/scenes.js`: Story Scenes (animated rewards), the scene player and the gallery
   - `js/core.js`: DOM helpers, host speech, timers, confetti, TV-remote navigation
   - `js/minigames.js`: Trial Room games (each is `play(container, level) → Promise<boolean>`)
   - `js/game.js`: the game flow

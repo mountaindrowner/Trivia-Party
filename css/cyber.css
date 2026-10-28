@@ -349,3 +349,8 @@ body { font-weight: 600; letter-spacing: 0.01em; }
   .reel-name { font-size: 1.25rem; }
   .answer { font-size: 1.1rem; }
 }
+/* Title footer: tighter tracking so the three buttons fit one line on a 720p TV. */
+.title-foot .btn, .title-foot .skin-btn { letter-spacing: 0.04em; }
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .title-foot .btn { padding-inline: 0.6rem !important; font-size: 0.8rem !important; }
+}
