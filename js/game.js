@@ -4,12 +4,13 @@ window.THP = window.THP || {};
 (function () {
   const { $, el, sleep, pick, shuffle, show, say, setMood, waitButton, ringTimer, confetti, popText, flash, stamp, crack } = THP.ui;
   const S = (n) => THP.Sound.play(n);
-  // Host lines: Legends get the hype-announcer set; with the Neon City skin on, everyone else gets the cyber preteen voice.
+  // Host lines: Legends get the hype-announcer set; with Neon City or Victory Lobby on, everyone else gets that skin's voice.
   // Any key a set doesn't have falls back to the default lines.
   const L = new Proxy({}, {
     get: (_, k) => {
       if (THP.state && THP.state.lvl === 3 && THP.LINES_TEEN[k]) return THP.LINES_TEEN[k];
       if (THP.ui.skin() === "cyber" && THP.LINES_CYBER[k]) return THP.LINES_CYBER[k];
+      if (THP.ui.skin() === "loot" && THP.LINES_LOOT[k]) return THP.LINES_LOOT[k];
       return THP.LINES[k];
     },
   });
@@ -28,6 +29,32 @@ window.THP = window.THP || {};
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   };
+
+  /* ---------- XP & rank (solo games, saved on this device) ---------- */
+  const RANKS = [[30, "Champion", "🏆"], [20, "Diamond", "💎"], [15, "Platinum", "💠"], [10, "Gold", "🥇"], [5, "Silver", "🥈"], [1, "Bronze", "🥉"]];
+  const xpNeed = (lvl) => 500 + (lvl - 1) * 100;
+  function levelOf(xp) {
+    let lvl = 1, into = xp;
+    while (into >= xpNeed(lvl)) { into -= xpNeed(lvl); lvl++; }
+    const [, rank, icon] = RANKS.find(([min]) => lvl >= min);
+    return { lvl, into, need: xpNeed(lvl), rank, icon };
+  }
+  /** Player card: rank badge, level and XP bar. `fromPct` lets the bar animate up from an old value. */
+  function xpCard(xp, fromPct) {
+    const L = levelOf(xp);
+    const pct = Math.round((L.into / L.need) * 100);
+    const fill = el("i", { class: "xp-fill", style: { width: (fromPct != null ? fromPct : pct) + "%" } });
+    const card = el("div", { class: "xp-card rank-" + L.rank.toLowerCase() },
+      el("span", { class: "xp-badge", "aria-hidden": "true" }, L.icon),
+      el("div", { class: "xp-info" },
+        el("p", { class: "xp-top" }, el("strong", {}, `LVL ${L.lvl}`), el("span", {}, L.rank)),
+        el("div", { class: "xp-bar", role: "progressbar", "aria-valuemin": 0, "aria-valuemax": L.need, "aria-valuenow": L.into, "aria-label": "XP to next level" }, fill),
+        el("p", { class: "xp-num" }, `${L.into.toLocaleString()} / ${L.need.toLocaleString()} XP`)));
+    if (fromPct != null) setTimeout(() => (fill.style.width = pct + "%"), 350);
+    return card;
+  }
+  /** Loot-style rarity for how fast a right answer came in (fraction of the timer used). */
+  const rarityFor = (frac) => frac < 0.25 ? ["LEGENDARY", "legendary"] : frac < 0.45 ? ["EPIC", "epic"] : frac < 0.7 ? ["RARE", "rare"] : ["UNCOMMON", "uncommon"];
 
   /* ---------- HUD ---------- */
   const LAMP_SVG =
@@ -73,15 +100,20 @@ window.THP = window.THP || {};
         el("strong", {}, cfg.name),
         el("small", {}, cfg.ages));
     };
+    // Two groups so big screens can lay the title out side by side: brand on the left, play options on the right.
     const node = el("section", { class: "title-screen" },
+      el("div", { class: "title-brand" },
       el("h1", { class: "logo", "aria-label": "Trivia Holy Party" },
         el("span", { class: "logo-1" }, "TRIVIA"),
         el("span", { class: "logo-2" }, ...[..."HOLY"].map((c, i) => el("b", { style: { "--i": i } }, c))),
         el("span", { class: "logo-3" }, "PARTY")),
-      el("p", { class: "tagline" }, THP.ui.skin() === "cyber"
-        ? "8 questions. 24 trials. 1 gate. Survive the Bible trivia gauntlet."
-        : "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
-      el("div", { class: "name-row" }, nameInput),
+      el("p", { class: "tagline" }, ({
+        cyber: "8 questions. 24 trials. 1 gate. Survive the Bible trivia gauntlet.",
+        loot: "8 questions · 24 trials · 1 gate · Get the Victory",
+      })[THP.ui.skin()] || "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
+      xpCard(store.get("thp-xp", 0)),
+      el("div", { class: "name-row" }, nameInput)),
+      el("div", { class: "title-play" },
       el("div", { class: "level-row" }, levelBtn(3), levelBtn(2), levelBtn(1)),
       el("button", { class: "versus-card", onclick: () => THP.versus.setup() },
         el("span", { class: "level-icon", "aria-hidden": "true" }, "⚔️"),
@@ -91,12 +123,12 @@ window.THP = window.THP || {};
         el("button", { class: "btn btn-ghost", onclick: howTo }, "How to play"),
         el("button", { class: "btn btn-ghost skin-btn", id: "skin-btn", "aria-label": "Switch look", onclick: () => {
           S("tap");
-          THP.ui.applySkin(THP.ui.skin() === "cyber" ? "fire" : "cyber");
+          THP.ui.applySkin(THP.ui.nextSkin());
           THP.state = null; // title lines follow the skin, not the last game's level
           titleScreen();
           $("#skin-btn").focus();
         } }, "Skin: " + THP.ui.skinName()),
-        best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null));
+        best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null)));
     show(node, { scene: "title" });
     $(".level-card", node).setAttribute("data-autofocus", "");
     THP.ui.focusFirst(node);
@@ -209,7 +241,10 @@ window.THP = window.THP || {};
       st.bestStreak = Math.max(st.bestStreak, st.streak);
       const pts = Math.round((500 + 500 * Math.max(0, 1 - elapsed / seconds)) * streakMult(st.streak));
       addScore(pts, buttons[chosen]);
-      stamp(st.streak >= 3 ? "ON FIRE" : elapsed < seconds * 0.3 ? "CLUTCH" : pick(["NAILED IT", "LOCKED IN", "CLEAN"]), "good");
+      if (THP.ui.skin() === "loot") {
+        const [word, tier] = rarityFor(elapsed / seconds);
+        stamp(st.streak >= 3 ? `${word}! x${streakMult(st.streak)}` : word + "!", "good rarity-" + tier);
+      } else stamp(st.streak >= 3 ? "ON FIRE" : elapsed < seconds * 0.3 ? "CLUTCH" : pick(["NAILED IT", "LOCKED IN", "CLEAN"]), "good");
       setMood("happy");
     } else {
       S("wrong"); flash("shake");
@@ -432,6 +467,20 @@ window.THP = window.THP || {};
     const best = store.get("thp-best", 0);
     const newBest = st.score > best;
     if (newBest) store.set("thp-best", st.score);
+    // XP: every right answer, trial win and streak counts, plus a bonus for beating Grumbles.
+    const gains = [
+      ["Match played", 50],
+      [`${st.correct} right answer${st.correct === 1 ? "" : "s"}`, st.correct * 100],
+      [`${st.trialsWon} trial${st.trialsWon === 1 ? "" : "s"} passed`, st.trialsWon * 75],
+      [`Best streak x${st.bestStreak}`, st.bestStreak * 25],
+      won ? ["Victory bonus", 300] : null,
+    ].filter((g) => g && g[1] > 0);
+    const earned = gains.reduce((n, g) => n + g[1], 0);
+    const xpBefore = store.get("thp-xp", 0);
+    const before = levelOf(xpBefore);
+    store.set("thp-xp", xpBefore + earned);
+    const after = levelOf(xpBefore + earned);
+    const leveled = after.lvl > before.lvl;
     won ? (S("win"), confetti(160)) : S("lose");
     const [verse, ref] = pick(THP.VERSES);
     const stat = (n, label) => el("div", { class: "stat" }, el("strong", {}, n), el("span", {}, label));
@@ -444,16 +493,21 @@ window.THP = window.THP || {};
         stat(`${st.trialsWon}/${st.trialsPlayed}`, "trials passed"),
         stat(st.oil + (st.lost ? " 🐑" : ""), "oil left"),
         stat(`x${st.bestStreak}`, "best streak")),
+      el("div", { class: "xp-earned" },
+        el("p", { class: "xp-gain" }, `+${earned.toLocaleString()} XP`, leveled ? el("em", {}, `LEVEL UP! LVL ${after.lvl}`) : null),
+        el("ul", { class: "xp-list" }, ...gains.map(([label, n]) => el("li", {}, el("span", {}, label), el("b", {}, "+" + n)))),
+        xpCard(xpBefore + earned, leveled ? 0 : Math.round((before.into / before.need) * 100))),
       el("p", { class: "verse" }, `“${verse}”`, el("cite", {}, ref)),
       el("div", { class: "btn-row" },
         el("button", { class: "btn btn-go", "data-primary": true, "data-autofocus": true, onclick: () => start(st.lvl, st.name === "Pilgrim" ? "" : st.name) }, "Play again"),
         el("button", { class: "btn btn-ghost", onclick: titleScreen }, "Title screen")));
     show(node, { scene: won ? "found" : "trial" });
+    if (leveled) setTimeout(() => { stamp(after.rank !== before.rank ? after.rank.toUpperCase() + "!" : "LEVEL UP!", "good rarity-legendary"); confetti(80); }, 900);
     await say(pick(won ? L.win : L.lose), { mood: won ? "happy" : "worried" });
   }
 
   // Shared with Versus mode (js/versus.js).
-  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult };
+  THP.game = { LEVELS, L, store, renderHud, askQuestion, runMinigame, titleScreen, streakMult, levelOf };
 
   /* ---------- Boot ---------- */
   function boot() {
@@ -465,6 +519,7 @@ window.THP = window.THP || {};
     THP.ui.applySkin(THP.ui.skin());
     THP.ui.embers();
     THP.ui.cityscape();
+    THP.ui.lobby();
     titleScreen();
   }
 

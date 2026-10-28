@@ -330,3 +330,45 @@ THP.VS_LINES_CYBER = {
   champion: ["{name} is the CHAMPION! GG everyone!", "{name} wins it all! \"Run in such a way as to get the prize.\" 1 Corinthians 9:24."],
   tieChampion: ["It's a TIE! Everybody gets bragging rights. Rematch?"],
 };
+
+/* Victory Lobby skin: Barnabas in a sideways cap, hyped like a kid streamer. Used for Lambs and Warriors while the
+ * loot skin is on; Legends keep THP.LINES_TEEN. Missing keys fall back to THP.LINES. */
+THP.LINES_LOOT = {
+  title: ["Yooo! Welcome to the lobby. Pick a level and drop in!", "Lobby's open. Choose your level and let's get this W.", "Ready up! Pick a level."],
+  intro: [
+    "What's good, {name}! I'm Barnabas, your host. Yes, a donkey in a cap. Don't worry about it.",
+    "You've got 3 oil charges. Miss a question and you get sent to the Trial Room. Lose the trial, lose a charge.",
+    "Survive, then race Grumbles the Goat to the Narrow Gate for the Victory. Let's gooo!",
+  ],
+  category: ["{cat}! Let's go!", "Next up: {cat}.", "{cat}. Lock in.", "{cat}! You've got this, no cap.", "Ooh, {cat}. Sweaty category.", "{cat} incoming!"],
+  correct: ["SHEEESH!", "That's a dub!", "Let's gooo!", "Easy W.", "No cap, that was clean.", "You're cracked at this!", "Big W energy.", "Bro said CORRECT.", "Too easy.", "Legendary pull!", "Absolute W.", "GG, that one's yours."],
+  wrong: ["Nooo! Not it.", "Oof. Took the L on that one.", "Ahh, so close!", "Nope. Shake it off.", "Unlucky, bro.", "That one was sneaky.", "Wrong, but you'll bounce back.", "Big oof."],
+  timeout: ["Too slow! The timer got you.", "Bro went AFK!", "Lag! Time's up.", "The clock wins that round."],
+  trial: ["Trial Room! Time to clutch up.", "You got sent to the Trial Room. Win it back!", "Trial incoming! James 1 says trials make you stronger. Let's level up.", "Clutch time. Don't sweat it.", "Trial Room. Show 'em your skills.", "Ooh, trial time. You got this."],
+  trialWin: ["CLUTCH! Trial cleared!", "GG! Oil's safe.", "That's a dub. Lamp still lit!", "Easy clear, let's go!"],
+  trialLose: ["Oof, lost a charge.", "Lamp's getting dim. Lock in!", "That trial was tough. Shake it off.", "Minus one oil. We move."],
+  lost: ["Lamp's out! You're a Lost Sheep. But the Shepherd always comes for the one. Hit the next one and you're back!", "Oil's gone. Lost Sheep mode. Don't quit, the Shepherd's on the way!"],
+  found: ["REVIVED! The Shepherd found you. Lamp's back on!", "You're back in the game! The lost sheep is found!"],
+  finalIntro: [
+    "Final round: THE NARROW GATE!",
+    "Tap EVERY answer that fits. Right taps move you up. Wrong taps knock you back.",
+    "Every oil charge you saved is a head start. Grumbles is already complaining. Let's goooo!",
+  ],
+  goat: ["Grumbles: \"Ugh, you're so sweaty.\"", "Grumbles: \"Bro, slow down!\"", "Grumbles: \"This is not fair. Baaa.\"", "Grumbles: \"I'm literally lagging.\"", "Grumbles: \"I'm right behind you!\"", "Grumbles: \"Whatever, I'm just warming up.\"", "Grumbles: \"Can I get a respawn?\"", "Grumbles: \"Gate's mine!\""],
+  win: ["VICTORY! Through the Narrow Gate! \"Well done, good and faithful servant.\" GG!", "#1 VICTORY! You beat Grumbles. Absolute legend."],
+  lose: ["Grumbles got the dub this time. But God's mercies are new every morning. Run it back!", "So close! Queue up again and get that Victory."],
+};
+
+THP.VS_LINES_LOOT = {
+  intro: ["VERSUS! Same challenge, different questions. Pass the device, no peeking. Best score gets the dub!"],
+  pass: ["Pass it to {name}! No peeking!", "{name}, you're up! Hands off, everybody else.", "{name}'s turn. Lock in!", "Hand it to {name}. Let's see what you've got!"],
+  roundTrivia: ["Trivia Blitz! Three questions each. Faster answers, more points!"],
+  roundTrial: ["Trial round! Everybody plays {game}. Top score wins it!", "It's {game}! Same game for everyone, reshuffled every time."],
+  finalRound: ["FINAL ROUND! Double points! Anybody can win this!"],
+  roundWin: ["{name} takes the dub!", "Round goes to {name}! Sheesh!", "{name} wins that one. GG."],
+  roundTie: ["A tie! Nobody gets the dub. Or everybody does?"],
+  roundNone: ["Nobody scored?! That trial was brutal. Next!"],
+  lead: ["{name} is in the lead!", "{name} is on top... for now.", "Everybody's coming for {name}!"],
+  champion: ["{name} is the CHAMPION! #1 VICTORY!", "{name} wins it all! \"Run in such a way as to get the prize.\" 1 Corinthians 9:24!"],
+  tieChampion: ["It's a TIE! Everybody gets a W. Rematch?"],
+};

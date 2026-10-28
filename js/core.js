@@ -310,27 +310,59 @@ THP.ui = (function () {
     sky.prepend(el("div", { class: "city" }, skyline, el("div", { class: "grid-floor" }), rain));
   }
 
-  /* ---------- Skins ---------- */
-  const SKINS = {
-    cyber: { name: "Neon City", host: "BARNABAS.EXE", color: "#05060f" },
-    fire: { name: "Holy Fire", host: "Barnabas", color: "#08080b" },
-  };
-  let skin = "cyber";
-  try { skin = localStorage.getItem("thp-skin") || "cyber"; } catch (e) {}
-  if (!SKINS[skin]) skin = "cyber";
+  /** Victory Lobby backdrop: drifting clouds and twinkling sparkles under the storm ring. Hidden unless the loot skin is on. */
+  function lobby() {
+    const sky = $(".sky");
+    if (!sky || $(".lobby", sky)) return;
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const box = el("div", { class: "lobby" });
+    for (let i = 0; i < 7; i++) {
+      const c = el("i", { class: "cloud" });
+      c.style.top = rand(4, 62) + "%";
+      c.style.setProperty("--w", rand(9, 22) + "rem");
+      c.style.animationDuration = rand(50, 110) + "s";
+      c.style.animationDelay = -rand(0, 100) + "s";
+      box.append(c);
+    }
+    if (!calm) for (let i = 0; i < 22; i++) {
+      const sp = el("b", { class: "sparkle" }, "✦");
+      sp.style.left = Math.random() * 100 + "%";
+      sp.style.top = Math.random() * 100 + "%";
+      sp.style.fontSize = (0.5 + Math.random() * 0.9).toFixed(2) + "rem";
+      sp.style.animationDelay = -Math.random() * 3 + "s";
+      box.append(sp);
+    }
+    box.append(el("div", { class: "storm" }));
+    sky.prepend(box);
+  }
 
-  /** Turn the cyber stylesheet on or off (Holy Fire is the layer underneath it). */
+  /* ---------- Skins ---------- */
+  // Each skin is a stylesheet layered over Holy Fire (css/edge.css); "fire" turns them all off.
+  const SKINS = {
+    loot: { name: "Victory Lobby", host: "Barnabas", color: "#2b5bea", sheet: "skin-loot" },
+    cyber: { name: "Neon City", host: "BARNABAS.EXE", color: "#05060f", sheet: "skin-cyber" },
+    fire: { name: "Holy Fire", host: "Barnabas", color: "#08080b", sheet: null },
+  };
+  const SKIN_ORDER = ["loot", "cyber", "fire"];
+  const SKIN_KEY = "thp-skin-v2"; // new key so everyone lands on Victory Lobby once
+  let skin = "loot";
+  try { skin = localStorage.getItem(SKIN_KEY) || "loot"; } catch (e) {}
+  if (!SKINS[skin]) skin = "loot";
+
   function applySkin(name) {
-    skin = SKINS[name] ? name : "cyber";
-    try { localStorage.setItem("thp-skin", skin); } catch (e) {}
+    skin = SKINS[name] ? name : "loot";
+    try { localStorage.setItem(SKIN_KEY, skin); } catch (e) {}
     document.documentElement.dataset.skin = skin;
-    const sheet = document.getElementById("skin-cyber");
-    if (sheet) sheet.disabled = skin !== "cyber";
+    for (const k in SKINS) {
+      const sheet = SKINS[k].sheet && document.getElementById(SKINS[k].sheet);
+      if (sheet) sheet.disabled = k !== skin;
+    }
     const hostName = $(".host-name");
     if (hostName) hostName.textContent = SKINS[skin].host;
     const meta = $('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", SKINS[skin].color);
   }
+  const nextSkin = () => SKIN_ORDER[(SKIN_ORDER.indexOf(skin) + 1) % SKIN_ORDER.length];
 
   /* ---------- Keyboard / TV-remote spatial navigation ---------- */
   function navTargets() {
@@ -377,7 +409,7 @@ THP.ui = (function () {
 
   return {
     $, $$, el, sleep, pick, rand, shuffle, show, focusFirst, say, setMood, waitButton, timer, ringTimer, barTimer,
-    confetti, popText, flash, stamp, crack, embers, cityscape, applySkin,
+    confetti, popText, flash, stamp, crack, embers, cityscape, lobby, applySkin, nextSkin,
     skin: () => skin, skinName: (k) => SKINS[k || skin].name, SKINS,
   };
 })();

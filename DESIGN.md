@@ -145,7 +145,25 @@ Future: Barnabas voice lines (recorded or text-to-speech), more moods (surprised
   animated lamp flames in the HUD, a 3-2-1 countdown before every trial, and a roulette that picks the trial.
 - **Sound:** synthesized with Web Audio, so there are no audio files. There's a mute toggle and the setting is remembered.
 
-### Neon City skin (current default, cyberpunk, preteen voice)
+### Victory Lobby skin (current default, preteen gamer)
+
+`css/loot.css`, layered over Holy Fire like Neon City. A bright video-game lobby: daylight-blue sky with drifting clouds,
+a spinning starburst and a purple storm pulsing in at the edges; chunky slanted cards with a bevel; loot-rarity colors
+(uncommon green, rare blue, epic purple, legendary orange) for answers, level cards and stats; a big yellow PLAY-style
+button; Anton italic poster type with Exo 2 for reading. Barnabas wears a sideways cap with a cross on it. The Trial
+Room is "the storm" (purple and white tape). Right answers stamp a rarity by speed (UNCOMMON → LEGENDARY).
+Voice: `THP.LINES_LOOT` / `THP.VS_LINES_LOOT`, a hyped kid-gamer Barnabas ("SHEEESH!", "That's a dub!", "Bro went AFK!").
+
+The skin button on the title cycles Victory Lobby → Neon City → Holy Fire (remembered per device).
+
+### XP and ranks (all skins)
+
+Solo games award XP: 50 per match, 100 per right answer, 75 per trial passed, 25 per streak step, 300 for beating
+Grumbles. Level n needs 500 + 100·(n−1) XP. Ranks: Bronze (1), Silver (5), Gold (10), Platinum (15), Diamond (20),
+Champion (30). A typical game is ~1,000 XP, so Silver comes around game 3 and Champion around game 50. The title shows
+the player card; results show the XP breakdown, an animated bar and a LEVEL UP / rank-up stamp. Saved on the device only.
+
+### Neon City skin (cyberpunk, preteen voice)
 
 `css/cyber.css` sits on top of Holy Fire and is switched from the title screen ("Skin: Neon City / Holy Fire"; remembered
 on the device). Rainy night skyline generated on load (lit windows, neon signs, blinking antennas, one tower carrying
