@@ -44,7 +44,7 @@ THP.QUESTIONS = [
   { lvl: 1, cat: "Exodus", q: "What food did God send from heaven in the desert?", a: ["Manna", "Pancakes", "Grapes", "Pizza"], ref: "Exodus 16:31", fact: "Manna was white and tasted like wafers made with honey." },
   { lvl: 1, cat: "Exodus", q: "How many commandments did God give Moses?", a: ["10", "3", "7", "12"], ref: "Exodus 34:28", fact: "God wrote them on tablets of stone." },
   { lvl: 1, cat: "Exodus", q: "Which sea did God split so His people could walk through?", a: ["The Red Sea", "The Dead Sea", "The Big Sea", "The Black Sea"], ref: "Exodus 14:21–22", fact: "They walked through on dry ground with walls of water on each side!" },
-  { lvl: 1, cat: "Miracles", q: "What did Jesus turn water into at a wedding?", a: ["Wine", "Milk", "Honey", "Ice"], ref: "John 2:9", fact: "It was Jesus' first miracle." },
+  { lvl: 1, cat: "Miracles", q: "What did Jesus turn water into at a wedding?", a: ["Wine", "Milk", "Juice", "Ice"], ref: "John 2:9", fact: "It was Jesus' first miracle." },
   { lvl: 1, cat: "Miracles", q: "Which friend did Jesus bring back to life after four days?", a: ["Lazarus", "Peter", "Zacchaeus", "Thomas"], ref: "John 11:17, 43–44", fact: "Jesus said, \"Lazarus, come out!\" and he walked out of the tomb." },
   { lvl: 1, cat: "Jesus Said", q: "Jesus said, \"I am the Good ___.\"", a: ["Shepherd", "Farmer", "Baker", "Painter"], ref: "John 10:11", fact: "A good shepherd takes care of every single sheep." },
   { lvl: 1, cat: "Jesus Said", q: "Which prayer starts with \"Our Father in heaven\"?", a: ["The Lord's Prayer", "The Bedtime Prayer", "The Psalm Prayer", "The Moses Prayer"], ref: "Matthew 6:9–13; Luke 11:1–4", fact: "Jesus taught this prayer to His disciples. In Luke, they asked Him, \"Lord, teach us to pray.\"" },
@@ -147,7 +147,7 @@ THP.QUESTIONS = [
   { lvl: 3, cat: "Church Begins", q: "Who baptized the Ethiopian official on the road?", a: ["Philip", "Peter", "Paul", "John the Baptist"], ref: "Acts 8:38", fact: "Then the Spirit suddenly took Philip away." },
   { lvl: 3, cat: "Road Trips", q: "Priscilla and her husband ___ made tents with Paul.", a: ["Aquila", "Apollos", "Silas", "Titus"], ref: "Acts 18:2–3", fact: "They later taught Apollos about Jesus more accurately." },
   { lvl: 3, cat: "Family Stories", q: "Who was Jacob's oldest son?", a: ["Reuben", "Judah", "Joseph", "Levi"], ref: "Genesis 35:23", fact: "Jacob had twelve sons, who became the twelve tribes of Israel." },
-  { lvl: 3, cat: "Church Begins", q: "Which couple lied to the apostles about money in Acts 5?", a: ["Ananias and Sapphira", "Aquila and Priscilla", "Zechariah and Elizabeth", "Boaz and Ruth"], ref: "Acts 5:1–10", fact: "Peter said, \"You have not lied just to human beings but to God.\"" },
+  { lvl: 3, cat: "Church Begins", q: "Which couple lied to the apostles about money in Acts 5?", a: ["Ananias and Sapphira", "Aquila and Priscilla", "Zechariah and Elizabeth", "Joseph and Mary"], ref: "Acts 5:1–10", fact: "Peter said, \"You have not lied just to human beings but to God.\"" },
   { lvl: 3, cat: "Deep Cuts", q: "What sign showed King Hezekiah that God would heal him?", a: ["A shadow moved backward", "A rainbow appeared", "Fire fell from the sky", "A dove landed on him"], ref: "2 Kings 20:9–11", fact: "The shadow went back ten steps on the stairway." },
 ];
 

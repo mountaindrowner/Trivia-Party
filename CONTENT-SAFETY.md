@@ -15,8 +15,14 @@ After the first review, the owner made these calls. The game follows them:
 - **No extra child-protection notes on lessons.** The lessons for "turn the other cheek," "love your enemies" and
   "keep forgiving" state what Jesus taught, with no added commentary.
 - **Theology and accuracy fixes stay** (below), including the change to the secret-mode unlock text.
+- **The game is non-denominational Protestant.** Content follows the Protestant canon and Protestant readings. It
+  doesn't make room for Catholic or Orthodox positions (book counts, Mary, the saints). It still avoids taking sides
+  on questions Protestant churches disagree about among themselves, such as baptism, communion and end-times timelines.
+- **Wine is mentioned where the Bible mentions it** (Cana, wine as a wrong answer). Mild irreverent humor in wrong
+  answers is fine, e.g. "cookie" next to the Last Supper bread, or Joseph and Mary as a wrong answer for the lying
+  couple in Acts 5. Bible wording like "undergarment" stays.
 
-## Theology (acceptable across traditions)
+## Theology (no side-taking between Protestant churches)
 
 - **Baptism:** no longer says it only "pictures" salvation. It now follows Peter's own wording (1 Peter 3:21).
 - **Isaiah 53:** the lesson quotes Isaiah and Peter instead of stating one theory of the atonement.
@@ -157,19 +163,12 @@ biblical violence told plainly, Barnabas's teasing, and no added child-protectio
 - Two wrong answers that made Jewish observance look trivial (handwashing, Sabbath walking) were replaced.
 - "So they will follow strict rules" is no longer a decoy for Jesus' "life to the full."
 
-**Across traditions:**
+**Accuracy and hedging:**
 - Disputed dates are hedged: Isaiah 53 "centuries before," Isaiah naming Cyrus, Psalm 22.
 - Mark's authorship is "early church tradition."
-- "His brothers" is no longer a decoy at the cross (it touches Catholic and Orthodox belief about Mary).
-- Catholic and Orthodox Old Testament counts are mentioned.
-- The Dead Sea Scrolls question is limited to the Hebrew Bible.
-- "Juice" is no longer a wrong answer at Cana.
 - "A crowd cheering us on" became the actual words of Hebrews 12:1.
 
-**Reverence and age:**
-- "Cookie" next to the Last Supper bread is now "ball."
-- Joseph and Mary are no longer offered as the lying couple of Acts 5.
-- "Undergarment" became "tunic."
+**Age:**
 - A clue describing how King Zimri took his own life was replaced.
 - A question that sent kids to the childbirth-purification law now asks about Mary and Joseph's offering in Luke 2.
 - The "sons of David" prompt (seen from age 9) swaps Amnon for Adonijah.
@@ -180,6 +179,14 @@ biblical violence told plainly, Barnabas's teasing, and no added child-protectio
 - "King" and "Teacher" for "I am the Good ___."
 - Moses as "not Abraham's family" (he's a descendant).
 - "The Samaritans" for "didn't believe in resurrection" (arguably true).
+
+**Reviewer suggestions the owner turned down (reverted):** all made for Catholic and Orthodox readers, or as
+reverence changes.
+- Catholic and Orthodox book counts were taken out.
+- The Dead Sea Scrolls question says "Old Testament" again.
+- "His brothers" is a wrong answer at the cross again.
+- Wine and "Juice" are back as wrong answers.
+- "Cookie", "Joseph and Mary" and "undergarment" are back.
 
 **Kept on purpose (owner's decisions):**
 - Samson "tore apart a lion" (Lambs).
@@ -198,7 +205,6 @@ These are all biblical and non-graphic. Some families or churches may choose dif
 | Barnabas teasing slow or wrong answers | All voices |
 | Battle-royale video-game look (Victory Lobby, the default skin) | Holy Fire and Neon City are a tap away |
 | Mild gamer slang ("no cap," "W," "GG," "AFK," "sheesh," "took the L") | Lobby and Neon City voices, editable in `js/data.js` |
-| Wine at Cana is the right answer | Little Lambs |
 | Translations differ: Isaiah 7:14 "virgin" vs "young woman"; NIV vs ESV wording in a few answers | Prophecy Hunters and others |
 | Baptism (1 Peter 3:21) and "born again" are quoted, not explained; traditions explain them differently | Prophecy Hunters, Parable Pros |
 | Galatians 4's Hagar and Sarah allegory, historically misused for "replacement" teaching | Prophecy Hunters |
