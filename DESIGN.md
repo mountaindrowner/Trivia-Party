@@ -250,11 +250,11 @@ Short animated cartoons of Bible stories, earned at milestones, each drawn in it
 | Scene | Unlocks at | About when (≈1,000 XP per solo game) | Style |
 |---|---|---|---|
 | 1 Giant Problem | First win | Game 1–2 | Saturday-morning cartoon |
-| 2 | Level 6 | Game 4 | Paper cut-out |
-| 3 | Level 10 | Game 8 | 8-bit pixel art |
-| 4 | Level 14 | Game 14 | Clay stop-motion |
-| 5 | Level 18 | Game 22 | Crayon drawing |
-| 6 | Level 22 | Game 32 | Stained glass |
+| 2 Wrong Way, Jonah | Level 6 | Game 4 | Paper cut-out |
+| 3 Lions on Mute | Level 10 | Game 8 | 8-bit pixel art |
+| 4 Two by Two | Level 14 | Game 14 | Clay stop-motion |
+| 5 Fire on the Mountain | Level 18 | Game 22 | Crayon drawing |
+| 6 He Is Risen | Level 22 | Game 32 | Stained glass |
 
 They come quickly at first to hook a new player, then spread out. Daily Challenges and Holiday Rushes also earn
 XP, so they count toward the milestones too.
@@ -262,10 +262,11 @@ XP, so they count toward the milestones too.
 - **Results screen:** a newly unlocked scene gets a fanfare, a "NEW SCENE!" stamp and a banner with Watch now.
   The XP card always shows the distance to the next one ("1,250 XP to Level 6").
 - **Gallery:** the title's 🎬 Story Scenes button opens it. Locked cards show their milestone and art style.
-  A milestone reached before its scene is finished reads "still being animated."
 - **Storage:** wins are saved as `thp-wins`, and scenes already announced as `thp-scenes-seen`.
 
-- **Built in `js/scenes.js` and `css/scenes.css`.** Characters and backgrounds are inline SVG. A small director drives
+- **Built in `js/scenes.js` and `css/scenes.css`,** with Scenes 2–6 in their own files: `js/stories/<story>.js`
+  registers a scene with `THP.Scenes.define(id, {...})`, and `css/stories/<story>.css` restyles the whole player
+  (frame, caption, bubbles, bursts, title and end cards) under `.scene-player.theme-<style>`. Characters and backgrounds are inline SVG. A small director drives
   them with the Web Animations API: actors that walk, a camera that pans and zooms, typed narration, speech bubbles,
   comic bursts, screen shake, slow motion and speed lines. The soundtrack switches tracks during the scene.
 - **Controls:** tap the picture (or Space/Enter) to rush the current beat; Skip or Esc jumps to the end card.
@@ -285,6 +286,21 @@ XP, so they count toward the milestones too.
 9. He falls facedown (17:49), with dizzy cartoon stars and no injury shown.
 10. The Philistines run (17:51).
 11. David's shades drop: "The battle is the LORD's." (17:47)
+
+**Scenes 2–6,** each about 95 seconds:
+- **2 "Wrong Way, Jonah" (Jonah 1–3), paper cut-out.** Torn-paper waves and a friendly fish. Jonah runs to Tarshish,
+  sleeps through the storm, goes overboard (1:12), prays inside the fish (2:9), and Nineveh turns back to God (3:4–10).
+- **3 "Lions on Mute" (Daniel 6), 8-bit pixel art.** RPG text boxes and a PRAYERS 3/3 counter. The trick law, Daniel
+  praying "just as he had done before" (6:10), the sleepless king, and "My God sent his angel" (6:22). The officials'
+  fate (6:24) is not shown.
+- **4 "Two by Two" (Genesis 6–9), clay stop-motion.** Building the ark, the animals in pairs, "the LORD shut him in"
+  (7:16), the rain, Ararat, the raven and the dove, and the rainbow promise (9:13). No people in the water.
+- **5 "Fire on the Mountain" (1 Kings 18:16–39), crayon drawing.** 450 to 1, "Shout louder!" (18:27), 12 numbered
+  stones, three soakings, "Answer me, LORD" (18:37), the fire, and "The LORD—he is God!" (18:39). Verse 18:40 is not
+  shown, and the "relieving himself" line is left out.
+- **6 "He Is Risen" (Matthew 27:57–28:10; John 20:1–18), stained glass.** A distant cross at dusk (no wounds), the
+  sealed tomb and guards, the women at dawn, the earthquake and the angel, the fainting guards, "He is not here; he
+  has risen" (28:6), the folded linen, "Mary." / "Rabboni!" (John 20:16), and the run to tell the disciples.
 
 The end card gives the lesson: "David wasn't brave because he was big. He knew God was bigger."
 
