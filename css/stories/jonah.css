@@ -1,0 +1,146 @@
+/* Story Scene 2 (Jonah): the paper cut-out look. Every rule is scoped to the paper theme.
+   Torn paper edges are clip-path polygons on ::before layers, so the parent's drop-shadow filter follows the torn shape.
+   Movement is choppy on purpose: steps() easing, like a shoebox puppet show. */
+
+.scene-player.theme-paper {
+  --jn-ink: #2c2a4a; --jn-cream: #f6ecd6; --jn-paper: #fffaf0; --jn-red: #e2574c; --jn-teal: #2f9e9a; --jn-gold: #ffd34d;
+  --jn-shadow: rgba(11, 15, 36, 0.45);
+  --jn-hand: "Patrick Hand", "Comic Sans MS", "Chalkboard SE", cursive;
+  --jn-cut: "Lilita One", "Arial Rounded MT Bold", "Baloo 2", system-ui, sans-serif;
+  --jn-torn: polygon(0% 0%,4.5% 3.9%,9.1% 4.7%,13.6% 1.8%,18.2% 4%,22.7% 0.6%,27.3% 1.4%,31.8% 2.4%,36.4% 2.4%,40.9% 4%,45.5% 5.5%,50% 3.6%,54.5% 0.9%,59.1% 1%,63.6% 1.6%,68.2% 3.9%,72.7% 2.1%,77.3% 0.2%,81.8% 5.5%,86.4% 2%,90.9% 0.5%,95.5% 2.6%,98.9% 10%,99.2% 30%,99.7% 50%,99.2% 70%,99.4% 90%,100% 98.4%,95.5% 99.5%,90.9% 97%,86.4% 96.7%,81.8% 95.1%,77.3% 98.1%,72.7% 98.6%,68.2% 95.9%,63.6% 96.2%,59.1% 99%,54.5% 95.3%,50% 94.3%,45.5% 95%,40.9% 98.6%,36.4% 94.5%,31.8% 96.3%,27.3% 95.4%,22.7% 98.5%,18.2% 97.8%,13.6% 99.1%,9.1% 97.5%,4.5% 97.8%,0.2% 90%,1% 70%,0.5% 50%,0.2% 30%,0.4% 10%);
+  --jn-torn2: polygon(0% 8%,4.5% 8.3%,9.1% 4.3%,13.6% 4.9%,18.2% 5.5%,22.7% 3%,27.3% 5.2%,31.8% 5.2%,36.4% 5.8%,40.9% 6%,45.5% 9.3%,50% 4.7%,54.5% 3.3%,59.1% 4.5%,63.6% 7.4%,68.2% 3.7%,72.7% 5%,77.3% 9.2%,81.8% 3.9%,86.4% 5.7%,90.9% 6.5%,95.5% 3.2%,99.2% 10%,99.7% 30%,99% 50%,99% 70%,99.8% 90%,100% 93.7%,95.5% 99.2%,90.9% 95.6%,86.4% 96.6%,81.8% 98.5%,77.3% 93.2%,72.7% 93.7%,68.2% 90%,63.6% 95.6%,59.1% 98.3%,54.5% 94.7%,50% 92.4%,45.5% 94.3%,40.9% 90.4%,36.4% 97.7%,31.8% 99.4%,27.3% 97.9%,22.7% 96.5%,18.2% 99.2%,13.6% 93.1%,9.1% 96.6%,4.5% 95.6%,1.1% 90%,0.9% 70%,1% 50%,0% 30%,0.2% 10%);
+  --jn-star: polygon(50% 1.3%,58.4% 21.3%,76.5% 8.7%,73.8% 29.4%,94.7% 29.6%,79.4% 45.8%,96% 56.6%,75.7% 61.7%,87.2% 82.2%,64.8% 73%,63.6% 96.3%,50% 80.9%,36.5% 95.9%,34.2% 74.6%,15.2% 80.2%,25% 61.4%,3.9% 56.6%,20% 45.7%,5.6% 29.7%,28.7% 31.5%,23.2% 8.3%,41.4% 20.7%);
+  background: radial-gradient(ellipse at 50% 35%, #3a3560, #15122a 75%);
+}
+
+/* The frame: a shoebox diorama with a cardboard rim. Its background matches the top of the paper sky. */
+.scene-player.theme-paper .sp-frame {
+  background: #9fd3df; border: 0.45rem solid #b07a45; border-radius: 0.25rem;
+  box-shadow: 0 0 0 0.2rem #6b4426, 0.5rem 0.8rem 0 rgba(0, 0, 0, 0.45);
+}
+.scene-player.theme-paper .jn-grain {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.32 0 0 0 0 0.26 0 0 0 0 0.2 0 0 0 0.42 -0.12'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Actors are paper puppets: one hard drop shadow each. */
+.scene-player.theme-paper .sp-actor svg { filter: drop-shadow(0.45cqh 0.8cqh 0 rgba(11, 15, 36, 0.35)); }
+.scene-player.theme-paper .sp-actor.jn-rays svg { filter: none; }
+
+/* The sea strips, storm, rain and lightning (all layers inside the world). */
+.scene-player.theme-paper .jn-sea { position: absolute; left: 43.75%; top: 0; width: 56.25%; height: 100%; display: block; pointer-events: none; }
+.scene-player.theme-paper .jn-wave { animation: jn-slide 3.2s steps(8) infinite alternate; }
+.scene-player.theme-paper .jn-wave.b { animation-duration: 4s; animation-direction: alternate-reverse; }
+.scene-player.theme-paper .jn-wave.c { animation-duration: 2.6s; }
+.scene-player.theme-paper .jn-stormy .jn-wave { animation-name: jn-chop; animation-duration: 1.2s; }
+.scene-player.theme-paper .jn-stormy .jn-wave.b { animation-duration: 1.5s; }
+.scene-player.theme-paper .jn-stormy .jn-wave.c { animation-duration: 1s; }
+@keyframes jn-slide { from { transform: translateX(0); } to { transform: translateX(-40px); } }
+@keyframes jn-chop { 0% { transform: translate(0, 2px); } 50% { transform: translate(-20px, -16px); } 100% { transform: translate(-40px, 6px); } }
+
+.scene-player.theme-paper .jn-storm { position: absolute; left: 40%; top: 0; width: 60%; height: 100%; opacity: 0; pointer-events: none; }
+.scene-player.theme-paper .jn-storm > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.scene-player.theme-paper .jn-bolt { position: absolute; left: 54%; top: 4%; width: 6%; height: 46%; opacity: 0; }
+.scene-player.theme-paper .jn-bolt svg { width: 100%; height: 100%; display: block; }
+.scene-player.theme-paper .jn-stormy .jn-bolt { animation: jn-flash 3.4s steps(1) infinite; }
+@keyframes jn-flash { 0%, 54%, 62%, 100% { opacity: 0; } 55%, 61% { opacity: 1; } }
+
+.scene-player.theme-paper .jn-rainbox { position: absolute; left: 44%; top: 0; width: 56%; height: 100%; overflow: hidden; pointer-events: none; opacity: 0; transition: opacity 0.6s steps(4); }
+.scene-player.theme-paper .jn-stormy .jn-rainbox { opacity: 0.8; }
+.scene-player.theme-paper .jn-rain {
+  position: absolute; left: 0; right: 0; top: -14cqh; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='%23cfe0ff'%3E%3Crect x='8' y='4' width='3' height='16' transform='rotate(16 9 12)'/%3E%3Crect x='38' y='30' width='3' height='16' transform='rotate(16 39 38)'/%3E%3Crect x='22' y='44' width='2.5' height='12' transform='rotate(16 23 50)'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 14cqh 14cqh; animation: jn-rain 0.5s steps(4) infinite;
+}
+@keyframes jn-rain { from { transform: translateY(0); } to { transform: translateY(14cqh); } }
+
+/* Puppet bobbing: the ship, the fish and its tail. Individual transform properties, so the director's own moves never fight them. */
+.scene-player.theme-paper .jn-ship svg { transform-origin: 50% 85%; animation: jn-bob 2.4s steps(6) infinite alternate; }
+.scene-player.theme-paper .jn-stormy .jn-ship svg { animation: jn-rock 1.3s steps(6) infinite alternate; }
+@keyframes jn-bob { from { rotate: -2deg; translate: 0 0.4cqh; } to { rotate: 2deg; translate: 0 -0.4cqh; } }
+@keyframes jn-rock { from { rotate: -9deg; translate: 0 1.4cqh; } to { rotate: 8deg; translate: 0 -1.4cqh; } }
+.scene-player.theme-paper .jn-fish svg { animation: jn-float 1.8s steps(5) infinite alternate; }
+@keyframes jn-float { from { translate: 0 0; } to { translate: 0 -1.4cqh; } }
+.scene-player.theme-paper .jn-tail { transform-box: view-box; transform-origin: 330px 130px; animation: jn-tail 1s steps(4) infinite alternate; }
+@keyframes jn-tail { from { rotate: -8deg; } to { rotate: 8deg; } }
+
+/* Inside the fish. */
+.scene-player.theme-paper .jn-belly { position: absolute; inset: 0; overflow: hidden; background: #5a1e36; pointer-events: none; }
+.scene-player.theme-paper .jn-belly > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.scene-player.theme-paper .jn-bellyj { position: absolute; left: 50%; bottom: 8%; height: 56%; translate: -50% 0; }
+.scene-player.theme-paper .jn-bellyj svg { display: block; height: 100%; width: auto; overflow: visible; filter: drop-shadow(0.8cqh 1.4cqh 0 rgba(20, 4, 14, 0.5)); }
+.scene-player.theme-paper .jn-day {
+  position: absolute; top: 6%; left: 5%; padding: 1.2cqh 3cqh 1cqh; color: var(--jn-ink); background: var(--jn-gold);
+  font: 400 5.4cqh/1 var(--jn-cut); letter-spacing: 0.04em; rotate: -4deg; box-shadow: 0.5cqh 0.9cqh 0 rgba(20, 4, 14, 0.5);
+}
+
+/* Narration: a strip of cream paper taped under the picture, in handwriting. */
+.scene-player.theme-paper .sp-caption {
+  position: relative; color: var(--jn-ink); background: var(--jn-cream); border: 0; border-radius: 2px;
+  font: 400 clamp(1.1rem, 1.3vw + 0.8rem, 1.7rem)/1.2 var(--jn-hand); rotate: -0.6deg;
+  box-shadow: 0.25rem 0.35rem 0 rgba(0, 0, 0, 0.45);
+}
+.scene-player.theme-paper .sp-caption::before {
+  content: ""; position: absolute; top: -0.55rem; left: 1.4rem; width: 4.2rem; height: 1.1rem; rotate: -5deg;
+  background: rgba(255, 228, 150, 0.8); box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
+}
+.scene-player.theme-paper .sp-caption .sp-who { color: var(--jn-red); font: inherit; }
+
+/* Speech bubbles: hand-cut paper ovals with a hard shadow (a filter, so the tail gets the shadow too). */
+.scene-player.theme-paper .sp-bubble {
+  color: var(--jn-ink); background: var(--jn-paper); border: 0; box-shadow: none;
+  border-radius: 4cqh 5cqh 3.5cqh 5.5cqh / 5cqh 4cqh 5.5cqh 4cqh; padding: 2cqh 3.2cqh 2.2cqh;
+  filter: drop-shadow(0.5cqh 0.9cqh 0 var(--jn-shadow)); font: 400 4.4cqh/1.15 var(--jn-hand);
+}
+.scene-player.theme-paper .sp-bubble::after { border-top-color: var(--jn-paper); }
+.scene-player.theme-paper .sp-who { font: 400 2.8cqh/1 var(--jn-cut); letter-spacing: 0.06em; text-transform: uppercase; color: var(--jn-red); margin-bottom: 0.6cqh; }
+.scene-player.theme-paper .sp-bubble.loud { background: #ffe08a; border: 0; box-shadow: none; font: 400 4.6cqh/1.1 var(--jn-hand); letter-spacing: 0; }
+.scene-player.theme-paper .sp-bubble.loud::after { border-top-color: #ffe08a; }
+.scene-player.theme-paper .sp-bubble.loud .sp-who { color: #b8382f; }
+.scene-player.theme-paper .sp-bubble.mini { padding: 0.6cqh 1.3cqh; font-size: 6.5cqh; line-height: 1; border-radius: 50%; }
+
+/* Bursts: two stacked paper stars, red behind yellow. */
+.scene-player.theme-paper .sp-burst { clip-path: none; background: none; width: 34cqh; height: 26cqh; filter: drop-shadow(0.6cqh 1cqh 0 var(--jn-shadow)); }
+.scene-player.theme-paper .sp-burst::before, .scene-player.theme-paper .sp-burst::after { content: ""; position: absolute; inset: 0; clip-path: var(--jn-star); }
+.scene-player.theme-paper .sp-burst::before { background: var(--jn-red); rotate: 9deg; scale: 1.1; }
+.scene-player.theme-paper .sp-burst::after { background: var(--jn-gold); }
+.scene-player.theme-paper .sp-burst span { position: relative; z-index: 1; font: 400 6cqh/1 var(--jn-cut); letter-spacing: 0.03em; color: var(--jn-ink); -webkit-text-stroke: 0; }
+
+/* Title card: a torn cream sheet glued on a teal one. */
+.scene-player.theme-paper .sp-card { color: var(--jn-ink); background: none; border: 0; box-shadow: none; inset: 20% 9%; filter: drop-shadow(0.8cqh 1.4cqh 0 rgba(10, 8, 30, 0.5)); }
+.scene-player.theme-paper .sp-card::before, .scene-player.theme-paper .sp-card::after { content: ""; position: absolute; z-index: -1; }
+.scene-player.theme-paper .sp-card::before { inset: 0; background: var(--jn-cream); clip-path: var(--jn-torn); }
+.scene-player.theme-paper .sp-card::after { inset: -3cqh -2.5cqh; z-index: -2; background: var(--jn-teal); clip-path: var(--jn-torn2); rotate: 3deg; }
+.scene-player.theme-paper .sp-card small { font: 400 3.8cqh/1 var(--jn-hand); letter-spacing: 0.2em; color: var(--jn-red); }
+.scene-player.theme-paper .sp-card strong { font: 400 11.5cqh/1 var(--jn-cut); letter-spacing: 0.02em; color: #1f4f8a; text-shadow: 0.6cqh 0.7cqh 0 var(--jn-gold); }
+.scene-player.theme-paper .sp-card span { font: 400 4.4cqh/1.2 var(--jn-hand); }
+
+/* End card: deep-sea paper behind a torn title strip and a taped-on verse note. */
+.scene-player.theme-paper .sp-end { background: rgba(23, 61, 110, 0.86); gap: 2.4cqh; }
+.scene-player.theme-paper .sp-end small { font: 400 3.8cqh/1 var(--jn-hand); letter-spacing: 0.18em; color: var(--jn-gold); }
+.scene-player.theme-paper .sp-end strong {
+  position: relative; padding: 1.6cqh 5cqh 1.2cqh; color: #1f4f8a; font: 400 10cqh/1 var(--jn-cut); letter-spacing: 0.02em; rotate: -2deg;
+  filter: drop-shadow(0.6cqh 1cqh 0 rgba(0, 0, 0, 0.4));
+}
+.scene-player.theme-paper .sp-end strong::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--jn-cream); clip-path: var(--jn-torn2); }
+.scene-player.theme-paper .sp-verse {
+  position: relative; max-width: 84cqw; padding: 2.4cqh 4.4cqh 2.2cqh; color: var(--jn-ink); font: 400 5.6cqh/1.15 var(--jn-hand); rotate: 1deg;
+  filter: drop-shadow(0.6cqh 1cqh 0 rgba(0, 0, 0, 0.4));
+}
+.scene-player.theme-paper .sp-verse::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--jn-paper); clip-path: var(--jn-torn); }
+.scene-player.theme-paper .sp-verse::after {
+  content: ""; position: absolute; top: -1.6cqh; left: 50%; width: 14cqh; height: 3.6cqh; translate: -50% 0; rotate: -3deg;
+  background: rgba(255, 228, 150, 0.85);
+}
+.scene-player.theme-paper .sp-verse cite { font-size: 0.72em; color: #b8382f; opacity: 1; }
+
+@container (max-height: 330px) {
+  .scene-player.theme-paper .sp-end { gap: 1.4cqh; }
+  .scene-player.theme-paper .sp-verse { padding: 1.6cqh 3.4cqh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-player.theme-paper .jn-wave, .scene-player.theme-paper .jn-ship svg, .scene-player.theme-paper .jn-fish svg,
+  .scene-player.theme-paper .jn-tail, .scene-player.theme-paper .jn-rain, .scene-player.theme-paper .jn-bolt { animation: none !important; }
+}
