@@ -1,0 +1,86 @@
+/* Story Scene 4 (Noah's Ark) in clay stop-motion: a warm workbench around the picture, plasticine slabs for the
+   caption, bubbles and cards, and a cheap frame-to-frame "boil" on the actors only. Every rule is scoped to the theme. */
+
+.scene-player.theme-clay { background: radial-gradient(ellipse at 50% 35%, #6b4426, #2a170b 72%); font-family: "Baloo 2", "Nunito", system-ui, sans-serif; }
+.scene-player.theme-clay .sp-frame { background: #8fc7e8; border: 0.45rem solid #c98a4b; border-radius: 1.6rem 1.9rem 1.5rem 1.8rem;
+  box-shadow: inset 0 0 0 0.2rem rgba(255, 226, 168, 0.35), 0 0 0 0.3rem #7a4219, 0 0.55rem 0 0.3rem #5a2e0e, 0 1.2rem 2.6rem rgba(0, 0, 0, 0.6); }
+
+/* Caption: a squashed pill of butter-yellow clay. */
+.scene-player.theme-clay .sp-caption { font: 800 clamp(1rem, 1.2vw + 0.72rem, 1.5rem)/1.25 "Baloo 2", "Nunito", system-ui, sans-serif; color: #5a2e0e;
+  background: #ffe2a8; border: 0; border-radius: 1.4rem 1.7rem 1.3rem 1.6rem; padding: 0.5rem 1.1rem 0.6rem;
+  box-shadow: inset 0 -0.3rem 0 rgba(150, 90, 30, 0.28), inset 0.25rem 0.25rem 0 rgba(255, 255, 255, 0.55), 0 0.3rem 0 rgba(0, 0, 0, 0.35); }
+.scene-player.theme-clay .sp-caption .sp-who { color: #c2410c; }
+.scene-player.theme-clay .sp-hint { color: #ffe2a8; }
+
+/* Speech bubbles: soft cream clay, no ink outline, a little thumb-pressed shine on the top left. */
+.scene-player.theme-clay .sp-bubble { color: #4a2a12; background: #fff6e4; border: 0; border-radius: 3.4cqh 4.2cqh 3cqh 4.6cqh;
+  box-shadow: inset 0 -0.9cqh 0 rgba(170, 110, 50, 0.22), inset 0.7cqh 0.7cqh 0 rgba(255, 255, 255, 0.9), 0 0.9cqh 0 rgba(70, 36, 12, 0.4);
+  font: 800 3.9cqh/1.18 "Baloo 2", "Nunito", system-ui, sans-serif; }
+.scene-player.theme-clay .sp-bubble::after { border-top-color: #fff6e4; bottom: -2.2cqh; }
+.scene-player.theme-clay .sp-who { font: 800 2.5cqh/1 "Baloo 2", "Nunito", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #c2410c; }
+.scene-player.theme-clay .sp-bubble.loud { background: #ffd9a8; }
+.scene-player.theme-clay .sp-bubble.loud::after { border-top-color: #ffd9a8; }
+.scene-player.theme-clay .sp-bubble.mini { padding: 0.8cqh 1.4cqh; font-size: 6cqh; border-radius: 50%; }
+
+/* Bursts: a blob of orange clay instead of a comic star. */
+.scene-player.theme-clay .sp-burst { clip-path: none; width: auto; height: auto; padding: 1.6cqh 3.2cqh 2cqh; border-radius: 48% 52% 46% 54% / 56% 50% 50% 44%;
+  background: radial-gradient(circle at 34% 30%, #fff3b0, #ffc53d 45%, #f0952a); box-shadow: inset 0 -1.1cqh 0 rgba(150, 70, 10, 0.35), 0 0.9cqh 0 rgba(70, 36, 12, 0.45); }
+.scene-player.theme-clay .sp-burst span { font: 800 6.4cqh/1 "Baloo 2", "Nunito", sans-serif; color: #8a3a10; -webkit-text-stroke: 0; text-shadow: 0 0.35cqh 0 #fff3b0; padding: 0; white-space: nowrap; }
+.scene-player.theme-clay .sp-burst.leaf { background: radial-gradient(circle at 34% 30%, #e8ffc8, #8cc46a 50%, #5aa04a); }
+.scene-player.theme-clay .sp-burst.leaf span { color: #23511a; text-shadow: 0 0.35cqh 0 #e8ffc8; }
+
+/* Title card: a pressed slab of terracotta clay. */
+.scene-player.theme-clay .sp-card { background: radial-gradient(ellipse at 30% 22%, #f6a160, #e8743b 55%, #c8582a); border: 0;
+  border-radius: 4cqh 5.4cqh 4.4cqh 3.6cqh; rotate: -2deg;
+  box-shadow: inset 0 -1.8cqh 0 rgba(110, 36, 8, 0.3), inset 1.2cqh 1.2cqh 0 rgba(255, 255, 255, 0.18), 0 1.4cqh 0 #6b2e12, 0 2.4cqh 3cqh rgba(0, 0, 0, 0.35); }
+.scene-player.theme-clay .sp-card small { font: 800 3.4cqh/1 "Baloo 2", "Nunito", sans-serif; letter-spacing: 0.24em; color: #fff3c4; }
+.scene-player.theme-clay .sp-card strong { font: 800 15cqh/0.95 "Baloo 2", "Nunito", sans-serif; letter-spacing: 0.01em; color: #ffe2a8;
+  text-shadow: 0 0.5cqh 0 #c8582a, 0 1cqh 0 #8a3414, 0 1.6cqh 1cqh rgba(0, 0, 0, 0.3); }
+.scene-player.theme-clay .sp-card span { font: 800 3.8cqh/1.2 "Baloo 2", "Nunito", sans-serif; color: #fff; }
+
+/* End card: dark walnut tint, a little clay rainbow over the title. */
+.scene-player.theme-clay .sp-end { background: rgba(58, 30, 12, 0.84); }
+.scene-player.theme-clay .sp-end::before { content: ""; width: 24cqh; height: 12cqh; border-radius: 12cqh 12cqh 0 0; margin-bottom: -1cqh;
+  background: radial-gradient(circle at 50% 100%, transparent 37%, #8a6ad0 38% 47%, #4aa3d8 48% 57%, #6cc04a 58% 67%, #ffd84d 68% 77%, #ff9a3d 78% 87%, #ff5a4e 88% 97%, transparent 98%); }
+.scene-player.theme-clay .sp-end small { font: 800 3.2cqh/1 "Baloo 2", "Nunito", sans-serif; color: #ffd27a; }
+.scene-player.theme-clay .sp-end strong { font: 800 12cqh/1 "Baloo 2", "Nunito", sans-serif; color: #ffe2a8; text-shadow: 0 0.5cqh 0 #c8582a, 0 1cqh 0 #6b2e12; }
+.scene-player.theme-clay .sp-verse { font: 800 4.6cqh/1.25 "Baloo 2", "Nunito", sans-serif; color: #fff6e4; }
+
+/* ---------- Scene pieces ---------- */
+.scene-player.theme-clay .clay-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.scene-player.theme-clay .clay-dim { position: absolute; inset: 0; background: rgba(46, 58, 86, 0.5); opacity: 0; }
+.scene-player.theme-clay .clay-clouds { position: absolute; left: 0; top: 0; width: 100%; height: 40%; transform: translateY(-110%); opacity: 0; }
+.scene-player.theme-clay .clay-clouds svg, .scene-player.theme-clay .clay-water svg { display: block; width: 100%; height: 100%; }
+.scene-player.theme-clay .clay-mtn { position: absolute; inset: 0; opacity: 0; }
+.scene-player.theme-clay .clay-beam { position: absolute; left: 24%; bottom: 10%; width: 9%; height: 92%; translate: -50% 0; opacity: 0;
+  background: linear-gradient(to bottom, rgba(255, 240, 170, 0), rgba(255, 236, 150, 0.8) 35%, rgba(255, 230, 140, 0.5));
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+.scene-player.theme-clay .clay-water { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.scene-player.theme-clay .clay-rain { position: absolute; left: 0; top: -30cqh; width: 100%; height: calc(100% + 30cqh); opacity: 0;
+  background-size: 14cqh 28cqh; background-repeat: repeat; }
+.scene-player.theme-clay .clay-glow { position: absolute; width: 34cqh; height: 34cqh; translate: -50% -50%; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, rgba(255, 246, 190, 0.95), rgba(255, 216, 77, 0.55) 40%, rgba(255, 216, 77, 0) 70%); }
+.scene-player.theme-clay .clay-rainbow svg { overflow: visible; }
+.scene-player.theme-clay .st, .scene-player.theme-clay .puffs, .scene-player.theme-clay .ramp { transform-box: fill-box; transform-origin: 50% 100%; }
+.scene-player.theme-clay .sp-actor.clay-flip svg { scale: -1 1; }
+
+/* The boil: every actor is re-posed a hair each frame, at 8 poses a second, on the compositor (no repaint). */
+.scene-player.theme-clay .clay-boil > svg { animation: clay-boil 0.5s steps(1, end) infinite; transform-origin: 50% 100%; }
+.scene-player.theme-clay .clay-boil.big > svg { animation-name: clay-boil-big; }
+.scene-player.theme-clay .clay-boil:nth-of-type(3n) > svg { animation-delay: -0.19s; }
+.scene-player.theme-clay .clay-boil:nth-of-type(3n + 1) > svg { animation-delay: -0.37s; }
+@keyframes clay-boil {
+  0% { transform: none; }
+  25% { transform: rotate(0.7deg) scale(1.012, 0.99); }
+  50% { transform: translateX(0.6%) rotate(-0.4deg); }
+  75% { transform: scale(0.992, 1.012) rotate(-0.6deg); }
+}
+@keyframes clay-boil-big {
+  0% { transform: none; }
+  25% { transform: scale(1.004, 0.996); }
+  50% { transform: translateX(0.15%) rotate(0.15deg); }
+  75% { transform: scale(0.997, 1.004) rotate(-0.1deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-player.theme-clay .clay-boil > svg { animation: none; }
+}
