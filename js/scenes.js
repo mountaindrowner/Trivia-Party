@@ -439,15 +439,18 @@ THP.Scenes = (function () {
      Level 6 ≈ game 4 · Level 10 ≈ game 8 · Level 14 ≈ game 14 · Level 18 ≈ game 22 · Level 22 ≈ game 32.
      Every scene gets its own art style. Milestones without a finished scene show as "in production". */
   const LIST = [
-    { id: "giant", ep: 1, need: { wins: 1 }, style: "Saturday-morning cartoon",
+    { id: "giant", ep: 1, need: { wins: 1 }, style: "Saturday-morning cartoon", theme: "cartoon",
       title: "Giant Problem", sub: "David and Goliath", ref: "1 Samuel 17", icon: "🪨",
       lesson: "David wasn't brave because he was big. He knew God was bigger.", verse: ["The battle is the LORD's.", "1 Samuel 17:47"], play: giant },
-    { id: "s2", ep: 2, need: { lvl: 6 }, style: "Paper cut-out" },
-    { id: "s3", ep: 3, need: { lvl: 10 }, style: "8-bit pixel art" },
-    { id: "s4", ep: 4, need: { lvl: 14 }, style: "Clay stop-motion" },
-    { id: "s5", ep: 5, need: { lvl: 18 }, style: "Crayon drawing" },
-    { id: "s6", ep: 6, need: { lvl: 22 }, style: "Stained glass" },
+    // Scenes 2–6 are filled in by their own files in js/stories/ (see define below).
+    { id: "s2", ep: 2, need: { lvl: 6 }, style: "Paper cut-out", theme: "paper" },
+    { id: "s3", ep: 3, need: { lvl: 10 }, style: "8-bit pixel art", theme: "pixel" },
+    { id: "s4", ep: 4, need: { lvl: 14 }, style: "Clay stop-motion", theme: "clay" },
+    { id: "s5", ep: 5, need: { lvl: 18 }, style: "Crayon drawing", theme: "crayon" },
+    { id: "s6", ep: 6, need: { lvl: 22 }, style: "Stained glass", theme: "glass" },
   ];
+  /** A story file adds its scene: title, sub, ref, icon, lesson, verse and play(D). */
+  function define(id, props) { Object.assign(LIST.find((s) => s.id === id), props); }
   const ready = (s) => typeof s.play === "function";
 
   /* ---------- Unlocks ---------- */
@@ -492,7 +495,7 @@ THP.Scenes = (function () {
       const skip = el("button", { class: "btn btn-ghost sp-skip" }, "Skip ⏭");
       const hint = el("span", { class: "sp-hint" }, "Tap the picture to speed up");
       const controls = el("div", { class: "sp-controls" }, hint, skip);
-      const root = el("div", { class: "scene-player", role: "dialog", "aria-label": def.title }, frame, cap, controls);
+      const root = el("div", { class: "scene-player theme-" + (def.theme || "cartoon"), role: "dialog", "aria-label": def.title }, frame, cap, controls);
       document.body.append(root);
       document.body.classList.add("scene-open");
       const D = director(frame, world, overlay, cap);
@@ -565,5 +568,5 @@ THP.Scenes = (function () {
     THP.ui.say(unlockedCount() ? "Grab some popcorn. Well, manna." : "Win a game to unlock your first scene!");
   }
 
-  return { LIST, play, screen, recordWin, newlyUnlocked, nextMilestone, unlockedCount, readyCount, isOpen };
+  return { LIST, define, kit: { svg, INK, store, REDUCED }, play, screen, recordWin, newlyUnlocked, nextMilestone, unlockedCount, readyCount, isOpen };
 })();
