@@ -1,0 +1,94 @@
+/* Story Scene 6 ("He Is Risen"): the player as a stained-glass church window.
+   Lead-dark stone around a pointed arch, Cinzel lettering on leaded plaques, and light that grows from dusk to sunrise. */
+
+.scene-player.theme-glass { background: #17111f; font-family: "Cinzel", Georgia, "Times New Roman", serif; }
+
+/* The frame: no cartoon border. The arch overlay (.g-arch) paints the stone around the window in the player's color. */
+.scene-player.theme-glass .sp-frame { background: #17111f; border: 0; border-radius: 0; box-shadow: none; }
+.scene-player.theme-glass .g-arch { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; display: block; }
+
+/* Night and dusk wash over the world (actors too). */
+.scene-player.theme-glass .g-tint { position: absolute; inset: 0; pointer-events: none; }
+.scene-player.theme-glass .g-tint.dusk { background: rgba(70, 12, 40, 0.38); }
+.scene-player.theme-glass .g-tint.night { background: rgba(8, 10, 48, 0.5); }
+
+/* Light through the glass: diagonal beams, a slow sweep, and dust motes. Only on once the angel arrives (.g-lit). */
+.scene-player.theme-glass .g-beams, .scene-player.theme-glass .g-sweep, .scene-player.theme-glass .g-motes, .scene-player.theme-glass .g-flash {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity 2.5s ease; }
+.scene-player.theme-glass .g-beams { background:
+  linear-gradient(115deg, transparent 18%, rgba(255, 246, 214, 0.16) 22%, rgba(255, 246, 214, 0.16) 30%, transparent 34%,
+    transparent 48%, rgba(255, 246, 214, 0.12) 52%, rgba(255, 246, 214, 0.12) 57%, transparent 61%,
+    transparent 70%, rgba(255, 246, 214, 0.1) 73%, rgba(255, 246, 214, 0.1) 80%, transparent 84%); }
+.scene-player.theme-glass .g-sweep { overflow: hidden; }
+.scene-player.theme-glass .g-sweep::before { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 246, 214, 0.28), transparent); animation: g-sweep 7s ease-in-out infinite; animation-play-state: paused; }
+.scene-player.theme-glass .g-motes i { position: absolute; width: 0.7cqh; height: 0.7cqh; border-radius: 50%; background: #fff6d6; box-shadow: 0 0 0.8cqh #fff6d6;
+  animation: g-mote 7s linear infinite; animation-play-state: paused; }
+.scene-player.theme-glass .g-flash { background: #fffdf0; transition: none; }
+.scene-player.theme-glass .sp-frame.g-lit .g-beams, .scene-player.theme-glass .sp-frame.g-lit .g-sweep, .scene-player.theme-glass .sp-frame.g-lit .g-motes { opacity: 1; }
+.scene-player.theme-glass .sp-frame.g-lit .g-sweep::before, .scene-player.theme-glass .sp-frame.g-lit .g-motes i { animation-play-state: running; }
+.scene-player.theme-glass .sp-frame.g-full .g-beams { filter: brightness(1.6); }
+@keyframes g-sweep { from { transform: translateX(0); } to { transform: translateX(350%); } }
+@keyframes g-mote { from { transform: translate(0, 6cqh); opacity: 0; } 20% { opacity: 0.9; } 80% { opacity: 0.9; } to { transform: translate(5cqh, -22cqh); opacity: 0; } }
+
+/* Dawn panes breathe once the light is on. */
+.scene-player.theme-glass .sp-frame.g-lit #glassDawn .g-ray { animation: g-ray 4s ease-in-out infinite alternate; }
+@keyframes g-ray { from { opacity: 0.7; } to { opacity: 1; } }
+
+/* The angel glows; Jesus starts dim in the early light and shines when he says her name. */
+.scene-player.theme-glass .g-angel { filter: drop-shadow(0 0 2.5cqh rgba(255, 250, 220, 0.95)); }
+.scene-player.theme-glass .g-jesus { filter: brightness(0.7) saturate(0.6); transition: filter 1.6s ease; }
+.scene-player.theme-glass .g-jesus.shine { filter: brightness(1.08) drop-shadow(0 0 2.2cqh rgba(255, 233, 160, 0.95)); }
+
+/* Glass confetti. */
+.scene-player.theme-glass .g-shard { position: absolute; bottom: -4cqh; width: 2.4cqh; height: 3.4cqh; z-index: 2; opacity: 0;
+  clip-path: polygon(50% 0, 100% 40%, 70% 100%, 0 70%); outline: 0.4cqh solid #1c1424; }
+
+/* Caption: a leaded plaque. */
+.scene-player.theme-glass .sp-caption { font: 700 clamp(0.9rem, 1.05vw + 0.65rem, 1.35rem)/1.35 "Cinzel", Georgia, serif; letter-spacing: 0.01em; color: #fff4d0;
+  background: linear-gradient(180deg, #4a2a16, #2e180c); border: 0.22rem solid #1c1424; border-radius: 0.3rem; text-align: center;
+  box-shadow: inset 0 0 0 0.16rem #d9a441, inset 0 0 0 0.4rem #1c1424, 0 0.4rem 1.2rem rgba(0, 0, 0, 0.5); padding: 0.6rem 1.1rem; }
+.scene-player.theme-glass .sp-caption .sp-who { color: #ffd45a; font-family: inherit; }
+.scene-player.theme-glass .sp-hint { color: #d9c9a8; }
+
+/* Speech bubbles: pale glass in a lead came, with a thin gold line inside. */
+.scene-player.theme-glass .sp-bubble { color: #2a1a10; background: linear-gradient(160deg, #fff8e2, #f3e2b8); border: 0.6cqh solid #1c1424; border-radius: 1.2cqh;
+  box-shadow: inset 0 0 0 0.35cqh #d9a441, 0 0.8cqh 2cqh rgba(0, 0, 0, 0.45); font: 700 3.5cqh/1.28 "Cinzel", Georgia, serif; letter-spacing: 0.01em; padding: 1.6cqh 2.6cqh 1.8cqh; }
+.scene-player.theme-glass .sp-bubble::after { border-top-color: #1c1424; }
+.scene-player.theme-glass .sp-bubble { width: max-content; max-width: 42cqw; }
+.scene-player.theme-glass .sp-who { font: 700 2.3cqh/1 "Cinzel", Georgia, serif; letter-spacing: 0.14em; text-transform: uppercase; color: #a02838; }
+.scene-player.theme-glass .sp-bubble.loud { background: radial-gradient(ellipse at 50% 30%, #ffffff, #e6f3ff); border-color: #1c1424; font: 700 3.8cqh/1.25 "Cinzel", Georgia, serif;
+  letter-spacing: 0.01em; box-shadow: inset 0 0 0 0.35cqh #ffd45a, 0 0 4cqh rgba(255, 250, 220, 0.85); }
+.scene-player.theme-glass .sp-bubble.loud .sp-who { color: #3757c4; }
+.scene-player.theme-glass .sp-bubble.jesus { background: radial-gradient(ellipse at 50% 30%, #fffdf2, #ffeeb8); box-shadow: inset 0 0 0 0.35cqh #e0b040, 0 0 4cqh rgba(255, 220, 130, 0.8); }
+.scene-player.theme-glass .sp-bubble.jesus .sp-who { color: #9a6a10; }
+.scene-player.theme-glass .sp-bubble.mini { padding: 0.6cqh 1.2cqh; font-size: 6.5cqh; line-height: 1; border-radius: 50%; box-shadow: inset 0 0 0 0.3cqh #d9a441; }
+
+/* Bursts: a leaded diamond pane with carved letters. */
+.scene-player.theme-glass .sp-burst { width: auto; height: auto; padding: 2cqh 4cqh; clip-path: none; background: linear-gradient(160deg, #ffe9a0, #f29b38);
+  border: 0.7cqh solid #1c1424; border-radius: 1cqh; box-shadow: inset 0 0 0 0.4cqh #fff6d6, 0 0 3cqh rgba(255, 220, 140, 0.7); }
+.scene-player.theme-glass .sp-burst span { font: 700 6.5cqh/1 "Cinzel", Georgia, serif; letter-spacing: 0.12em; color: #3a1f12; -webkit-text-stroke: 0; padding: 0; white-space: nowrap; }
+.scene-player.theme-glass .sp-burst.quake { background: linear-gradient(160deg, #9d9bb2, #6e6c86); box-shadow: inset 0 0 0 0.4cqh #d9d6e8; }
+.scene-player.theme-glass .sp-burst.quake span { color: #fff4d0; }
+.scene-player.theme-glass .sp-burst.risen { padding: 3cqh 5cqh; background: radial-gradient(ellipse at 50% 40%, #fffbe8, #ffd45a); box-shadow: inset 0 0 0 0.5cqh #fff, 0 0 6cqh 1cqh rgba(255, 233, 160, 0.9); }
+.scene-player.theme-glass .sp-burst.risen span { font-size: 9cqh; color: #5a2a10; }
+
+/* Title card: a pointed-arch plaque of deep blue glass. */
+.scene-player.theme-glass .sp-card { inset: 12% 22% 10%; rotate: 0deg; gap: 1.8cqh; padding: 8cqh 4cqh 4cqh; color: #fff4d0;
+  background: radial-gradient(ellipse at 50% 20%, #3a56b8, #1b2a6b 70%); border: 0.8cqh solid #1c1424; border-radius: 50% 50% 1.5cqh 1.5cqh / 30% 30% 1.5cqh 1.5cqh;
+  box-shadow: inset 0 0 0 0.45cqh #d9a441, inset 0 0 0 1.3cqh #1c1424, inset 0 0 0 1.8cqh #c2413b, 0 0 5cqh rgba(255, 210, 120, 0.35); }
+.scene-player.theme-glass .sp-card small { font: 700 2.8cqh/1 "Cinzel", Georgia, serif; letter-spacing: 0.3em; color: #ffd45a; }
+.scene-player.theme-glass .sp-card strong { font: 700 10cqh/1.02 "Cinzel", Georgia, serif; letter-spacing: 0.06em; text-shadow: 0 0 3cqh rgba(255, 220, 140, 0.6); padding: 0; }
+.scene-player.theme-glass .sp-card span { font: 700 3cqh/1.25 "Cinzel", Georgia, serif; color: #e6dcc0; }
+
+/* End card. */
+.scene-player.theme-glass .sp-end { background: radial-gradient(ellipse at 50% 45%, rgba(58, 31, 18, 0.88), rgba(23, 17, 31, 0.95) 75%); color: #fff4d0; }
+.scene-player.theme-glass .sp-end small { font: 700 2.8cqh/1.2 "Cinzel", Georgia, serif; letter-spacing: 0.22em; color: #ffd45a; }
+.scene-player.theme-glass .sp-end strong { font: 700 10cqh/1 "Cinzel", Georgia, serif; letter-spacing: 0.06em; text-shadow: 0 0 3cqh rgba(255, 220, 140, 0.6); padding: 0; }
+.scene-player.theme-glass .sp-verse { max-width: 70cqw; font: 700 4.4cqh/1.3 "Cinzel", Georgia, serif; padding: 2cqh 3.5cqh; color: #2a1a10;
+  background: linear-gradient(160deg, #fff8e2, #f3e2b8); border: 0.6cqh solid #1c1424; border-radius: 1cqh; box-shadow: inset 0 0 0 0.35cqh #d9a441; }
+.scene-player.theme-glass .sp-verse cite { color: #a02838; opacity: 1; letter-spacing: 0.12em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-player.theme-glass .g-sweep::before, .scene-player.theme-glass .g-motes i, .scene-player.theme-glass .sp-frame.g-lit #glassDawn .g-ray { animation: none; }
+}
