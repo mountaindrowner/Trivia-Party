@@ -1,0 +1,131 @@
+/* Story Scene 3 · "Lions on Mute" (Daniel 6) · 8-bit pixel art.
+   A retro console look: square corners, hard shadows, a tiny palette and Press Start 2P text in RPG dialogue boxes. */
+
+.scene-player.theme-pixel {
+  --px-ink: #12102a; --px-white: #f4f4ff; --px-gold: #ffd84d; --px-red: #e8433a; --px-sky: #9fd8ff;
+  --px-font: "Press Start 2P", ui-monospace, "Courier New", monospace;
+  background-color: #0a0918;
+  background-image: linear-gradient(45deg, #141230 25%, transparent 25%, transparent 75%, #141230 75%),
+    linear-gradient(45deg, #141230 25%, transparent 25%, transparent 75%, #141230 75%);
+  background-size: 2rem 2rem; background-position: 0 0, 1rem 1rem;
+}
+
+/* The screen: a chunky white bezel, no rounded corners, and a little more room for the caption box. */
+.scene-player.theme-pixel .sp-frame {
+  width: min(100%, calc((100vh - 13rem) * 1.6)); width: min(100%, calc((100dvh - 13rem) * 1.6));
+  border-radius: 0; background: var(--px-ink); border: 0.3rem solid var(--px-white);
+  box-shadow: 0 0 0 0.3rem var(--px-ink), 0 0 0 0.55rem #5a5478, 0.9rem 0.9rem 0 0.55rem rgba(0, 0, 0, 0.55);
+}
+.scene-player.theme-pixel .sp-world, .scene-player.theme-pixel .px-bg, .scene-player.theme-pixel .px-sprite { image-rendering: pixelated; }
+/* Faint scanlines over the picture. */
+.scene-player.theme-pixel .sp-overlay { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.09) 0 0.25cqh, transparent 0.25cqh 0.6cqh); }
+
+/* Sprites: poses and four-frame loops (js/stories/daniel.js builds them). */
+.scene-player.theme-pixel .px-flip svg { scale: -1 1; }
+.scene-player.theme-pixel .px-peek { overflow: hidden; }
+.scene-player.theme-pixel .px-frames > g { opacity: 0; animation: px-frame var(--px-t, 0.9s) steps(1) infinite; }
+.scene-player.theme-pixel .px-frames > g:nth-child(2) { animation-delay: calc(var(--px-t, 0.9s) * -0.75); }
+.scene-player.theme-pixel .px-frames > g:nth-child(3) { animation-delay: calc(var(--px-t, 0.9s) * -0.5); }
+.scene-player.theme-pixel .px-frames > g:nth-child(4) { animation-delay: calc(var(--px-t, 0.9s) * -0.25); }
+@keyframes px-frame { 0% { opacity: 1; } 25%, 100% { opacity: 0; } }
+.scene-player.theme-pixel .px-tint { position: absolute; left: 0; top: 0; width: 38.75%; height: 100%; opacity: 0; pointer-events: none;
+  background: rgba(14, 10, 50, 0.55); }
+
+/* RPG dialogue boxes instead of round speech bubbles. */
+.scene-player.theme-pixel .sp-bubble {
+  width: max-content; max-width: 44cqw; padding: 2cqh 2.6cqh 2.6cqh; border-radius: 0; color: var(--px-white); background: var(--px-ink);
+  border: 0.7cqh solid var(--px-white); box-shadow: 0 0 0 0.7cqh var(--px-ink), 1cqh 1cqh 0 0.7cqh rgba(0, 0, 0, 0.45);
+  font: 400 2.7cqh/1.6 var(--px-font); text-wrap: pretty;
+}
+.scene-player.theme-pixel .sp-bubble::after { bottom: -3cqh; border-width: 0 1.6cqh; border-style: solid; border-color: transparent;
+  border-top: 2.4cqh solid var(--px-white); }
+.scene-player.theme-pixel .sp-bubble::before { content: "▼"; position: absolute; right: 1.2cqh; bottom: 0.6cqh; font-size: 1.8cqh; color: var(--px-gold);
+  animation: px-blink 0.8s steps(1) infinite; }
+.scene-player.theme-pixel .sp-who { font: 400 2.5cqh/1.2 var(--px-font); letter-spacing: 0; color: var(--px-gold); margin-bottom: 1.2cqh; text-transform: uppercase; }
+.scene-player.theme-pixel .sp-bubble.loud { background: #2a0e1e; border-color: #ffb3a8; box-shadow: 0 0 0 0.7cqh var(--px-ink), 1cqh 1cqh 0 0.7cqh rgba(0, 0, 0, 0.45);
+  font: 400 3cqh/1.55 var(--px-font); letter-spacing: 0; }
+.scene-player.theme-pixel .sp-bubble.loud::after { border-top-color: #ffb3a8; }
+.scene-player.theme-pixel .sp-bubble.loud .sp-who { color: #ff8a7a; }
+.scene-player.theme-pixel .sp-bubble.mini { padding: 1cqh 1.4cqh; font-size: 0; line-height: 0; border-width: 0.6cqh; box-shadow: 0 0 0 0.5cqh var(--px-ink); }
+.scene-player.theme-pixel .sp-bubble.mini::before { content: "..."; position: static; font: 400 4cqh/1 var(--px-font); color: var(--px-white); animation: px-blink 0.6s steps(1) infinite; }
+
+/* Bursts: notched pixel boxes. */
+.scene-player.theme-pixel .sp-burst { width: auto; height: auto; padding: 1.8cqh 2.6cqh; background: var(--px-gold); border: 0.7cqh solid var(--px-ink);
+  clip-path: polygon(1.2cqh 0, calc(100% - 1.2cqh) 0, calc(100% - 1.2cqh) 0.7cqh, 100% 0.7cqh, 100% calc(100% - 0.7cqh), calc(100% - 1.2cqh) calc(100% - 0.7cqh),
+    calc(100% - 1.2cqh) 100%, 1.2cqh 100%, 1.2cqh calc(100% - 0.7cqh), 0 calc(100% - 0.7cqh), 0 0.7cqh, 1.2cqh 0.7cqh); }
+.scene-player.theme-pixel .sp-burst span { font: 400 4.6cqh/1 var(--px-font); letter-spacing: 0; color: var(--px-red); -webkit-text-stroke: 0; text-shadow: 0.5cqh 0.5cqh 0 var(--px-ink);
+  padding: 0; white-space: nowrap; }
+.scene-player.theme-pixel .sp-burst.lvl { background: #5ee0a0; }
+.scene-player.theme-pixel .sp-burst.lvl span { color: var(--px-white); }
+.scene-player.theme-pixel .sp-burst.q, .scene-player.theme-pixel .sp-burst.alert { padding: 1.4cqh 2cqh; }
+.scene-player.theme-pixel .sp-burst.q { background: var(--px-white); }
+.scene-player.theme-pixel .sp-burst.q span { color: #3b6fd1; font-size: 5cqh; }
+.scene-player.theme-pixel .sp-burst.alert { background: var(--px-red); }
+.scene-player.theme-pixel .sp-burst.alert span { color: var(--px-gold); font-size: 6cqh; }
+.scene-player.theme-pixel .sp-burst.stamp { background: var(--px-red); }
+.scene-player.theme-pixel .sp-burst.stamp span { color: var(--px-white); }
+.scene-player.theme-pixel .sp-burst.thud { background: #b8b4d0; }
+.scene-player.theme-pixel .sp-burst.thud span { color: var(--px-ink); text-shadow: 0.5cqh 0.5cqh 0 #6a6488; }
+.scene-player.theme-pixel .sp-burst.mute { background: var(--px-ink); border-color: var(--px-white); }
+.scene-player.theme-pixel .sp-burst.mute span { font-size: 7cqh; color: var(--px-gold); text-shadow: 0.6cqh 0.6cqh 0 var(--px-red); }
+
+.scene-player.theme-pixel .px-wipe { position: absolute; inset: 0; z-index: 4; background: var(--px-ink); }
+
+/* RPG location banner and the prayer counter. */
+.scene-player.theme-pixel .px-area { position: absolute; z-index: 2; left: 50%; top: 4cqh; translate: -50% 0; padding: 1.4cqh 2.4cqh; white-space: nowrap;
+  font: 400 3.2cqh/1 var(--px-font); color: var(--px-white); background: var(--px-ink); border: 0.6cqh solid var(--px-gold); box-shadow: 0 0 0 0.6cqh var(--px-ink); }
+.scene-player.theme-pixel .px-hud { position: absolute; z-index: 2; right: 3cqh; top: 3cqh; padding: 1.4cqh 2cqh; transform-origin: 100% 0;
+  font: 400 3.2cqh/1 var(--px-font); color: var(--px-gold); background: var(--px-ink); border: 0.6cqh solid var(--px-white); box-shadow: 0 0 0 0.6cqh var(--px-ink); }
+
+/* Title card: a game's start screen. */
+.scene-player.theme-pixel .sp-card { inset: 16% 7%; gap: 2.4cqh; rotate: 0deg; border-radius: 0; background: var(--px-ink); color: var(--px-white);
+  border: 0.9cqh solid var(--px-white); box-shadow: 0 0 0 0.9cqh var(--px-ink), 0 0 0 1.8cqh var(--px-gold), 1.6cqh 1.6cqh 0 1.8cqh rgba(0, 0, 0, 0.5); padding: 3cqh; }
+.scene-player.theme-pixel .sp-card small { font: 400 2.8cqh/1 var(--px-font); letter-spacing: 0.1em; color: var(--px-sky); }
+.scene-player.theme-pixel .sp-card strong { font: 400 8.6cqh/1.2 var(--px-font); letter-spacing: 0; padding: 0; color: var(--px-gold); text-shadow: 0.8cqh 0.8cqh 0 var(--px-red); }
+.scene-player.theme-pixel .sp-card span { font: 400 2.8cqh/1.5 var(--px-font); }
+.scene-player.theme-pixel .sp-card::after { content: "▶ PRESS START"; font: 400 2.6cqh/1 var(--px-font); color: var(--px-white); margin-top: 1.4cqh; animation: px-blink 0.8s steps(1) infinite; }
+
+/* End card: quest complete. */
+.scene-player.theme-pixel .sp-end { background: rgba(18, 16, 42, 0.93); gap: 2.4cqh; }
+.scene-player.theme-pixel .sp-end::before { content: "QUEST COMPLETE!"; font: 400 4cqh/1 var(--px-font); color: #5ee0a0; text-shadow: 0.5cqh 0.5cqh 0 var(--px-ink); }
+.scene-player.theme-pixel .sp-end small { font: 400 2.4cqh/1.4 var(--px-font); letter-spacing: 0.05em; color: var(--px-sky); }
+.scene-player.theme-pixel .sp-end strong { font: 400 7cqh/1.2 var(--px-font); letter-spacing: 0; padding: 0; color: var(--px-gold); text-shadow: 0.7cqh 0.7cqh 0 var(--px-red); }
+.scene-player.theme-pixel .sp-verse { max-width: 120cqh; font: 400 3.2cqh/1.7 var(--px-font); color: var(--px-white); }
+.scene-player.theme-pixel .sp-verse cite { font-size: 0.8em; color: var(--px-gold); opacity: 1; margin-top: 0.8em; }
+.scene-player.theme-pixel .btn { border-radius: 0; clip-path: none; font: 400 0.85rem/1.2 var(--px-font); letter-spacing: 0; text-transform: uppercase;
+  color: var(--px-ink); background: var(--px-white); border: 0.2rem solid var(--px-ink); box-shadow: 0.3rem 0.3rem 0 #000; padding: 0.6rem 1rem; min-height: 2.6rem; }
+.scene-player.theme-pixel .btn-go { background: var(--px-gold); }
+.scene-player.theme-pixel .btn:focus-visible { outline: 0.2rem dashed var(--px-gold); outline-offset: 0.25rem; filter: none; }
+
+/* The caption: the RPG text box under the picture. */
+.scene-player.theme-pixel .sp-caption { width: min(100%, 64rem); min-height: calc(4.8em + 1.6rem); padding: 0.8rem 1rem; border-radius: 0;
+  font: 400 clamp(0.8rem, 0.5vw + 0.55rem, 1.05rem)/1.6 var(--px-font); color: var(--px-white); background: var(--px-ink);
+  border: 0.25rem solid var(--px-white); box-shadow: 0 0 0 0.25rem var(--px-ink), 0 0 0 0.45rem #5a5478; }
+.scene-player.theme-pixel .sp-caption .sp-who { font: inherit; color: var(--px-gold); text-transform: uppercase; }
+.scene-player.theme-pixel .sp-hint { font: 400 0.6rem/1.4 var(--px-font); opacity: 0.75; }
+.scene-player.theme-pixel .sp-controls .btn { min-height: 2.2rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; }
+
+@keyframes px-blink { 50% { opacity: 0; } }
+
+/* Phones: the caption holds a few more lines, since speech goes there too. */
+@media (max-width: 600px) {
+  .scene-player.theme-pixel .sp-caption { min-height: calc(8em + 1.6rem); }
+}
+/* Short frames: bigger cqh text so the end card stays readable. */
+@container (max-height: 330px) {
+  .scene-player.theme-pixel .sp-end { gap: 1.8cqh; padding: 2cqh 3cqh; }
+  .scene-player.theme-pixel .sp-end::before { font-size: 4.8cqh; }
+  .scene-player.theme-pixel .sp-end small { font-size: 3.4cqh; }
+  .scene-player.theme-pixel .sp-end strong { font-size: 7.6cqh; }
+  .scene-player.theme-pixel .sp-verse { font-size: 4.2cqh; line-height: 1.6; }
+  .scene-player.theme-pixel .sp-end .btn { font-size: 0.7rem; min-height: 2rem; padding: 0.3rem 0.7rem; }
+  .scene-player.theme-pixel .px-area, .scene-player.theme-pixel .px-hud { font-size: 4.4cqh; }
+  .scene-player.theme-pixel .sp-burst span { font-size: 6cqh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-player.theme-pixel .px-frames > g { animation: none; opacity: 0; }
+  .scene-player.theme-pixel .px-frames > g:first-child { opacity: 1; }
+  .scene-player.theme-pixel .sp-bubble::before, .scene-player.theme-pixel .sp-bubble.mini::before,
+  .scene-player.theme-pixel .sp-card::after, .scene-player.theme-pixel .sp-end::before { animation: none; }
+}
