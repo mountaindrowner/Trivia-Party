@@ -253,7 +253,7 @@ Short animated cartoons of Bible stories, earned at milestones, each drawn in it
 | 2 | Level 6 | Game 4 | Paper cut-out |
 | 3 | Level 10 | Game 8 | 8-bit pixel art |
 | 4 | Level 14 | Game 14 | Clay stop-motion |
-| 5 | Level 18 | Game 22 | Neon anime |
+| 5 | Level 18 | Game 22 | Crayon drawing |
 | 6 | Level 22 | Game 32 | Stained glass |
 
 They come quickly at first to hook a new player, then spread out. Daily Challenges and Holiday Rushes also earn

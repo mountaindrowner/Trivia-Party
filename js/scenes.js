@@ -445,7 +445,7 @@ THP.Scenes = (function () {
     { id: "s2", ep: 2, need: { lvl: 6 }, style: "Paper cut-out" },
     { id: "s3", ep: 3, need: { lvl: 10 }, style: "8-bit pixel art" },
     { id: "s4", ep: 4, need: { lvl: 14 }, style: "Clay stop-motion" },
-    { id: "s5", ep: 5, need: { lvl: 18 }, style: "Neon anime" },
+    { id: "s5", ep: 5, need: { lvl: 18 }, style: "Crayon drawing" },
     { id: "s6", ep: 6, need: { lvl: 22 }, style: "Stained glass" },
   ];
   const ready = (s) => typeof s.play === "function";
