@@ -1,0 +1,85 @@
+/* Story Scene 5 (Elijah, "Fire on the Mountain"): the crayon-drawing look.
+   The player is a wooden desk, the picture is a sheet of notebook paper, and every caption, bubble and card is
+   handwritten in Patrick Hand with wobbly "crayon" outlines (uneven border radii and a second, offset pass). */
+
+.scene-player.theme-crayon {
+  --cr-paper: #fdfcf6; --cr-line: #9cc3ea; --cr-margin: #f0a0a8; --cr-ink: #2b2b2b; --cr-blue: #2357c9; --cr-red: #d42a2a;
+  --cr-hand: "Patrick Hand", "Comic Sans MS", "Chalkboard SE", cursive;
+  --cr-wobble: 6cqh 1.2cqh 5cqh 1.4cqh / 1.4cqh 5cqh 1.2cqh 6cqh;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(255, 220, 160, 0.18), transparent 65%),
+    repeating-linear-gradient(94deg, #5a3d28 0 0.3rem, #4f3523 0.3rem 0.9rem, #613f2a 0.9rem 1.4rem, #553824 1.4rem 2.2rem);
+  background-color: #4f3523;
+}
+
+/* The paper. */
+.scene-player.theme-crayon .sp-frame { background: var(--cr-paper); border: 0; border-radius: 0.35rem;
+  box-shadow: 0 0.15rem 0 #e6e1cf, 0 0.3rem 0 #d8d2bd, 0 1rem 2.4rem rgba(0, 0, 0, 0.55); }
+.scene-player.theme-crayon .sp-actor { will-change: transform; }
+.scene-player.theme-crayon .sp-frame.slowmo::after { background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(60, 40, 20, 0.35)); }
+
+/* Speech bubbles: crayon outlines, never quite round. */
+.scene-player.theme-crayon .sp-bubble { color: var(--cr-ink); background: #fff; border: 0.5cqh solid var(--cr-ink); border-radius: var(--cr-wobble);
+  box-shadow: none; outline: 0.25cqh solid rgba(43, 43, 43, 0.35); outline-offset: 0.45cqh;
+  font: 400 4.5cqh/1.12 var(--cr-hand); padding: 1.3cqh 2.4cqh 1.5cqh; width: max-content; max-width: 42cqw; }
+.scene-player.theme-crayon .sp-bubble::after { border-top-color: var(--cr-ink); bottom: -3.2cqh; }
+.scene-player.theme-crayon .sp-bubble::before { content: ""; position: absolute; z-index: 1; left: var(--tail, 50%); bottom: -2cqh; translate: -50% 0;
+  border: 1.1cqh solid transparent; border-top: 1.6cqh solid #fff; border-bottom: 0; }
+.scene-player.theme-crayon .sp-bubble.side::before, .scene-player.theme-crayon .sp-bubble.mini::before { display: none; }
+.scene-player.theme-crayon .sp-who { font: 400 3cqh/1 var(--cr-hand); letter-spacing: 0.06em; text-transform: uppercase; color: var(--cr-red);
+  text-decoration: underline wavy rgba(212, 42, 42, 0.6); text-underline-offset: 0.5cqh; margin-bottom: 0.7cqh; }
+.scene-player.theme-crayon .sp-bubble.loud { background: #fff6d8; border-color: #c0392b; outline-color: rgba(192, 57, 43, 0.4);
+  font: 400 5cqh/1.08 var(--cr-hand); letter-spacing: 0.02em; text-transform: uppercase; box-shadow: none; }
+.scene-player.theme-crayon .sp-bubble.loud::after { border-top-color: #c0392b; }
+.scene-player.theme-crayon .sp-bubble.loud::before { border-top-color: #fff6d8; }
+.scene-player.theme-crayon .sp-bubble.loud .sp-who { color: #e07a10; }
+.scene-player.theme-crayon .sp-bubble.mini { padding: 0.4cqh 1cqh; font-size: 6cqh; border-radius: 50% 45% 55% 48%; outline: 0; }
+
+/* Bursts: scribble-filled stars, or (plain) just handwriting on the page. */
+.scene-player.theme-crayon .sp-burst { width: 34cqh; height: 22cqh;
+  background: repeating-linear-gradient(-32deg, #ffd21a 0 1.1cqh, #ffe680 1.1cqh 1.5cqh, #ffb000 1.5cqh 2.4cqh); }
+.scene-player.theme-crayon .sp-burst span { font: 400 8cqh/1 var(--cr-hand); color: #e0301e; -webkit-text-stroke: 0.25cqh #fff; paint-order: stroke fill; letter-spacing: 0.02em; }
+.scene-player.theme-crayon .sp-burst.woosh { width: 52cqh; height: 30cqh; rotate: 8deg; }
+.scene-player.theme-crayon .sp-burst.woosh span { font-size: 11cqh; }
+.scene-player.theme-crayon .sp-burst.plain { background: none; clip-path: none; width: auto; height: auto; }
+.scene-player.theme-crayon .sp-burst.plain span { font-size: 9cqh; color: #777; -webkit-text-stroke: 0; white-space: nowrap; }
+.scene-player.theme-crayon .sp-burst.count span { font-size: 12cqh; color: #2a8ae0; }
+
+/* Title card: a taped-on sheet of notebook paper. */
+.scene-player.theme-crayon .sp-card { inset: 14% 10%; color: var(--cr-ink); border: 0; border-radius: 0.3cqh; rotate: -2deg; gap: 1.6cqh;
+  background:
+    linear-gradient(90deg, transparent 6%, var(--cr-margin) 6% calc(6% + 0.35cqh), transparent calc(6% + 0.35cqh)),
+    repeating-linear-gradient(180deg, transparent 0 6.2cqh, var(--cr-line) 6.2cqh 6.5cqh), var(--cr-paper);
+  box-shadow: 0 0.8cqh 2.4cqh rgba(0, 0, 0, 0.35); }
+.scene-player.theme-crayon .sp-card::before { content: ""; position: absolute; left: 50%; top: -2.6cqh; width: 22cqh; height: 5.5cqh; translate: -50% 0; rotate: 3deg;
+  background: rgba(255, 240, 170, 0.75); box-shadow: 0 0.2cqh 0.4cqh rgba(0, 0, 0, 0.12); }
+.scene-player.theme-crayon .sp-card small { font: 400 4cqh/1 var(--cr-hand); letter-spacing: 0.12em; text-transform: uppercase; color: var(--cr-blue); }
+.scene-player.theme-crayon .sp-card strong { font: 400 13cqh/0.95 var(--cr-hand); letter-spacing: 0.02em; color: #e0301e;
+  text-shadow: 0.5cqh 0.5cqh 0 #ffd21a; -webkit-text-stroke: 0.15cqh #e0301e; padding-inline: 0.3em; text-wrap: balance; }
+.scene-player.theme-crayon .sp-card span { font: 400 4.4cqh/1.2 var(--cr-hand); color: #555; }
+
+/* End card: the same paper, with the verse copied out neatly in blue. */
+.scene-player.theme-crayon .sp-end { color: var(--cr-ink);
+  background:
+    linear-gradient(90deg, transparent 6%, var(--cr-margin) 6% calc(6% + 0.35cqh), transparent calc(6% + 0.35cqh)),
+    repeating-linear-gradient(180deg, transparent 0 6.2cqh, var(--cr-line) 6.2cqh 6.5cqh), rgba(253, 252, 246, 0.96); }
+.scene-player.theme-crayon .sp-end small { font: 400 4cqh/1 var(--cr-hand); letter-spacing: 0.12em; color: var(--cr-blue); }
+.scene-player.theme-crayon .sp-end strong { font: 400 11cqh/1 var(--cr-hand); color: #e0301e; text-shadow: 0.45cqh 0.45cqh 0 #ffd21a; -webkit-text-stroke: 0.12cqh #e0301e; }
+.scene-player.theme-crayon .sp-verse { font: 400 5.4cqh/1.2 var(--cr-hand); color: var(--cr-blue); max-width: 80cqw; text-wrap: balance; }
+.scene-player.theme-crayon .sp-verse cite { color: #666; font-size: 0.75em; opacity: 1; }
+
+/* Caption: a strip torn from the same notebook. */
+.scene-player.theme-crayon .sp-caption { color: #1d3f8f; font: 400 clamp(1.1rem, 1.3vw + 0.8rem, 1.7rem)/1.25 var(--cr-hand); letter-spacing: 0.01em;
+  background: linear-gradient(90deg, transparent 2rem, var(--cr-margin) 2rem 2.12rem, transparent 2.12rem), var(--cr-paper);
+  padding: 0.5rem 1rem 0.5rem 2.7rem; border: 0.16rem solid var(--cr-ink); border-radius: 1.2rem 0.3rem 1rem 0.35rem / 0.35rem 1rem 0.3rem 1.2rem;
+  box-shadow: 0.2rem 0.25rem 0 rgba(0, 0, 0, 0.35); }
+.scene-player.theme-crayon .sp-caption .sp-who { color: var(--cr-red); text-decoration: none; font-size: 1em; letter-spacing: 0.04em; }
+.scene-player.theme-crayon .sp-hint { color: #f3e6d0; }
+
+@container (max-height: 330px) {
+  .scene-player.theme-crayon .sp-card strong { font-size: 12cqh; }
+  .scene-player.theme-crayon .sp-verse { font-size: 6cqh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-player.theme-crayon .sp-actor { will-change: auto; }
+}
