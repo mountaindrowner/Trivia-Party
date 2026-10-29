@@ -183,7 +183,8 @@ THP.Holiday = (function () {
       id: "thanksgiving", name: "Thanksgiving Rush", icon: "🌾", fx: "🍂",
       blurb: "Six thankful trials in a row: the ten healed men, Grumbles the Goat, loaves and fishes, and thank-you verses.",
       inSeason: (d) => d.getMonth() === 10, // November
-      opens: "November",
+      opensOn: (y) => new Date(y, 10, 1),
+      teaser: "Six thankful trials and double XP.",
       rounds: [["lepers", 1], ["grumbles", 1], ["loaves", 1], ["verse", 2], ["lepers", 2], ["grumbles", 2]],
       theme: {
         verses: [["Give thanks to the LORD, for he is good", "Psalm 107:1"], ["Give thanks in all circumstances", "1 Thessalonians 5:18"], ["Enter his gates with thanksgiving", "Psalm 100:4"], ["Every good and perfect gift is from above", "James 1:17"]],
@@ -194,7 +195,8 @@ THP.Holiday = (function () {
       id: "christmas", name: "Christmas Rush", icon: "🎄", fx: "❄️",
       blurb: "Six Christmas trials in a row: follow the star, find the gifts, put the Christmas story in order, and build the angels' words.",
       inSeason: (d) => d.getMonth() === 11 || (d.getMonth() === 0 && d.getDate() <= 6), // Dec 1 – Jan 6 (Epiphany)
-      opens: "December",
+      opensOn: (y) => new Date(y, 11, 1),
+      teaser: "Six Christmas trials and double XP.",
       rounds: [["star", 1], ["gifts", 1], ["order", 1], ["verse", 2], ["star", 2], ["gifts", 2]],
       theme: {
         verses: [["For to us a child is born", "Isaiah 9:6"], ["A Savior has been born to you", "Luke 2:11"], ["Glory to God in the highest heaven", "Luke 2:14"], ["They will call him Immanuel", "Matthew 1:23"]],
@@ -204,6 +206,31 @@ THP.Holiday = (function () {
     },
   ];
   const live = () => EVENTS.find((e) => e.inSeason(new Date())) || null;
+
+  /* Events are only playable in season. In the two weeks before one opens, the title shows a notice instead. */
+  const NOTICE_DAYS = 14;
+  function upcoming() {
+    const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return EVENTS.filter((ev) => !ev.inSeason(now)).map((ev) => {
+      let opens = ev.opensOn(today.getFullYear());
+      if (opens < today) opens = ev.opensOn(today.getFullYear() + 1);
+      return { ev, opens, days: Math.round((opens - today) / 864e5) };
+    }).filter((u) => u.days <= NOTICE_DAYS).sort((a, b) => a.days - b.days)[0] || null;
+  }
+  /** The "coming soon" notice for the title screen, or null. Dismissing it hides it until next year's event. */
+  function notice() {
+    const u = upcoming();
+    if (!u) return null;
+    const key = `thp-notice-${u.ev.id}-${u.opens.getFullYear()}`;
+    if (G().store.get(key, false)) return null;
+    const when = u.days === 1 ? "tomorrow" : `in ${u.days} days`;
+    const date = u.opens.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    const n = el("div", { class: `event-notice notice-${u.ev.id}`, role: "status" },
+      el("span", { class: "notice-icon", "aria-hidden": "true" }, u.ev.icon),
+      el("span", { class: "notice-text" }, el("strong", {}, `${u.ev.name} starts ${when}!`), el("small", {}, `${date} · ${u.ev.teaser}`)),
+      el("button", { class: "notice-x", "aria-label": "Dismiss", onclick: () => { S("tap"); G().store.set(key, true); n.remove(); } }, "✕"));
+    return n;
+  }
   const bestKey = (ev) => "thp-rush-" + ev.id;
 
   /* Falling leaves or snow while a Rush is running. */
@@ -225,11 +252,11 @@ THP.Holiday = (function () {
     setMood("happy");
     const now = live();
     const card = (ev) => {
-      const on = ev === now, best = G().store.get(bestKey(ev), 0);
-      return el("button", { class: `rush-card rush-${ev.id}` + (on ? " live" : ""), onclick: () => run(ev) },
+      const best = G().store.get(bestKey(ev), 0);
+      return el("button", { class: `rush-card rush-${ev.id} live`, onclick: () => run(ev) },
         el("span", { class: "rush-icon", "aria-hidden": "true" }, ev.icon),
         el("span", { class: "rush-text" },
-          el("small", {}, on ? "🔴 LIVE NOW · Double XP" : `Featured in ${ev.opens} · play anytime`),
+          el("small", {}, "🔴 LIVE NOW · Double XP"),
           el("strong", {}, ev.name),
           el("span", {}, ev.blurb),
           best ? el("em", {}, `Best: ${best.toLocaleString()}`) : null));
@@ -238,10 +265,10 @@ THP.Holiday = (function () {
       el("p", { class: "eyebrow" }, "Seasonal events"),
       el("h2", { class: "screen-title" }, "Holiday Rush"),
       el("p", { class: "section-help" }, "Six minigames back to back. Three lives. How far can you get?"),
-      el("div", { class: "scene-list" }, ...EVENTS.slice().sort((a, b) => (b === now) - (a === now)).map(card)),
+      now ? el("div", { class: "scene-list" }, card(now)) : el("p", { class: "fine" }, "No Holiday Rush right now. Check back in November!"),
       el("div", { class: "btn-row" }, el("button", { class: "btn btn-ghost", onclick: () => G().titleScreen() }, "Back")));
     show(node, { scene: "title" });
-    say(now ? `${now.name} is live! Double XP all season!` : "Holiday Rush! Practice now, and get double XP when the holidays come.");
+    say(now ? `${now.name} is live! Double XP all season!` : "No rush right now. See you when the holidays come!");
   }
 
   async function run(ev) {
@@ -324,5 +351,5 @@ THP.Holiday = (function () {
     await say(all ? "PERFECT! Every single trial! Legendary!" : won >= 4 ? "So close to perfect! Run it back!" : "Good rush! Try again and beat your best!", { mood: won >= 3 ? "happy" : "worried" });
   }
 
-  return { screen, live, EVENTS, games: [lepers, grumbles, star, gifts], clearFx: () => eventFx(null) };
+  return { screen, live, upcoming, notice, EVENTS, games: [lepers, grumbles, star, gifts], clearFx: () => eventFx(null) };
 })();

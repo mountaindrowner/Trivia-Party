@@ -131,8 +131,9 @@ window.THP = window.THP || {};
       el("button", { class: "btn quick-btn daily-btn" + (daily.done ? " done" : " due"), onclick: () => THP.Daily.screen() },
         el("span", {}, daily.done ? "✓ Daily done" : "🌅 Daily Challenge"),
         daily.streak ? el("small", {}, `🔥 ${daily.streak}`) : el("small", {}, "NEW")),
-      el("button", { class: "btn quick-btn rush-btn" + (rush ? " live" : ""), onclick: () => THP.Holiday.screen() },
-        el("span", {}, rush ? `${rush.icon} ${rush.name}` : "🎉 Holiday Rush"), rush ? el("small", {}, "LIVE") : null),
+      // Holiday Rush only shows while an event is live (see js/holiday.js for the seasons).
+      rush ? el("button", { class: "btn quick-btn rush-btn live", onclick: () => THP.Holiday.screen() },
+        el("span", {}, `${rush.icon} ${rush.name}`), el("small", {}, "LIVE")) : null,
       el("button", { class: "btn quick-btn scenes-btn", onclick: () => THP.Scenes.screen(titleScreen) },
         el("span", {}, "🎬 Story Scenes"), el("small", {}, `${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`)));
   }
@@ -165,6 +166,7 @@ window.THP = window.THP || {};
       })[THP.ui.skin()] || "Eight questions. Twenty-four trials. One gate. Survive the Bible trivia gauntlet."),
       xpCard(store.get("thp-xp", 0)),
       el("div", { class: "name-row" }, nameInput),
+      THP.Holiday.notice(),
       quickRow(),
       best ? el("span", { class: "best" }, `Best: ${best.toLocaleString()} talents`) : null),
       el("div", { class: "title-play" },

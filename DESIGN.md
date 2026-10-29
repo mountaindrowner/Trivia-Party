@@ -158,7 +158,11 @@ Six minigames back to back with three lives: lose a trial, lose a life.
 | 🎄 Christmas Rush | Dec 1 – Jan 6 (Epiphany) | Follow the Star (Matthew 2:9), Gifts for the King (Matthew 2:11), In Order! with the Christmas story, Verse Builder with Christmas verses, then the two new ones on hard |
 
 - **In season:** the event is featured on the title (LIVE badge) and earns double XP.
-- **The rest of the year:** both events stay playable from the Holiday Rush menu, without the bonus.
+- **The rest of the year:** Holiday Rush is hidden. The title shows the 🎉 button only while an event is live.
+- **Coming soon:** in the 14 days before an event opens, the title shows a notice ("🎄 Christmas Rush starts in
+  5 days! December 1 · Six Christmas trials and double XP"). The ✕ dismisses it until that event's next year, saved as
+  `thp-notice-<event>-<year>`. On TV layouts the notice shrinks to one line and takes the tagline's place.
+- **Overlap:** from mid-November, Thanksgiving is live while the Christmas notice counts down. Both can show at once.
 - **Effects:** leaves or snow fall during a Rush.
 - **Records:** best scores are kept per event (`thp-rush-thanksgiving`, `thp-rush-christmas`).
 - **The four holiday minigames:**

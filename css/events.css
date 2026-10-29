@@ -89,3 +89,24 @@ body[data-event="christmas"] .event-fx i { opacity: 0.55; }
 @media (prefers-reduced-motion: reduce) {
   .rush-btn.live small, .grumble-card.pop, .leper.nope, .gift-cell.nope { animation: none; }
 }
+
+/* ---------- Coming-soon notice on the title (two weeks before an event) ---------- */
+.event-notice { display: flex; align-items: center; gap: 0.7rem; width: min(30rem, 100%); padding: 0.55rem 0.6rem 0.55rem 0.8rem; text-align: left;
+  color: #fff; border: 0.2rem solid #1a0b3d; border-radius: 0.9rem; box-shadow: 0 0.3rem 0 #1a0b3d; }
+.notice-thanksgiving { background: linear-gradient(115deg, #c2410c, #a16207); }
+.notice-christmas { background: linear-gradient(115deg, #b91c1c, #15803d); }
+.notice-icon { font-size: 1.8rem; flex: none; }
+.notice-text { display: grid; gap: 0.05rem; flex: 1; min-width: 0; }
+.notice-text strong { font-weight: 900; font-size: 0.95rem; line-height: 1.2; }
+.notice-text small { font-size: 0.78rem; opacity: 0.92; }
+.notice-x { flex: none; width: 2rem; height: 2rem; border-radius: 50%; border: 0; color: #fff; background: rgba(0, 0, 0, 0.3); font-size: 0.9rem; cursor: pointer; }
+.notice-x:hover, .notice-x:focus-visible { background: rgba(0, 0, 0, 0.5); }
+/* TV / landscape: the brand column is short on height, so the notice goes to one line and replaces the tagline. */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .event-notice { padding: 0.3rem 0.4rem 0.3rem 0.7rem; gap: 0.5rem; }
+  .notice-icon { font-size: 1.3rem; }
+  .notice-text strong { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notice-text small { display: none; }
+  .notice-x { width: 1.6rem; height: 1.6rem; font-size: 0.75rem; }
+  .title-brand:has(.event-notice) .tagline { display: none; }
+}

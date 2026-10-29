@@ -44,7 +44,8 @@ python3 -m http.server 8000
   results screen or 🎬 Story Scenes on the title.
 - **🌅 Daily Challenge**: 5 questions and 1 minigame, the same for everyone each day, with a 🔥 day streak and bonus XP
 - **🎉 Holiday Rush**: six minigames back to back with three lives. Thanksgiving Rush (November) and Christmas Rush
-  (Dec 1 – Jan 6) come with four new holiday minigames and double XP in season.
+  (Dec 1 – Jan 6) come with four new holiday minigames and double XP. They only appear in season, with a "starts in
+  N days" notice on the title for the two weeks before.
 - Synthesized sound effects, responsive phone and TV layouts, best score saved on the device
 
 All player-facing text has been through a content review and a two-pass fact check against the Bible text. See
