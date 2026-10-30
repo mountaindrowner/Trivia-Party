@@ -132,59 +132,8 @@ THP.Scenes = (function () {
   };
   const pace = () => (PACES[store.get("thp-read-pace", "slow")] ? store.get("thp-read-pace", "slow") : "slow");
 
-  /* ---------- Recorded voices ----------
-     A story can ship recorded lines (js/stories/<story>-voice.js), keyed by the exact text. They play through the
-     game's sound context, duck the music, and the line waits for the clip to finish. Muting silences them. */
-  function voicer(clips) {
-    const ctx = THP.Sound.context && THP.Sound.context();
-    const buffers = new Map();
-    let current = null;
-    if (ctx && clips) {
-      for (const text in clips) {
-        const b64 = clips[text].split(",")[1], bin = atob(b64), bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        buffers.set(text, ctx.decodeAudioData(bytes.buffer).catch(() => null));
-      }
-    }
-    const V = {
-      has: (text) => buffers.has(text),
-      /** Play a line; resolves to its length in ms (0 when there is no clip or sound is off). */
-      async play(text) {
-        V.stop();
-        if (!buffers.has(text) || THP.Sound.isMuted()) return 0;
-        const buf = await buffers.get(text);
-        if (!buf) return 0;
-        if (ctx.state === "suspended") ctx.resume();
-        const src = ctx.createBufferSource(), g = ctx.createGain();
-        src.buffer = buf; g.gain.value = 1;
-        src.connect(g).connect(ctx.destination);
-        src.start();
-        current = { src, g };
-        THP.Music.duck && THP.Music.duck(true);
-        src.onended = () => { if (current && current.src === src) { current = null; THP.Music.duck && THP.Music.duck(false); } };
-        return buf.duration * 1000;
-      },
-      /** A shouted word (a burst): plays on its own, over the top of any line. */
-      async fx(text) {
-        if (!buffers.has(text) || THP.Sound.isMuted()) return;
-        const buf = await buffers.get(text);
-        if (!buf) return;
-        const src = ctx.createBufferSource();
-        src.buffer = buf; src.connect(ctx.destination); src.start();
-      },
-      stop() {
-        if (!current) return;
-        const { src, g } = current;
-        current = null;
-        try { g.gain.setTargetAtTime(0, ctx.currentTime, 0.03); src.stop(ctx.currentTime + 0.15); } catch (e) {}
-        THP.Music.duck && THP.Music.duck(false);
-      },
-    };
-    return V;
-  }
-
   /* ---------- Director: the little animation engine every scene uses ---------- */
-  function director(frame, world, overlay, cap, voice) {
+  function director(frame, world, overlay, cap) {
     let rush = false, abort = false;
     const anims = new Set(), loops = new Set(), waiters = new Set(), tappers = new Set();
     // The line on screen now: when it finished typing, how long it needs, and whether a tap has moved past it.
@@ -205,12 +154,11 @@ THP.Scenes = (function () {
       get aborted() { return abort; },
       get rushing() { return rush; },
       rushNow() { rush = true; anims.forEach((a) => { try { a.finish(); } catch (e) {} }); [...waiters].forEach((f) => f()); [...tappers].forEach((f) => f()); },
-      abort() { abort = true; voice.stop(); D.rushNow(); },
+      abort() { abort = true; D.rushNow(); },
       /** A tap on the picture: finish the line being typed, or else skip ahead to the next line. */
       nudge() {
         if (typing) { typeSkip = true; return; }
         lineAck = true;
-        voice.stop();
         if (tappers.size) { [...tappers].forEach((f) => f()); return; }
         anims.forEach((a) => { try { a.finish(); } catch (e) {} });
         [...waiters].forEach((f) => f());
@@ -306,7 +254,6 @@ THP.Scenes = (function () {
       /** Narration under the picture, typed out, then held long enough to read. */
       async narrate(text, hold) {
         await D.settle();
-        const said = rush ? Promise.resolve(0) : voice.play(text), saidAt = Date.now();
         cap.textContent = "";
         typing = true; typeSkip = false;
         for (let i = 1; i <= text.length; i++) {
@@ -315,15 +262,12 @@ THP.Scenes = (function () {
           await new Promise((r) => setTimeout(r, P().typeMs));
         }
         typing = false;
-        const clipMs = await said;
-        lineAt = Date.now(); lineAck = false;
-        // A recorded line stays up until it has been heard, and for the reading time either way.
-        lineNeed = Math.max(readTime(text), clipMs ? saidAt + clipMs + 400 - lineAt : 0);
+        lineAt = Date.now(); lineNeed = readTime(text); lineAck = false;
         // hold 0 (or a short hold) lets the action carry on while the line stays up; the next line still waits for it.
         if (hold === 0) return;
         if (hold == null) {
           if (pace() === "tap") { await waitTap(); lineAck = true; } else await D.wait(lineNeed);
-        } else await D.wait(clipMs ? Math.max(hold, lineNeed) : hold);
+        } else await D.wait(hold);
       },
       /** A speech bubble over an actor's head point (vx, vy in its SVG units). */
       async bubble(a, vx, vy, who, text, o) {
@@ -331,8 +275,7 @@ THP.Scenes = (function () {
         o = o || {};
         await D.settle();
         const p = D.point(a, vx, vy);
-        const clipMs = await voice.play(text);
-        const hold = Math.max(o.hold || 0, 600 + readTime(text), clipMs + 400);
+        const hold = Math.max(o.hold || 0, 600 + readTime(text));
         const linger = () => (pace() === "tap" ? waitTap() : D.wait(hold));
         // Small screens: the line goes in the caption bar, with a "talking" marker over the speaker.
         if (frame.clientHeight < 330) {
@@ -344,7 +287,6 @@ THP.Scenes = (function () {
           D.sfx("flip");
           await linger();
           m.remove();
-          voice.stop();
           cap.textContent = prev;
           return;
         }
@@ -365,12 +307,10 @@ THP.Scenes = (function () {
         D.anim(b, [{ scale: 0.3, opacity: 0 }, { scale: 1.06, opacity: 1, offset: 0.7 }, { scale: 1, opacity: 1 }], { duration: 260, easing: "ease-out" });
         D.sfx("flip");
         await linger();
-        voice.stop();
         b.remove();
       },
       /** A comic-book burst ("BONK!") at a frame position (% of the frame). */
       burst(text, fx, fy, cls) {
-        if (!rush && voice.has(text)) voice.fx(text);
         const b = el("div", { class: "sp-burst " + (cls || "") }, el("span", {}, text));
         b.style.left = fx + "%"; b.style.top = fy + "%";
         overlay.append(b);
@@ -618,8 +558,7 @@ THP.Scenes = (function () {
       const root = el("div", { class: "scene-player theme-" + (def.theme || "cartoon"), role: "dialog", "aria-label": def.title }, frame, cap, controls);
       document.body.append(root);
       document.body.classList.add("scene-open");
-      const voice = voicer((THP.Voices || {})[id]);
-      const D = director(frame, world, overlay, cap, voice);
+      const D = director(frame, world, overlay, cap);
       frame.addEventListener("click", () => D.nudge());
       cap.addEventListener("click", () => D.nudge());
       skip.addEventListener("click", () => { S("tap"); D.abort(); });
@@ -631,7 +570,6 @@ THP.Scenes = (function () {
       skip.focus();
 
       const close = () => {
-        voice.stop();
         document.removeEventListener("keydown", onKey);
         root.remove();
         document.body.classList.remove("scene-open");

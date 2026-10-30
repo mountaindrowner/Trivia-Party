@@ -454,8 +454,6 @@ THP.Music = (function () {
       refresh();
     },
     play(id) { wanted = id; refresh(); },
-    /** Lower the music while a recorded voice is speaking. */
-    duck(on) { if (master && ctx) master.gain.setTargetAtTime(on ? 0.09 : 0.3, ctx.currentTime, 0.12); },
     playing: () => (voice ? voice.track.id : null),
     isOn: () => enabled,
     toggle() {
