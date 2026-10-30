@@ -23,4 +23,6 @@ cartoons.
 **Tags:** Trivia, Quiz, Bible, Christian, Kids, Family Friendly, Party Game, Educational, Local multiplayer, Minigames.
 Genre: Educational.
 
-**Theme colors:** background `#3B2BC4`, page `#140A2E`, text `#F3EFFF`, links `#FFC53D`, buttons `#FF3D7F`.
+**Edit theme:** background `#3B2BC4` with `background-1920x1080.jpg` (no repeat, top center, fixed), page (BG2)
+`#140A2E`, text `#F3EFFF`, headers `#FFC53D`, links `#5CC8FF`, buttons `#FF3D7F`. Body font Exo 2 (medium), header font
+Anton: the game's own fonts. Make the description's section names Heading style so they pick up the header look.
