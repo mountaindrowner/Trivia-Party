@@ -98,3 +98,12 @@ body.scene-open { overflow: hidden; }
 .scene-card.soon:not(.locked) { opacity: 1; }
 .scene-card.locked.soon .scene-thumb { filter: grayscale(0.3); }
 .scene-next { margin: 0; font-weight: 800; font-size: 0.9rem; color: var(--amber, #ffc53d); }
+
+/* Reading pace: the pace button, and the blinking ▶ when a line is waiting for a tap. */
+.sp-controls { flex-wrap: wrap; }
+.sp-caption { position: relative; }
+.sp-caption.await-tap::after { content: "▶"; position: absolute; right: 0.6rem; bottom: 0.35rem; font-size: 0.8em; color: currentColor;
+  animation: sp-await 0.8s steps(2) infinite; }
+@keyframes sp-await { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sp-caption.await-tap::after { animation: none; } }
+.sp-caption { cursor: pointer; }

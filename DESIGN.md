@@ -269,7 +269,12 @@ XP, so they count toward the milestones too.
   (frame, caption, bubbles, bursts, title and end cards) under `.scene-player.theme-<style>`. Characters and backgrounds are inline SVG. A small director drives
   them with the Web Animations API: actors that walk, a camera that pans and zooms, typed narration, speech bubbles,
   comic bursts, screen shake, slow motion and speed lines. The soundtrack switches tracks during the scene.
-- **Controls:** tap the picture (or Space/Enter) to rush the current beat; Skip or Esc jumps to the end card.
+- **Reading pace:** every line of narration and dialogue stays up for a reading time based on its length, and the
+  next line waits until it has been read. A button under the picture switches between 🐢 Slow reading (the default,
+  for young readers), 🐇 Fast reading and 👆 Tap for next line, which waits on each line with a blinking ▶. Saved as
+  `thp-read-pace`.
+- **Controls:** tap the picture or the caption (or Space/Enter) to finish the line being typed, or else skip ahead
+  to the next line. Skip or Esc jumps to the end card.
 - **Phones:** on short frames the dialogue moves into the caption bar, with a 💬 marker over the speaker.
 - **Voice:** Barnabas narrates with a little preteen flair ("Huge upgrade… except it does NOT fit."). What the
   characters say is quoted from the text.

@@ -122,16 +122,54 @@ THP.Scenes = (function () {
     <path d="M600 456 q40 -8 80 0 M860 450 q50 -8 100 0" fill="none" stroke="#fff" stroke-width="3" opacity="0.7"/>
   </svg>`;
 
+  /* ---------- Reading pace ----------
+     Young readers need time. Every line of narration and dialogue stays up for a reading time based on its length,
+     and the next line waits for it. "tap" waits for a tap on every line instead. Saved as thp-read-pace. */
+  const PACES = {
+    slow: { label: "🐢 Slow reading", typeMs: 30, base: 1200, perChar: 65 },
+    fast: { label: "🐇 Fast reading", typeMs: 18, base: 900, perChar: 32 },
+    tap: { label: "👆 Tap for next line", typeMs: 30, base: 0, perChar: 0 },
+  };
+  const pace = () => (PACES[store.get("thp-read-pace", "slow")] ? store.get("thp-read-pace", "slow") : "slow");
+
   /* ---------- Director: the little animation engine every scene uses ---------- */
   function director(frame, world, overlay, cap) {
     let rush = false, abort = false;
-    const anims = new Set(), loops = new Set(), waiters = new Set();
+    const anims = new Set(), loops = new Set(), waiters = new Set(), tappers = new Set();
+    // The line on screen now: when it finished typing, how long it needs, and whether a tap has moved past it.
+    let lineAt = 0, lineNeed = 0, lineAck = true, typing = false, typeSkip = false;
+    const P = () => PACES[pace()];
+    const readTime = (text) => P().base + P().perChar * text.length;
+    /** Wait for a tap (tap pace), with a blinking ▶ on the caption. */
+    const waitTap = () => {
+      if (rush) return Promise.resolve();
+      cap.classList.add("await-tap");
+      return new Promise((r) => {
+        const done = () => { tappers.delete(done); cap.classList.remove("await-tap"); r(); };
+        tappers.add(done);
+      });
+    };
     const D = {
       world, frame,
       get aborted() { return abort; },
       get rushing() { return rush; },
-      rushNow() { rush = true; anims.forEach((a) => { try { a.finish(); } catch (e) {} }); [...waiters].forEach((f) => f()); },
+      rushNow() { rush = true; anims.forEach((a) => { try { a.finish(); } catch (e) {} }); [...waiters].forEach((f) => f()); [...tappers].forEach((f) => f()); },
       abort() { abort = true; D.rushNow(); },
+      /** A tap on the picture: finish the line being typed, or else skip ahead to the next line. */
+      nudge() {
+        if (typing) { typeSkip = true; return; }
+        lineAck = true;
+        if (tappers.size) { [...tappers].forEach((f) => f()); return; }
+        anims.forEach((a) => { try { a.finish(); } catch (e) {} });
+        [...waiters].forEach((f) => f());
+      },
+      /** Hold until the current line has been read (or tapped past). */
+      async settle() {
+        if (rush) return;
+        if (pace() === "tap") { if (!lineAck) await waitTap(); lineAck = true; return; }
+        const left = lineAt + lineNeed - Date.now();
+        if (left > 0) await D.wait(left);
+      },
       /** Start a new beat: clear speech bubbles and loops left over from the last one. */
       next() {
         rush = abort;
@@ -215,20 +253,30 @@ THP.Scenes = (function () {
       },
       /** Narration under the picture, typed out, then held long enough to read. */
       async narrate(text, hold) {
+        await D.settle();
         cap.textContent = "";
+        typing = true; typeSkip = false;
         for (let i = 1; i <= text.length; i++) {
-          if (rush) { cap.textContent = text; break; }
+          if (rush || typeSkip) { cap.textContent = text; break; }
           cap.textContent = text.slice(0, i);
-          await new Promise((r) => setTimeout(r, 18));
+          await new Promise((r) => setTimeout(r, P().typeMs));
         }
-        await D.wait(hold != null ? hold : 900 + text.length * 32);
+        typing = false;
+        lineAt = Date.now(); lineNeed = readTime(text); lineAck = false;
+        // hold 0 (or a short hold) lets the action carry on while the line stays up; the next line still waits for it.
+        if (hold === 0) return;
+        if (hold == null) {
+          if (pace() === "tap") { await waitTap(); lineAck = true; } else await D.wait(lineNeed);
+        } else await D.wait(hold);
       },
       /** A speech bubble over an actor's head point (vx, vy in its SVG units). */
       async bubble(a, vx, vy, who, text, o) {
         if (abort) return;
         o = o || {};
+        await D.settle();
         const p = D.point(a, vx, vy);
-        const hold = o.hold || 1300 + text.length * 48;
+        const hold = Math.max(o.hold || 0, 600 + readTime(text));
+        const linger = () => (pace() === "tap" ? waitTap() : D.wait(hold));
         // Small screens: the line goes in the caption bar, with a "talking" marker over the speaker.
         if (frame.clientHeight < 330) {
           const prev = cap.textContent;
@@ -237,7 +285,7 @@ THP.Scenes = (function () {
           m.style.left = Math.min(92, Math.max(8, p.fx)) + "%"; m.style.top = Math.max(12, p.fy) + "%";
           overlay.append(m);
           D.sfx("flip");
-          await D.wait(hold);
+          await linger();
           m.remove();
           cap.textContent = prev;
           return;
@@ -258,7 +306,7 @@ THP.Scenes = (function () {
         overlay.append(b);
         D.anim(b, [{ scale: 0.3, opacity: 0 }, { scale: 1.06, opacity: 1, offset: 0.7 }, { scale: 1, opacity: 1 }], { duration: 260, easing: "ease-out" });
         D.sfx("flip");
-        await D.wait(hold);
+        await linger();
         b.remove();
       },
       /** A comic-book burst ("BONK!") at a frame position (% of the frame). */
@@ -493,17 +541,30 @@ THP.Scenes = (function () {
       const frame = el("div", { class: "sp-frame", role: "img", "aria-label": `${def.sub}, an animated scene` }, world, overlay);
       const cap = el("p", { class: "sp-caption", "aria-live": "polite" });
       const skip = el("button", { class: "btn btn-ghost sp-skip" }, "Skip ⏭");
-      const hint = el("span", { class: "sp-hint" }, "Tap the picture to speed up");
-      const controls = el("div", { class: "sp-controls" }, hint, skip);
+      const hint = el("span", { class: "sp-hint" });
+      const paceBtn = el("button", { class: "btn btn-ghost sp-pace" });
+      const showPace = () => {
+        paceBtn.textContent = PACES[pace()].label;
+        hint.textContent = pace() === "tap" ? "Tap the picture for the next line" : "Tap the picture to skip ahead";
+      };
+      paceBtn.addEventListener("click", () => {
+        S("tap");
+        const order = Object.keys(PACES);
+        store.set("thp-read-pace", order[(order.indexOf(pace()) + 1) % order.length]);
+        showPace();
+      });
+      showPace();
+      const controls = el("div", { class: "sp-controls" }, hint, paceBtn, skip);
       const root = el("div", { class: "scene-player theme-" + (def.theme || "cartoon"), role: "dialog", "aria-label": def.title }, frame, cap, controls);
       document.body.append(root);
       document.body.classList.add("scene-open");
       const D = director(frame, world, overlay, cap);
-      frame.addEventListener("click", () => D.rushNow());
+      frame.addEventListener("click", () => D.nudge());
+      cap.addEventListener("click", () => D.nudge());
       skip.addEventListener("click", () => { S("tap"); D.abort(); });
       const onKey = (e) => {
         if (e.key === "Escape") { D.abort(); e.preventDefault(); }
-        else if ((e.key === " " || e.key === "Enter") && document.activeElement !== skip && !root.querySelector(".sp-end")) { D.rushNow(); e.preventDefault(); }
+        else if ((e.key === " " || e.key === "Enter") && document.activeElement !== skip && document.activeElement !== paceBtn && !root.querySelector(".sp-end")) { D.nudge(); e.preventDefault(); }
       };
       document.addEventListener("keydown", onKey);
       skip.focus();
@@ -529,7 +590,7 @@ THP.Scenes = (function () {
           el("div", { class: "btn-row" }, again, done)));
         done.focus();
       };
-      def.play(D).catch((e) => console.error(e)).then(endCard);
+      def.play(D).catch((e) => console.error(e)).then(() => D.settle()).then(endCard);
     });
   }
 
