@@ -243,6 +243,19 @@ Behavior:
   - 🎵 in the HUD turns music alone on or off (saved as `thp-music`).
   - The title's **🎵 Music** button opens the Jukebox, which lists all five tracks to play.
 
+### First-time intro
+
+The first time the game opens, a short intro plays over the skin's sky (`js/intro.js`, `css/intro.css`):
+1. **Press start.** The tap also lets the browser play sound.
+2. **The logo slams in.** TRIVIA slides in, H-O-L-Y drop one at a time with a thud and a shake, PARTY pops, confetti.
+3. **Barnabas drops in.** The logo flies off and he lands with a squash and stretch. In a speech bubble he says hi
+   ("your host, your hype man… and yes, a donkey"), that a donkey carried Jesus into Jerusalem, that his name means
+   "son of encouragement" (Acts 4:36), and how a game works.
+4. **He asks your name.** It fills the nickname on the title screen. Then confetti, and the title screen.
+
+Tap (or Space/Enter) finishes a line or moves on; Skip or Esc ends it. It plays once (`thp-intro-seen`), and How to
+play has a "Watch the intro again" button. With reduced motion it skips the animation and keeps the words.
+
 ### Story Scenes (rewards)
 
 Short animated cartoons of Bible stories, earned at milestones, each drawn in its own art style.

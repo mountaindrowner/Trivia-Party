@@ -209,7 +209,8 @@ window.THP = window.THP || {};
     const node = el("section", { class: "howto" },
       el("h2", { class: "screen-title" }, "How to Play"),
       el("ol", { class: "howto-list" }, ...steps.map(([i, t, d]) => el("li", {}, el("span", { class: "howto-icon", "aria-hidden": "true" }, i), el("div", {}, el("strong", {}, t), el("p", {}, d))))),
-      el("p", { class: "fine" }, "On a TV or keyboard: arrow keys to move, Enter to choose, 1–4 to answer."));
+      el("p", { class: "fine" }, "On a TV or keyboard: arrow keys to move, Enter to choose, 1–4 to answer."),
+      el("button", { class: "btn btn-ghost", onclick: () => { S("tap"); THP.Intro.play(); } }, "👋 Watch the intro again"));
     show(node);
     say("Easy as manna from heaven!");
     await waitButton(node, "Got it!");
@@ -722,6 +723,8 @@ window.THP = window.THP || {};
     THP.ui.cityscape();
     THP.ui.lobby();
     titleScreen();
+    // The first time the game is opened, Barnabas introduces himself.
+    if (THP.Intro && !THP.Intro.seen()) THP.Intro.play();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

@@ -66,7 +66,7 @@ body { font-weight: 700; }
 .logo { line-height: 0.85; }
 .logo-1 { font-size: 2.2rem; letter-spacing: 0.3em; margin-right: -0.3em; color: #fff; text-shadow: var(--poster); rotate: -3deg; }
 .logo-2 { gap: 0.2rem; margin: 0.2rem 0; }
-.logo-2 b { font-family: var(--display); font-weight: 400; font-style: italic; font-size: 7rem; padding: 0 0.14em 0 0.04em; margin-right: -0.1em; /* room for the italic overhang so the gradient isn't clipped */
+.logo-2 b { font-family: var(--display); font-weight: 400; font-style: italic; font-size: 7rem; padding: 0.12em 0.16em 0.02em 0.06em; margin: -0.07em -0.12em -0.02em -0.02em; /* room above (the tight line-height) and to the right (the italic overhang) so the gradient text isn't clipped */
   background-image: linear-gradient(180deg, #fffbe0 0%, var(--amber) 40%, #ff9d1a 75%, #e85d00 100%) !important;
   filter: drop-shadow(0 0.06em 0 var(--ink)) drop-shadow(0 0.1em 0.12em rgba(10, 15, 58, 0.5)); animation: hop 2.4s ease-in-out infinite; }
 .logo-3 { font-size: 2.8rem; letter-spacing: 0.25em; margin-right: -0.25em; color: #fff; -webkit-text-stroke: 0; rotate: 2deg;

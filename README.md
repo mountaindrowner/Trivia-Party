@@ -39,6 +39,8 @@ python3 -m http.server 8000
 - Five synthesized jazz-funk tracks: Manna Groove, Jericho Jump, Red Sea Shuffle, Narrow Gate Breakdown and Hallelujah
   Strut. Each part of the game has its own, and the Jukebox on the title screen plays any of them. 🎵 toggles music,
   and 🔊 mutes everything.
+- **Meet Barnabas**: a short intro the first time you open the game, where the logo slams in and Barnabas drops in
+  to say hi, explain the game and ask your name.
 - **Story Scenes**: animated Bible cartoon rewards, each in its own art style. Scene 1, *Giant Problem* (David and
   Goliath, 1 Samuel 17), unlocks on your first win. Then come Jonah in paper cut-out (Level 6), Daniel in 8-bit pixel
   art (Level 10), Noah in clay (Level 14), Elijah in crayon (Level 18) and the Empty Tomb in stained glass (Level 22). Watch from the

@@ -1,0 +1,52 @@
+/* First-time intro (js/intro.js). The game's sky shows through, darkened, with a spotlight; the logo uses the skin's own style. */
+.intro { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; overflow: hidden;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(6, 3, 20, 0.88); cursor: pointer; transition: background 0.8s; }
+.intro.on { background: radial-gradient(ellipse at 50% 45%, rgba(6, 3, 20, 0.15), rgba(6, 3, 20, 0.7)); }
+/* While the intro plays only the skin's sky shows behind it. */
+body.intro-open #stage, body.intro-open #host, body.intro-open #hud { visibility: hidden; }
+.intro-spot { position: absolute; inset: -20%; pointer-events: none; opacity: 0; transition: opacity 0.8s;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 240, 180, 0.35), transparent 38%); }
+.intro.on .intro-spot { opacity: 1; animation: intro-sweep 6s ease-in-out infinite alternate; }
+@keyframes intro-sweep { from { transform: translateX(-6%) rotate(-2deg); } to { transform: translateX(6%) rotate(2deg); } }
+
+.intro-stage { position: relative; display: grid; justify-items: center; align-content: center; gap: 0.6rem; width: min(46rem, 100%); max-height: 100%; }
+.intro-logo { margin: 0; opacity: 0; transition: opacity 0.2s; }
+.intro.on .intro-logo { opacity: 1; }
+.intro-logo .logo-1, .intro-logo .logo-2 b, .intro-logo .logo-3 { opacity: 0; }
+.intro.on .intro-logo .logo-1, .intro.on .intro-logo .logo-2 b, .intro.on .intro-logo .logo-3 { opacity: 1; }
+.intro-logo .logo-2 b { animation-play-state: paused; }
+.intro.meet .intro-logo { display: none; }
+@media (min-width: 700px) and (min-height: 600px) { .intro-logo { transform: scale(1.4); } }
+
+.intro-donkey { display: none; width: clamp(9rem, 32vh, 17rem); }
+.intro.meet .intro-donkey { display: block; }
+.intro-donkey svg { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 0.5rem 0.6rem rgba(0, 0, 0, 0.45)); }
+.intro-donkey.talking .mouth-open { animation: talk 0.2s steps(2, jump-none) infinite; }
+.intro-donkey.talking .mouth-closed { animation: talk 0.2s steps(2, jump-none) infinite reverse; }
+
+.intro-bubble { position: relative; display: grid; gap: 0.4rem; width: min(34rem, 100%); padding: 0.9rem 1.1rem 1rem; cursor: default;
+  color: #1a0b3d; background: #fff; border: 0.25rem solid #1a0b3d; border-radius: 1rem; box-shadow: 0 0.4rem 0 #1a0b3d; }
+.intro-bubble::before { content: ""; position: absolute; left: 50%; top: -1.05rem; translate: -50% 0; border: 0.8rem solid transparent; border-top: 0; border-bottom: 1rem solid #1a0b3d; }
+.intro-who { margin: 0; font: 400 1rem/1 "Bangers", "Anton", sans-serif; letter-spacing: 0.08em; color: #ff3d7f; }
+.intro-text { margin: 0; min-height: 2.6em; font: 800 clamp(1.05rem, 1.2vw + 0.75rem, 1.45rem)/1.3 "Nunito", system-ui, sans-serif; }
+.intro-next { justify-self: end; border: 0; border-radius: 0.5rem; padding: 0.35rem 0.8rem; font: 800 0.95rem/1 "Nunito", sans-serif; color: #fff; background: #ff3d7f; cursor: pointer;
+  animation: intro-nudge 1s ease-in-out infinite; }
+@keyframes intro-nudge { 50% { translate: 0.25rem 0; } }
+.intro-name { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.intro-name input { flex: 1 1 10rem; min-width: 0; font: 800 1.15rem/1 "Nunito", sans-serif; padding: 0.55rem 0.8rem; border: 0.2rem solid #1a0b3d; border-radius: 0.5rem; color: #1a0b3d; background: #fff; }
+.intro-name .btn { flex: none; }
+
+.intro-start { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font-size: 1.4rem !important; padding: 0.8rem 1.8rem !important; animation: intro-pulse 1.2s ease-in-out infinite; }
+@keyframes intro-pulse { 50% { scale: 1.06; } }
+.intro-skip { position: absolute; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); }
+.intro button:focus-visible { outline: 0.2rem solid #ffc53d; outline-offset: 0.15rem; }
+
+/* Short screens (phones held sideways, small laptops): a smaller logo and donkey so the bubble fits. */
+@media (max-height: 560px) {
+  .intro-donkey { width: clamp(6rem, 30vh, 9rem); }
+  .intro-skip { bottom: auto; top: max(0.6rem, env(safe-area-inset-top)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro.on .intro-spot, .intro-next, .intro-start { animation: none; }
+}
