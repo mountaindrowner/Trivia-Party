@@ -273,6 +273,11 @@ XP, so they count toward the milestones too.
   next line waits until it has been read. A button under the picture switches between 🐢 Slow reading (the default,
   for young readers), 🐇 Fast reading and 👆 Tap for next line, which waits on each line with a blinking ▶. Saved as
   `thp-read-pace`.
+- **Recorded voices:** a story can ship recorded lines in `js/stories/<story>-voice.js`
+  (`THP.Voices[id] = { "exact line text": "data:audio/mpeg;base64,…" }`). Lines without a clip stay text-only. A voiced line
+  plays through the game's sound context, ducks the music, and the caption waits for it to finish; shouted words in
+  bursts play over the top. Muting silences them. Scene 2 (Jonah) is fully voiced: one reader, with each character
+  pitched and shaped in ffmpeg (Jonah higher, the captain and the king deeper, a soft echo on the LORD).
 - **Controls:** tap the picture or the caption (or Space/Enter) to finish the line being typed, or else skip ahead
   to the next line. Skip or Esc jumps to the end card.
 - **Phones:** on short frames the dialogue moves into the caption bar, with a 💬 marker over the speaker.
