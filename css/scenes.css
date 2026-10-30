@@ -5,7 +5,7 @@ body.scene-open { overflow: hidden; }
   gap: 0.6rem; padding: max(0.6rem, env(safe-area-inset-top)) 0.6rem max(0.6rem, env(safe-area-inset-bottom));
   background: radial-gradient(ellipse at 50% 40%, #241052, #070314 70%); color: #fff; font-family: "Nunito", system-ui, sans-serif; }
 
-.sp-frame { position: relative; flex: none; width: min(100%, calc((100vh - 9rem) * 1.6)); width: min(100%, calc((100dvh - 9rem) * 1.6));
+.sp-frame { position: relative; flex: none; width: min(100%, calc((100vh - 11.5rem) * 1.6)); width: min(100%, calc((100dvh - 11.5rem) * 1.6));
   aspect-ratio: 16 / 10; overflow: hidden; container-type: size; cursor: pointer; border-radius: 0.7rem; background: #47a8ff;
   border: 0.22rem solid #000; box-shadow: 0 0 0 0.2rem #ffc53d, 0 1rem 3rem rgba(0, 0, 0, 0.6); -webkit-tap-highlight-color: transparent; }
 .sp-world { position: absolute; left: 0; top: 0; width: 200%; height: 100%; transform-origin: 0 0; }
