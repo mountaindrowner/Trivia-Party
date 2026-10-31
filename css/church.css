@@ -1,0 +1,33 @@
+/* Church of the Crossroads behind the title screen. It sits at the bottom of the sky and only shows on the title,
+   drawn in each skin's colors: a sunny cartoon (Victory Lobby), neon outlines (Neon City), a firelit silhouette (Holy Fire). */
+/* Bottom-left, in the open space under Barnabas, so the menus never cover it. */
+.sky .church { display: none; position: absolute; left: 0; bottom: 0; width: min(31vw, 34rem); height: auto; aspect-ratio: 640 / 420; pointer-events: none; }
+@media (max-width: 900px), (max-aspect-ratio: 5/4) { .sky .church { width: min(80vw, 26rem); left: 50%; translate: -50% 0; } }
+#app:has(#stage[data-scene="title"]) .sky .church { display: block; }
+.church .ch-signtext { font: 400 22px/1 "Anton", "Impact", sans-serif; letter-spacing: 0.14em; }
+
+/* Victory Lobby (and the default): the white stucco church on a sunny day. */
+.church { --ch-ink: #1a0b3d; --ch-wall: #f4f1fb; --ch-shade: #d6d2ea; --ch-dark: #3b3470; --ch-roof: #c2552f; --ch-trunk: #8a5a2b; --ch-palm: #2f9e57; --ch-bush: #43b25f; --ch-grass: #6cc24a; --ch-sky: #6fb6ff; --ch-text: #6f68a8; opacity: 0.95; }
+.church .ch-line { stroke: var(--ch-ink); }
+.church .ch-wall { fill: var(--ch-wall); }
+.church .ch-shade { fill: var(--ch-shade); }
+.church .ch-dark { fill: var(--ch-dark); }
+.church .ch-roof { fill: var(--ch-roof); }
+.church .ch-trunk { fill: var(--ch-trunk); }
+.church .ch-palm path { fill: var(--ch-palm); }
+.church .ch-bush ellipse { fill: var(--ch-bush); }
+.church .ch-grass { fill: var(--ch-grass); }
+.church .ch-sky { fill: var(--ch-sky); }
+.church .ch-signtext { fill: var(--ch-text); }
+
+/* Neon City: dark shapes traced in glowing lines. */
+[data-skin="cyber"] .church { --ch-ink: #19e3ff; --ch-wall: #0b0a24; --ch-shade: #120f33; --ch-dark: #05040f; --ch-roof: #2a0f3d; --ch-trunk: #0b0a24; --ch-palm: #0b0a24; --ch-bush: #0b0a24; --ch-grass: #07061a; --ch-sky: #120f33; --ch-text: #ff2bd6;
+  opacity: 0.9; filter: drop-shadow(0 0 0.35rem rgba(25, 227, 255, 0.7)); }
+[data-skin="cyber"] .church .ch-palm path, [data-skin="cyber"] .church .ch-bush ellipse { stroke: #ff2bd6; }
+[data-skin="cyber"] .church .ch-signtext { stroke: none; filter: drop-shadow(0 0 0.3rem #ff2bd6); }
+
+/* Holy Fire: a dark silhouette lit warm from below. */
+[data-skin="fire"] .church { --ch-ink: #ff7a2e; --ch-wall: #1a1214; --ch-shade: #120c0e; --ch-dark: #08070a; --ch-roof: #2a1410; --ch-trunk: #140d0e; --ch-palm: #140d0e; --ch-bush: #140d0e; --ch-grass: #0d090b; --ch-sky: #2a1612; --ch-text: #ffb02e;
+  opacity: 0.85; filter: drop-shadow(0 -0.3rem 0.8rem rgba(255, 90, 31, 0.45)); }
+[data-skin="fire"] .church .ch-line { stroke-width: 2.5px; }
+[data-skin="fire"] .church .ch-signtext { stroke: none; }

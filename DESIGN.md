@@ -243,6 +243,14 @@ Behavior:
   - 🎵 in the HUD turns music alone on or off (saved as `thp-music`).
   - The title's **🎵 Music** button opens the Jukebox, which lists all five tracks to play.
 
+### Title screen backdrop
+
+Church of the Crossroads stands in the bottom-left of the title screen's sky, in the open space under Barnabas, drawn
+as an inline SVG cartoon from a photo of the building: the white stucco gable, the arched cross tower, the mission
+parapet, the arched door and window, the terracotta roof, the palm and the sign wall. Each skin colors it its own way
+(`css/church.css`): sunny white stucco (Victory Lobby), neon outlines (Neon City) and a firelit silhouette (Holy Fire).
+It only shows on the title screen.
+
 ### First-time intro
 
 The first time the game opens, a short intro plays over the skin's sky (`js/intro.js`, `css/intro.css`):

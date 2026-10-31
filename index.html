@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/stories/tomb.css">
   <link rel="stylesheet" href="css/events.css">
   <link rel="stylesheet" href="css/intro.css">
+  <link rel="stylesheet" href="css/church.css">
 </head>
 <body>
   <!-- Rough-edge filters for the mode borders (css/grit.css): more warp as the modes get harder. -->
@@ -33,7 +34,44 @@
     <filter id="gf7" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="3" seed="21"/><feDisplacementMap in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G"/></filter>
   </svg>
   <div id="app">
-    <div class="sky" aria-hidden="true"><div class="rays"></div><div class="glass"></div></div>
+    <div class="sky" aria-hidden="true"><div class="rays"></div><div class="glass"></div>
+      <svg class="church" viewBox="0 0 640 420" preserveAspectRatio="xMidYMax meet">
+        <!-- Church of the Crossroads, drawn in the game's cartoon style. Colors come from the skin (css/church.css). -->
+        <g class="ch-line" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+          <!-- cross tower: a tall rounded arch with the cross inside -->
+          <path class="ch-wall" d="M286 132 L286 46 Q286 14 315 14 Q344 14 344 46 L344 132 Z"/>
+          <path class="ch-sky" d="M298 132 L298 50 Q298 28 315 28 Q332 28 332 50 L332 132 Z"/>
+          <path class="ch-wall" d="M309 46 h12 v30 h16 v11 h-16 v45 h-12 v-45 h-16 v-11 h16 z"/>
+          <!-- main sanctuary: tall wall with a steep gable -->
+          <path class="ch-wall" d="M40 360 L40 196 L315 128 L520 214 L520 360 Z"/>
+          <path class="ch-shade" d="M40 196 L40 360 L70 360 L70 202 Z"/>
+          <!-- front entry: lighter recess with an arched door -->
+          <path class="ch-wall" d="M262 360 L262 236 L352 222 L352 360 Z"/>
+          <path class="ch-dark" d="M286 360 L286 292 Q286 266 307 266 Q328 266 328 292 L328 360 Z"/>
+          <!-- side wing with the curved mission parapet and an arched window -->
+          <path class="ch-wall" d="M352 360 L352 222 Q352 200 372 200 Q392 200 392 214 L420 214 Q440 214 440 194 Q440 176 464 176 Q488 176 488 196 Q488 214 512 214 Q534 214 534 240 L600 268 L600 360 Z"/>
+          <path class="ch-dark" d="M440 270 L440 238 Q440 214 462 214 Q484 214 484 238 L484 270 Z"/>
+          <path class="ch-dark" d="M410 276 L410 248 L426 246 L426 276 Z"/>
+          <!-- low terracotta roof over the side door -->
+          <path class="ch-roof" d="M400 312 L470 286 L560 286 L586 312 Z"/>
+          <path class="ch-wall" d="M410 312 L576 312 L576 360 L410 360 Z"/>
+          <!-- palm tree -->
+          <path class="ch-trunk" d="M500 360 Q498 320 506 282 L516 282 Q510 320 514 360 Z"/>
+          <g class="ch-palm">
+            <path d="M510 282 Q470 262 440 280 Q474 268 510 286 Z"/><path d="M510 282 Q478 240 446 236 Q480 252 508 288 Z"/>
+            <path d="M510 282 Q520 236 552 224 Q528 250 514 286 Z"/><path d="M512 282 Q556 260 588 272 Q556 270 514 288 Z"/>
+            <path d="M510 284 Q540 300 552 330 Q532 302 508 290 Z"/><path d="M508 284 Q478 296 470 322 Q488 298 510 290 Z"/>
+          </g>
+          <!-- lawn, bushes and the sign wall -->
+          <path class="ch-grass" d="M0 352 Q320 340 640 352 L640 420 L0 420 Z"/>
+          <g class="ch-bush"><ellipse cx="62" cy="356" rx="46" ry="22"/><ellipse cx="120" cy="362" rx="38" ry="18"/><ellipse cx="596" cy="360" rx="40" ry="18"/></g>
+          <path class="ch-wall" d="M140 400 L140 330 L566 330 L566 400 Z"/>
+          <path class="ch-shade" d="M150 340 L556 340 L556 392 L150 392 Z"/>
+          <g class="ch-bush"><ellipse cx="236" cy="398" rx="62" ry="18"/><ellipse cx="300" cy="402" rx="30" ry="12"/></g>
+        </g>
+        <text class="ch-signtext" x="353" y="376" text-anchor="middle">CHURCH OF THE CROSSROADS</text>
+      </svg>
+    </div>
 
     <header class="hud" id="hud" hidden>
       <div class="hud-group">
