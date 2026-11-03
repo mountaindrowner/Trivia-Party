@@ -5,6 +5,9 @@ Trial Room minigames, and race Grumbles the Goat to the Narrow Gate. Your host i
 
 It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to answer).
 
+> **Also in this repo:** [`good-shepherd/`](good-shepherd/) is *Ninety-Nine*, a pixel-art shepherd survival and
+> farming game in early development. See [good-shepherd/DESIGN.md](good-shepherd/DESIGN.md).
+
 ## Play
 
 There's no build step. Open `index.html` in a browser, or serve the folder:
