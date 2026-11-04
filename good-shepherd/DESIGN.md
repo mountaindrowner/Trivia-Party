@@ -202,23 +202,35 @@ Final card: *"I am the good shepherd. The good shepherd lays down his life for t
 
 ## 9. Look, sound, voice
 
-- **Resolution:** 320×180, scaled by whole numbers. 16 px tiles. People are 12×16, sheep 12×9, wolves 14×9.
-- **Proportions:** not chibi. People have three-head proportions and long cloaks. Sheep are round but with
-  sharp, readable silhouettes. The attitude comes from props (shades, beanies, bows), poses and fast,
-  snappy animation.
-- **Palette:** about 24 colors. Warm meadow greens, hay gold and wool cream by day. Deep navy nights where the only
-  color is lantern and fire light, drawn as chunky stepped circles (no smooth gradients). The Shepherd's teal is the
-  one cool color that stays bright at night.
-- **Music:** chiptune funk. Bouncy bass and claps by day, a slow minor groove at night, and full band at the
-  Sabbath feast. The sheep choir sings over it once you have one.
+**Visual direction: a cozy farm sim with a bit of attitude.** It's the warm, hand-placed pixel style of the farming-sim
+genre, built from our own art. We don't copy any existing game's sprites, characters or UI.
+
+- **View and scale:** top-down 3/4 view at 384×216, scaled by whole numbers, on a 16 px grid. Things have height:
+  fence posts, the hut, trees and the shelter roof all sort by depth, so sheep walk behind and in front of them.
+- **People are tall and slender, with funny proportions.** A 5×7 head sits on a 30 px body, about four and a half
+  heads tall, with long legs, one-pixel arms, long feet and big noses. They face down, up and sideways with a
+  four-step walk and a little bob.
+  - **The Shepherd:** teal hooded cloak over a cream tunic, a short beard, and a crook taller than he is with a
+    lantern hanging from the hook.
+  - **Jory the Thief:** purple hood, hunched, a long pointy nose and a sack. After he's redeemed he carries a lantern.
+- **Animals are round and readable:** fluffy shaded sheep with dark faces and props (shades, beanies, bows,
+  bandanas, a doc's cap, the lookout's bell, the lamplighter's candle); slinking wolves; two scruffy sheepdogs.
+- **Palette:** saturated meadow greens with grass tufts and flowers, warm dirt paths, straw floors, red roof shingles,
+  wood browns. Every sprite has a warm, colored outline instead of black, and shading in three tones.
+- **Nights:** a deep blue overlay with stepped pools of light from the lantern, the campfire and the hut window, with
+  a little warm glow added back. Dusk tints orange before the dark comes in.
+- **UI:** wood-framed parchment panels. A day clock (Day 1 · 6:10 am · Morning) with a sun or moon, a flock count,
+  a dialogue box with a framed portrait and name plate, and parchment level-up cards. The font is Pixelify Sans.
+- **Music:** chiptune funk. Bouncy bass by day, a slow minor groove at night, and full band at the Sabbath feast.
+  The sheep choir sings over it once you have one.
 - **Writing voice:** the sheep are spunky, sarcastic and loyal ("WOLF. That's a wolf. I'm not being dramatic.").
   The Shepherd says very little, always kindly and never sarcastic. The humor is never at a hurt character's expense.
-- **Fonts:** Press Start 2P for HUD and banners, Pixelify Sans for dialogue.
 
 ## 10. The prototype in this folder
 
 `index.html` plays a vertical slice of **Chapter 1: Green Pastures**, three days and three nights (about 10 minutes).
 
+- A meadow with the Shepherd's hut, a fenced fold with a shelter, hay and a campfire, a pond, paths and trees.
 - Find and befriend 20+ wild sheep and walk them through the gate into the fold.
 - Day and night cycle with stepped-light darkness; wolves at night; sheep left outside get scattered, never killed,
   and you go find them again.
