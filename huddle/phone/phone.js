@@ -205,7 +205,7 @@
   }
   function meCard() {
     return el("div", { class: "me" }, el("div", { class: "face", "aria-hidden": "true" }, AVATAR_EMOJI[me.avatar] || "🐑"), el("div", { class: "name" }, me.name),
-      lastScreen.lost ? el("span", { class: "tag lost" }, "🌫️ Lost Sheep") : me.vip ? el("span", { class: "tag gold" }, "👑 VIP") : me.audience ? el("span", { class: "tag" }, "Audience") : null);
+      lastScreen.lost ? el("span", { class: "tag lost" }, "☁️ Lost Sheep") : me.vip ? el("span", { class: "tag gold" }, "👑 VIP") : me.audience ? el("span", { class: "tag" }, "Audience") : null);
   }
   function lobbyScreen() {
     const parts = [meCard(), el("h2", {}, "You're in!"), el("p", { class: "center soft" }, "Find your name on the TV.")];

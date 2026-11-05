@@ -864,5 +864,5 @@ THP.Huddle = (function () {
     THP.game.titleScreen();
   }
 
-  return { screen, base: BASE };
+  return { screen, base: BASE, get phase() { return phase; } };
 })();
