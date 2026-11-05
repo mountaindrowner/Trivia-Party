@@ -1,8 +1,8 @@
 // Holy Huddle relay test: a fake TV and up to 20 fake phones play through everything the relay must handle.
 // Usage: node test/bots.mjs [base-url] [origin]
-//   local:  npx wrangler dev --var "ALLOWED_ORIGINS:http://localhost:*" --var "IDLE_MINUTES:0.08" --var "LIMIT_LOOK:40"
+//   local:  npx wrangler dev --var "ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*" --var "IDLE_MINUTES:0.08" --var "LIMIT_LOOK:40"
 //           node test/bots.mjs http://127.0.0.1:8787 http://localhost:3000
-//   live:   node test/bots.mjs https://holyhuddle-relay.thecrossroads.workers.dev https://holyhuddle.pages.dev --live
+//   live:   node test/bots.mjs https://holyhuddle.thecrossroads.workers.dev https://holyhuddle.thecrossroads.workers.dev --live
 // The --live run skips the tests that need the short idle timer and low lookup limit of the local run.
 // Behind a network proxy (HTTPS_PROXY set), route fetch and WebSocket through it.
 if (process.env.HTTPS_PROXY || process.env.https_proxy) {

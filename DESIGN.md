@@ -264,6 +264,19 @@ The first time the game opens, a short intro plays over the skin's sky (`js/intr
 Tap (or Space/Enter) finishes a line or moves on; Skip or Esc ends it. It plays once (`thp-intro-seen`), and How to
 play has a "Watch the intro again" button. With reduced motion it skips the animation and keeps the words.
 
+### Holy Huddle (everyone on their own phone)
+
+The **📱 Holy Huddle** button on the title screen turns the TV into a party-game host, Jackbox-style
+(`js/huddle.js`, with the server and the phone page in `huddle/`).
+- The TV makes a room and shows a 4-letter code and a QR code.
+- Phones join at `holyhuddle.thecrossroads.workers.dev`, pick a nickname and an animal, and their names pop into the
+  lobby while Barnabas greets each one.
+- The first player in is the VIP and starts from their phone. The host can lock the room or remove a player.
+- Phase 2 plays one warm-up question; the full party game (questions, Trial Room, Lost Sheep, the Narrow Gate race)
+  is phase 3 of the plan.
+- It needs the internet, so it works from `holyhuddle.thecrossroads.workers.dev/tv` and from itch.io, but not from a
+  saved copy of the game.
+
 ### Story Scenes (rewards)
 
 Short animated cartoons of Bible stories, earned at milestones, each drawn in its own art style.

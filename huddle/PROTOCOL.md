@@ -3,7 +3,8 @@
 How the TV (host), the phones and the relay talk. The relay knows nothing about any game: it runs rooms and passes
 messages. The TV runs the game and decides what every phone shows.
 
-Relay: `https://holyhuddle-relay.thecrossroads.workers.dev` (code in `server/`). Every message is one JSON object
+Server: `https://holyhuddle.thecrossroads.workers.dev` (code in `server/`). It also serves the join page at `/` and the
+whole game for the TV at `/tv`. Every message is one JSON object
 with a `t` (type) field.
 
 ## Plain requests
@@ -70,6 +71,19 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 - Each phone may send about 12 messages a second (bursts of 30) and 2 KB per message; the TV 60 a second and 16 KB.
   Over that, the line is closed.
 - Per internet address, per 10 minutes: 20 rooms made, 200 code lookups, 400 live lines.
-- Only allowed web pages (the phone page and the TV page on itch.io) can connect from a browser (`ALLOWED_ORIGINS`).
+- Other websites can't connect from a browser: a request that names another page (`Origin`) must be on
+  `ALLOWED_ORIGINS` (this site, the TV page on itch.io). This site's own pages send no Origin on plain requests.
 - Rooms delete themselves after 2 hours with nothing happening, or 12 hours at most. Nothing about players is kept
   after that. No accounts, no cookies, no logs of names.
+
+## Screens the TV sends (`data` in `msg`)
+
+The phone page draws these; anything it doesn't know shows the lobby.
+
+| `screen` | Fields | The phone shows |
+| --- | --- | --- |
+| `lobby` | | The player's animal and name, "You're in!", and for the VIP an **Everybody's in!** button (sends `{ type: "start" }`) |
+| `wait` | `title`, `text` | A waiting message |
+| `message` | `title`, `text` | A message |
+| `choices` | `round`, `prompt`, `options`, `seconds` | Answer buttons and a time bar; a tap sends `{ type: "pick", round, pick }` once |
+| `result` | `good`, `title`, `points`, `text` | Right or wrong, and the points |
