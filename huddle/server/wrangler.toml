@@ -1,0 +1,29 @@
+# Holy Huddle relay on Cloudflare Workers. Deploy with `npx wrangler deploy` (see huddle/README.md).
+name = "holyhuddle-relay"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+account_id = "ec288a6a02dc7158129ffbbe7b819f48"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[durable_objects.bindings]]
+name = "GATES"
+class_name = "Gate"
+
+# The free plan needs SQLite-backed Durable Objects.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Gate"]
+
+[vars]
+# Pages allowed to connect from a browser: the phone page, its preview builds, and the TV page on itch.io.
+ALLOWED_ORIGINS = "https://holyhuddle.pages.dev,https://*.holyhuddle.pages.dev,https://html-classic.itch.zone,https://html.itch.zone,https://v6p9d9t4.ssl.hwcdn.net"
+IDLE_MINUTES = "120"
+# Per internet address, per 10 minutes. A whole church can share one address, so these are roomy.
+LIMIT_WINDOW_SEC = "600"
+LIMIT_CREATE = "20"
+LIMIT_LOOK = "200"
+LIMIT_WS = "400"

@@ -1,0 +1,14 @@
+{
+  "name": "holy-huddle-relay",
+  "private": true,
+  "description": "Holy Huddle room relay: rooms, codes, joining and message passing between the TV and the phones. Runs on Cloudflare Workers + Durable Objects.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node test/bots.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.45.0"
+  }
+}
