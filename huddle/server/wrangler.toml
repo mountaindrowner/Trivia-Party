@@ -1,9 +1,16 @@
-# Holy Huddle relay on Cloudflare Workers. Deploy with `npx wrangler deploy` (see huddle/README.md).
-name = "holyhuddle-relay"
+# Holy Huddle on Cloudflare Workers: the room relay, the phone join page (/) and the game for the TV (/tv).
+# Run `python3 huddle/build.py` first, then `npx wrangler deploy` (see huddle/README.md).
+name = "holyhuddle"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
 workers_dev = true
 account_id = "ec288a6a02dc7158129ffbbe7b819f48"
+
+# The pages are served as text.
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
 
 [[durable_objects.bindings]]
 name = "ROOMS"
@@ -19,8 +26,8 @@ tag = "v1"
 new_sqlite_classes = ["Room", "Gate"]
 
 [vars]
-# Pages allowed to connect from a browser: the phone page, its preview builds, and the TV page on itch.io.
-ALLOWED_ORIGINS = "https://holyhuddle.pages.dev,https://*.holyhuddle.pages.dev,https://html-classic.itch.zone,https://html.itch.zone,https://v6p9d9t4.ssl.hwcdn.net"
+# Pages allowed to connect from a browser: this site, a Pages copy and its previews, and the TV page on itch.io.
+ALLOWED_ORIGINS = "https://holyhuddle.thecrossroads.workers.dev,https://holyhuddle.pages.dev,https://*.holyhuddle.pages.dev,https://html-classic.itch.zone,https://html.itch.zone,https://v6p9d9t4.ssl.hwcdn.net"
 IDLE_MINUTES = "120"
 # Per internet address, per 10 minutes. A whole church can share one address, so these are roomy.
 LIMIT_WINDOW_SEC = "600"

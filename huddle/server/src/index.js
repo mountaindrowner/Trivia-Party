@@ -6,6 +6,9 @@
    See huddle/PROTOCOL.md for every message. */
 import { DurableObject } from "cloudflare:workers";
 import { checkName } from "./names.js";
+// Built by huddle/build.py: the join page for phones, and the whole game for the TV.
+import PHONE_PAGE from "../static/phone.html";
+import TV_PAGE from "../static/tv.html";
 
 const CODE_LETTERS = "BCDFGHJKLMNPRSTVWZ"; // no vowels, so a code can't spell a word; no Q, X or Y
 const AVATARS = ["sheep", "donkey", "lion", "dove", "fish", "camel", "whale", "raven", "frog", "ox", "goat", "eagle"];
@@ -39,10 +42,12 @@ function cleanCode(raw) {
 }
 const num = (v, d) => (Number.isFinite(Number(v)) && v !== "" && v != null ? Number(v) : d);
 
-/** Only our own pages (the TV page on itch.io or Cloudflare, the phone page) may connect from a browser.
+/** Only our own pages (the TV page on itch.io or here, the phone page) may connect from a browser. A browser always
+    names the page in an Origin header when it calls another site or opens a live line, so another website is turned
+    away. No Origin at all = this site's own page asking for something, or a tool outside a browser.
     Entries: an exact origin, "https://*.example.com" for its subdomains, or "http://localhost:*" for any port. */
 function originAllowed(origin, env) {
-  if (!origin) return env.ALLOW_NO_ORIGIN === "1"; // test bots and tools outside a browser, only when switched on
+  if (!origin) return true;
   const list = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
   return list.some((rule) => {
     if (rule === origin) return true;
@@ -62,6 +67,11 @@ const cors = (origin) => ({
   vary: "origin",
 });
 
+const page = (html) => new Response(html, { headers: {
+  "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer", "x-frame-options": "SAMEORIGIN",
+} });
+
 /* ---------- The front door: plain web requests ---------- */
 export default {
   async fetch(request, env) {
@@ -69,6 +79,7 @@ export default {
     const origin = request.headers.get("origin");
     const ip = request.headers.get("cf-connecting-ip") || "local";
     if (url.pathname === "/health") return json({ ok: true });
+    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? PHONE_PAGE : TV_PAGE);
     if (!originAllowed(origin, env)) return json({ error: "origin" }, 403);
     const h = origin ? cors(origin) : {};
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: h });

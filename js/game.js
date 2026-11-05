@@ -135,7 +135,10 @@ window.THP = window.THP || {};
       rush ? el("button", { class: "btn quick-btn rush-btn live", onclick: () => THP.Holiday.screen() },
         el("span", {}, `${rush.icon} ${rush.name}`), el("small", {}, "LIVE")) : null,
       el("button", { class: "btn quick-btn scenes-btn", onclick: () => THP.Scenes.screen(titleScreen) },
-        el("span", {}, "🎬 Story Scenes"), el("small", {}, `${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`)));
+        el("span", {}, "🎬 Story Scenes"), el("small", {}, `${THP.Scenes.unlockedCount()}/${THP.Scenes.LIST.length}`)),
+      // Holy Huddle: everyone joins on their phone (js/huddle.js).
+      el("button", { class: "btn quick-btn huddle-btn", onclick: () => THP.Huddle.screen() },
+        el("span", {}, "📱 Holy Huddle"), el("small", {}, "NEW")));
   }
   function titleScreen() {
     THP.mgTheme = null; // leaving a Holiday Rush

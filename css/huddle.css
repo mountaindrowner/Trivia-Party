@@ -1,0 +1,60 @@
+/* Holy Huddle on the TV: the lobby (code, QR, players) and the warm-up question. Dark panels with gold, so it reads
+   the same in every skin, and sized to be read from across a room. */
+.huddle-screen { gap: 1rem; }
+/* The game lays every screen out as a narrow column (#stage > section); the lobby sits side by side instead. */
+#stage > section.huddle-lobby { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1.6rem; align-items: center; max-width: 66rem; }
+@media (max-width: 760px), (max-aspect-ratio: 5/4) { #stage > section.huddle-lobby { grid-template-columns: minmax(0, 1fr); } }
+@media (max-height: 760px) and (min-aspect-ratio: 5/4) {
+  .huddle-qr { width: min(11rem, 30vh); }
+  .huddle-code span { width: 3rem; height: 3.5rem; font-size: 2.5rem; }
+}
+.huddle-join { display: grid; justify-items: center; gap: 0.6rem; text-align: center; padding: 1.2rem; border-radius: 1.2rem;
+  background: rgba(14, 6, 40, 0.72); border: 0.2rem solid #ffc53d; color: #fff; box-shadow: 0 0.5rem 0 rgba(0, 0, 0, 0.35); }
+.huddle-join .screen-title { margin: 0; }
+.huddle-qr { width: min(15rem, 46vw); aspect-ratio: 1; padding: 0.5rem; border-radius: 0.8rem; background: #fff; }
+.huddle-qr svg { display: block; width: 100%; height: 100%; }
+.huddle-url { margin: 0; font-weight: 800; font-size: 1.05rem; }
+.huddle-url b { color: #ffc53d; word-break: break-all; }
+.huddle-code { display: flex; gap: 0.5rem; }
+.huddle-code span { display: grid; place-items: center; width: 3.6rem; height: 4.2rem; border-radius: 0.6rem; background: #ffc53d; color: #1a0b3d;
+  font: 400 3rem/1 "Lilita One", "Bangers", system-ui, sans-serif; box-shadow: 0 0.35rem 0 #1a0b3d; }
+.huddle-status { margin: 0; min-height: 1.2em; font-weight: 800; color: #ffd0dd; }
+.huddle-side { display: grid; gap: 0.8rem; }
+.huddle-players { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+.huddle-tile { display: grid; justify-items: center; gap: 0.15rem; padding: 0.6rem 0.3rem; border-radius: 0.9rem; color: #fff; min-width: 0;
+  background: rgba(14, 6, 40, 0.72); border: 0.18rem solid rgba(255, 255, 255, 0.25); font: inherit; cursor: pointer; }
+.huddle-tile .face { font-size: 2.6rem; line-height: 1.1; }
+.huddle-tile .name { font-weight: 900; font-size: 1rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.huddle-tile .pts { font-size: 0.78rem; font-weight: 800; color: #ffc53d; }
+.huddle-tile.vip { border-color: #ffc53d; }
+.huddle-tile.away { opacity: 0.45; }
+.huddle-tile.confirm { border-color: #ff3d7f; background: rgba(120, 10, 50, 0.8); }
+.huddle-tile.empty { cursor: default; border-style: dashed; opacity: 0.45; }
+.huddle-tile.empty .face { color: rgba(255, 255, 255, 0.5); font-weight: 900; }
+.huddle-tile:focus-visible { outline: 0.2rem solid #ffc53d; outline-offset: 0.15rem; }
+.pop-in { animation: huddle-pop 0.35s ease-out; }
+@keyframes huddle-pop { from { transform: scale(0.6); opacity: 0; } }
+.huddle-aud, .huddle-hint { margin: 0; text-align: center; font-weight: 800; color: #fff; text-shadow: 0 0.12rem 0 rgba(0, 0, 0, 0.45); }
+.huddle-aud:empty, .huddle-hint:empty { display: none; }
+.huddle-tip { margin: 0; font-weight: 800; color: #fff; text-align: center; }
+
+#stage > section.huddle-question { max-width: 56rem; }
+.huddle-q { margin: 0; text-align: center; font: 400 clamp(1.6rem, 2.6vw + 0.8rem, 2.6rem)/1.15 "Lilita One", "Bangers", system-ui, sans-serif; color: #fff;
+  text-shadow: 0 0.2rem 0 rgba(0, 0, 0, 0.45); text-wrap: balance; }
+.huddle-timer { height: 0.8rem; border-radius: 99px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+.huddle-timer i { display: block; height: 100%; background: #ffc53d; transform-origin: left; }
+.huddle-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+.huddle-opt { display: flex; gap: 0.6rem; align-items: center; padding: 0.8rem 1rem; border-radius: 0.9rem; color: #fff; font-weight: 900; font-size: 1.25rem;
+  border: 0.2rem solid #1a0b3d; box-shadow: 0 0.3rem 0 #1a0b3d; transition: opacity 0.3s, transform 0.3s; }
+.huddle-opt.gem-0 { background: #2b7bff; } .huddle-opt.gem-1 { background: #a24bff; } .huddle-opt.gem-2 { background: #19a85b; } .huddle-opt.gem-3 { background: #ff7a1a; }
+.huddle-opt.right { outline: 0.3rem solid #fff; transform: scale(1.04); }
+.huddle-opt.wrong { opacity: 0.3; }
+.huddle-sub { margin: 0; text-align: center; font-weight: 900; color: #fff; text-shadow: 0 0.12rem 0 rgba(0, 0, 0, 0.45); }
+.huddle-answered { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; min-height: 2rem; }
+.huddle-chip { padding: 0.25rem 0.6rem; border-radius: 99px; background: rgba(14, 6, 40, 0.72); color: #fff; font-weight: 800; }
+.huddle-winners { margin: 0 auto; padding: 0; list-style: none; display: grid; gap: 0.35rem; counter-reset: w; }
+.huddle-winners li { counter-increment: w; padding: 0.35rem 0.9rem; border-radius: 0.7rem; background: rgba(14, 6, 40, 0.72); color: #fff; font-weight: 900; font-size: 1.15rem; }
+.huddle-winners li::before { content: counter(w) ". "; color: #ffc53d; }
+.huddle-winners small { color: #ffc53d; }
+.huddle-btn small { background: #ff3d7f !important; }
+@media (prefers-reduced-motion: reduce) { .pop-in { animation: none; } }

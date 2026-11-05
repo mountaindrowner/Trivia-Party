@@ -82,6 +82,12 @@ async function main() {
   section("Front door");
   const health = await api("/health");
   check(health.status === 200 && health.body.ok, "health check answers");
+  const phonePage = await fetch(BASE + "/").then(async (r) => ({ status: r.status, text: await r.text(), type: r.headers.get("content-type") }));
+  check(phonePage.status === 200 && /text\/html/.test(phonePage.type) && phonePage.text.includes("Holy Huddle"), "the join page is served at /");
+  const tvPage = await fetch(BASE + "/tv").then(async (r) => ({ status: r.status, text: await r.text() }));
+  check(tvPage.status === 200 && tvPage.text.includes("THP.Huddle"), "the game for the TV is served at /tv");
+  const own = await fetch(BASE + "/api/rooms/ZZZZ").then((r) => r.status);
+  check(own === 404, "a lookup with no Origin (this site's own page) is answered");
   const bad = await api("/api/rooms", { method: "POST", origin: "https://evil.example", body: "{}" });
   check(bad.status === 403, "another website can't make a room", bad);
   const evilLine = new Line(`${WS_BASE}/ws/BCDF?role=player`, "https://evil.example");
