@@ -58,3 +58,112 @@
 .huddle-winners small { color: #ffc53d; }
 .huddle-btn small { background: #ff3d7f !important; }
 @media (prefers-reduced-motion: reduce) { .pop-in { animation: none; } }
+
+/* ---------- The game: intro, question cards, scoreboard, podium ---------- */
+.huddle-big { margin: 0; font: 400 clamp(2.4rem, 4vw + 1rem, 4rem)/1 "Lilita One", "Bangers", system-ui, sans-serif; color: #ffc53d; text-shadow: 0 0.25rem 0 #1a0b3d; text-align: center; }
+.huddle-introcard { display: grid; gap: 1rem; justify-items: center; padding: 1.4rem 1.8rem; border-radius: 1.2rem; background: rgba(14, 6, 40, 0.78);
+  border: 0.2rem solid #ffc53d; box-shadow: 0 0.5rem 0 rgba(0, 0, 0, 0.35); width: min(40rem, 100%); }
+.huddle-rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; width: 100%; }
+.huddle-rules li { display: flex; gap: 0.7rem; align-items: center; padding: 0.6rem 0.9rem; border-radius: 0.8rem; color: #fff; font-weight: 900; font-size: 1.3rem; text-align: left;
+  background: rgba(255, 255, 255, 0.08); opacity: 0.25; transform: translateX(-0.6rem); transition: opacity 0.4s, transform 0.4s, background 0.4s; }
+.huddle-rules li.on { opacity: 1; transform: none; background: rgba(255, 197, 61, 0.18); }
+.huddle-rules li b { font-size: 1.5rem; width: 2.2rem; text-align: center; color: #ffc53d; }
+.huddle-card { justify-content: center; min-height: 60vh; }
+.huddle-card .huddle-big { font-size: clamp(4rem, 8vw + 1rem, 7.5rem); animation: huddle-slam 0.45s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes huddle-slam { from { transform: scale(2.4); opacity: 0; } }
+.huddle-of { margin: 0; font-weight: 900; font-size: 1.4rem; color: #fff; }
+.huddle-double { margin: 0; padding: 0.4rem 1rem; border-radius: 0.6rem; background: #ff3d7f; color: #fff; font: 400 2rem/1 "Lilita One", "Bangers", sans-serif; animation: huddle-pulse 0.8s ease-in-out infinite alternate; }
+@keyframes huddle-pulse { to { transform: scale(1.08); } }
+.huddle-opt { position: relative; }
+.huddle-opt > span:first-of-type { flex: 1; }
+.huddle-who { display: flex; gap: 0.15rem; font-size: 1.5rem; }
+.huddle-who:empty { display: none; }
+.huddle-who span { animation: huddle-pop 0.3s ease-out; }
+.huddle-board { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.45rem; width: min(40rem, 100%); }
+.huddle-row { display: grid; grid-template-columns: 2.2rem 2.6rem minmax(0, 1fr) 3rem 5rem 6rem; align-items: center; gap: 0.5rem; padding: 0.45rem 0.8rem;
+  border-radius: 0.8rem; background: rgba(14, 6, 40, 0.78); color: #fff; font-weight: 900; font-size: 1.25rem; animation-fill-mode: backwards; }
+.huddle-row.lead { background: linear-gradient(90deg, rgba(255, 197, 61, 0.35), rgba(14, 6, 40, 0.78)); border: 0.15rem solid #ffc53d; }
+.huddle-row .rank { color: #ffc53d; text-align: center; }
+.huddle-row .face { font-size: 1.7rem; text-align: center; }
+.huddle-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.huddle-row .move { font-size: 0.95rem; text-align: center; }
+.huddle-row .move.up { color: #5dff9b; }
+.huddle-row .move.down { color: #ff8fae; }
+.huddle-row .gain { color: #5dff9b; font-size: 1rem; text-align: right; }
+.huddle-row .total { text-align: right; font-variant-numeric: tabular-nums; }
+.huddle-board.small .huddle-row { grid-template-columns: 2.2rem 2.6rem minmax(0, 1fr) 6rem; font-size: 1.05rem; }
+.huddle-countdown { align-self: center; font-weight: 900; color: #fff; text-shadow: 0 0.12rem 0 rgba(0, 0, 0, 0.45); }
+.huddle-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 11rem)); gap: 0.8rem; align-items: end; justify-content: center; width: 100%; }
+.huddle-step { display: grid; justify-items: center; align-content: start; gap: 0.2rem; padding: 0.8rem 0.4rem; border-radius: 1rem 1rem 0.4rem 0.4rem;
+  background: rgba(14, 6, 40, 0.8); color: #fff; border: 0.18rem solid rgba(255, 255, 255, 0.25); min-width: 0; }
+.huddle-step.step-1 { min-height: 15rem; border-color: #ffc53d; }
+.huddle-step.step-0 { min-height: 11.5rem; }
+.huddle-step.step-2 { min-height: 9.5rem; }
+.huddle-step.empty { opacity: 0.25; }
+.huddle-step .face { font-size: 3.2rem; line-height: 1.1; }
+.huddle-step .medal { font-size: 2rem; line-height: 1; }
+.huddle-step .name { font-weight: 900; font-size: 1.2rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.huddle-step .total { color: #ffc53d; font-weight: 900; font-variant-numeric: tabular-nums; }
+.huddle-step.crowned { animation: huddle-crown 0.6s cubic-bezier(.2, 1.4, .4, 1); box-shadow: 0 0 2rem rgba(255, 197, 61, 0.6); }
+@keyframes huddle-crown { from { transform: translateY(2rem) scale(0.9); } }
+.huddle-levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.huddle-level { display: grid; gap: 0.1rem; padding: 0.5rem; border-radius: 0.8rem; color: #fff; font: inherit; cursor: pointer; background: rgba(14, 6, 40, 0.72); border: 0.18rem solid rgba(255, 255, 255, 0.25); }
+.huddle-level b { font-weight: 900; font-size: 1rem; }
+.huddle-level small { font-size: 0.75rem; font-weight: 800; color: #d9d2ff; }
+.huddle-level[aria-pressed="true"] { border-color: #ffc53d; background: rgba(255, 197, 61, 0.25); }
+.huddle-level:focus-visible { outline: 0.2rem solid #ffc53d; outline-offset: 0.15rem; }
+@media (max-height: 760px) and (min-aspect-ratio: 5/4) {
+  .huddle-row { padding: 0.3rem 0.7rem; font-size: 1.1rem; }
+  .huddle-step.step-1 { min-height: 12rem; } .huddle-step.step-0 { min-height: 9.5rem; } .huddle-step.step-2 { min-height: 8rem; }
+  .huddle-rules li { padding: 0.45rem 0.8rem; font-size: 1.15rem; }
+}
+@media (prefers-reduced-motion: reduce) { .huddle-card .huddle-big, .huddle-double, .huddle-step.crowned, .huddle-who span { animation: none; } }
+
+/* ---------- Lost Sheep, the Trial Room and the race ---------- */
+.huddle-chip.lost, .huddle-who span.lost { filter: grayscale(1) opacity(0.7); }
+.huddle-chip.lost::after { content: " 🌫️"; }
+.huddle-row.lost { background: rgba(60, 56, 84, 0.78); }
+.huddle-row.lost .face { filter: grayscale(1); }
+.huddle-row .name small { font-size: 0.7rem; color: #c9c4e6; letter-spacing: 0.06em; text-transform: uppercase; }
+.huddle-trialtag { margin: 0; padding: 0.35rem 1rem; border-radius: 0.6rem; background: #c2185b; color: #fff; font: 400 1.6rem/1 "Lilita One", "Bangers", sans-serif; letter-spacing: 0.06em;
+  animation: huddle-pulse 0.7s ease-in-out infinite alternate; }
+.huddle-trial .huddle-big { font-size: clamp(2rem, 3vw + 1rem, 3.2rem); }
+.huddle-walls { display: flex; gap: 1rem; justify-content: center; align-items: end; flex-wrap: wrap; }
+.huddle-wall { display: grid; justify-items: center; gap: 0.3rem; }
+.huddle-wall .bar { width: 4.5rem; height: 9rem; border-radius: 0.5rem; overflow: hidden; display: flex; align-items: end; background: repeating-linear-gradient(0deg, #c9a46a 0 1.1rem, #a8834c 1.1rem 1.25rem); border: 0.2rem solid #1a0b3d; }
+.huddle-wall .bar i { display: block; width: 100%; height: 100%; background: rgba(255, 197, 61, 0.85); transform-origin: bottom; transform: scaleY(0); transition: transform 0.15s; }
+.huddle-wall .n { font: 400 2rem/1 "Lilita One", sans-serif; color: #fff; text-shadow: 0 0.15rem 0 #1a0b3d; }
+.huddle-lamps { display: grid; grid-template-columns: repeat(4, minmax(0, 8rem)); gap: 0.8rem; justify-content: center; }
+.huddle-lamp { display: grid; justify-items: center; gap: 0.2rem; padding: 0.7rem 0.4rem; border-radius: 1rem; background: rgba(14, 6, 40, 0.78); color: #fff; border: 0.18rem solid rgba(255, 255, 255, 0.25); }
+.huddle-lamp .flame { font-size: 3rem; line-height: 1.1; }
+.huddle-lamp.lit { border-color: #ffc53d; box-shadow: 0 0 1.6rem rgba(255, 197, 61, 0.55); }
+.huddle-lamp.empty { opacity: 0.55; border-color: #ff3d7f; }
+.huddle-lamp.empty .flame { filter: grayscale(1) brightness(0.6); }
+.huddle-lamp .huddle-who { font-size: 1.4rem; min-height: 1.6rem; }
+.huddle-order { margin: 0; padding-left: 1.8rem; color: #fff; font-weight: 900; font-size: 1.3rem; text-align: left; display: grid; gap: 0.25rem; }
+.huddle-field { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; max-width: 36rem; font-size: 2.8rem; padding: 0.8rem; border-radius: 1rem; background: rgba(14, 6, 40, 0.6); transition: opacity 0.4s; }
+.huddle-field.gone { opacity: 0; }
+.huddle-field.show-fish span:not(:empty) { opacity: 1; }
+.huddle-verdict { display: grid; gap: 0.5rem; justify-items: center; }
+.huddle-verdict p { margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; justify-content: center; font-weight: 900; color: #fff; }
+.huddle-verdict .safe { color: #9dffbf; }
+.huddle-verdict .lostline { color: #ffc0d2; }
+.huddle-options.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.huddle-track { display: grid; gap: 0.35rem; width: min(52rem, 100%); padding: 0.6rem 0.8rem; border-radius: 1rem; background: rgba(14, 6, 40, 0.72); }
+.huddle-lane { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: center; gap: 0.6rem; }
+.huddle-lane .lane-name { color: #fff; font-weight: 900; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.huddle-lane .lane-path { position: relative; display: grid; grid-template-columns: repeat(12, 1fr) 2.2rem; align-items: center; height: 2.4rem; }
+.huddle-lane .dot { height: 0.35rem; margin: 0 0.1rem; border-radius: 99px; background: rgba(255, 255, 255, 0.2); }
+.huddle-lane .dot.passed { background: #ffc53d; }
+.huddle-lane .lane-gate { font-size: 1.6rem; text-align: center; }
+.huddle-lane .lane-runner { position: absolute; top: 0; font-size: 1.9rem; line-height: 2.4rem; transition: left 0.8s cubic-bezier(.3, 1.3, .5, 1); }
+.huddle-lane.lost .lane-runner { filter: grayscale(1) opacity(0.7); }
+.huddle-lane.lost .lane-name::after { content: " 🌫️"; }
+.huddle-lane.won .lane-runner { filter: drop-shadow(0 0 0.6rem #ffc53d); }
+@media (max-height: 760px) and (min-aspect-ratio: 5/4) {
+  .huddle-wall .bar { height: 6.5rem; }
+  .huddle-lane .lane-path { height: 2rem; }
+  .huddle-lane .lane-runner { font-size: 1.6rem; line-height: 2rem; }
+  .huddle-field { font-size: 2.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .huddle-trialtag { animation: none; } .huddle-lane .lane-runner { transition: none; } }

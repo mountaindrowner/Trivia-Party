@@ -78,12 +78,20 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 
 ## Screens the TV sends (`data` in `msg`)
 
-The phone page draws these; anything it doesn't know shows the lobby.
+The phone page draws these; anything it doesn't know shows the lobby. Every screen may also carry `lost: true` (the
+player is a Lost Sheep: the phone shows a badge) and `vip` (one button, or a list of buttons, shown only on the VIP's
+phone: `{ label, action }`, a tap sends `{ type: "vip", action }`).
 
-| `screen` | Fields | The phone shows |
-| --- | --- | --- |
-| `lobby` | | The player's animal and name, "You're in!", and for the VIP an **Everybody's in!** button (sends `{ type: "start" }`) |
-| `wait` | `title`, `text` | A waiting message |
-| `message` | `title`, `text` | A message |
-| `choices` | `round`, `prompt`, `options`, `seconds` | Answer buttons and a time bar; a tap sends `{ type: "pick", round, pick }` once |
-| `result` | `good`, `title`, `points`, `text` | Right or wrong, and the points |
+| `screen` | Fields | The phone shows | It sends |
+| --- | --- | --- | --- |
+| `lobby` | | The player's animal and name, "You're in!", and for the VIP **Everybody's in!** | `{ type: "start" }` |
+| `wait` | `title`, `text` | A waiting message | |
+| `message` | `title`, `text` | A message | |
+| `choices` | `round`, `prompt`, `options`, `seconds` | Answer buttons and a time bar | `{ type: "pick", round, pick }` once |
+| `tap` | `round`, `title`, `text`, `seconds`, `label` | A big button to tap as fast as you can | `{ type: "taps", round, n }` a few times a second |
+| `order` | `round`, `title`, `items`, `seconds` | Items to tap first to last, with Undo | `{ type: "order", round, seq }` (indexes into `items`) |
+| `multi` | `round`, `prompt`, `options`, `seconds` | Tap all that apply, then **Lock it in!** | `{ type: "multi", round, picks }` |
+| `result` | `good`, `title`, `points`, `text` | Right or wrong, and the points | |
+| `final` | `place`, `points`, `of`, `audience` | The medal or place, and the points | |
+
+The TV numbers every question, trial and race round (`round`) and ignores answers for any other round.

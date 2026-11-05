@@ -267,15 +267,33 @@ play has a "Watch the intro again" button. With reduced motion it skips the anim
 ### Holy Huddle (everyone on their own phone)
 
 The **📱 Holy Huddle** button on the title screen turns the TV into a party-game host, Jackbox-style
-(`js/huddle.js`, with the server and the phone page in `huddle/`).
-- The TV makes a room and shows a 4-letter code and a QR code.
-- Phones join at `holyhuddle.thecrossroads.workers.dev`, pick a nickname and an animal, and their names pop into the
-  lobby while Barnabas greets each one.
-- The first player in is the VIP and starts from their phone. The host can lock the room or remove a player.
-- Phase 2 plays one warm-up question; the full party game (questions, Trial Room, Lost Sheep, the Narrow Gate race)
-  is phase 3 of the plan.
-- It needs the internet, so it works from `holyhuddle.thecrossroads.workers.dev/tv` and from itch.io, but not from a
-  saved copy of the game.
+(`js/huddle.js`, with the server and the phone page in `huddle/`). It needs the internet, so it works from
+`holyhuddle.thecrossroads.workers.dev/tv` and from itch.io, but not from a saved copy of the game.
+
+- **Lobby:** the TV shows a 4-letter code and a QR code. Phones join at `holyhuddle.thecrossroads.workers.dev`, pick a
+  nickname and an animal, and pop into the lobby while Barnabas greets each one. Up to 8 players, then the audience.
+  The host picks the level and can lock the room or remove a player; the first player in is the VIP.
+- **Intro:** when the VIP taps **Everybody's in!**, Barnabas explains the game ("Think of me as the dealer: I deal
+  the questions, you bring the brains") while the rules light up one by one. The VIP can skip it.
+- **Voice:** Barnabas's lines and the questions are read out loud with the device's own speech (and the choices too,
+  at Little Lambs). **🗣 Voice on/off** in the lobby, saved as `thp-huddle-prefs`.
+- **8 questions:** answered on phones; 500 points for a right answer plus up to 500 for speed. The reveal shows which
+  animals picked which answer, then a scoreboard with movers. It moves on by itself after 8 seconds, or the host or
+  VIP can go sooner.
+- **The Trial Room:** everyone still in the flock who missed plays a quick phone challenge together, a different one
+  each time:
+  - **Walls of Jericho:** tap as fast as you can for 7 seconds. The slowest is lost; alone, it takes 25 taps.
+  - **Who Has Oil?:** pick 1 of 4 lamps; one is empty.
+  - **In Order!:** tap 4 Bible events or books in order.
+  - **Loaves and Fishes:** count the fish on the TV before they swim away.
+- **Lost Sheep:** losing a trial makes you a Lost Sheep (misted over on the TV, a badge on the phone). Lost Sheep keep
+  answering and scoring; they just don't go to trials again.
+- **The Race to the Narrow Gate:** "tap all that apply" rounds from the final-race prompts. Each right tap is a step
+  forward and each wrong tap a step back. The flock starts on step 2 (the top scorer on 3), Lost Sheep on 0. A Lost
+  Sheep who catches the last of the flock is found again, but can't pass the gate while lost. The first of the flock
+  to step 12 wins (8 rounds at most).
+- **Podium:** the winner, second and third, with their place on every phone, and **Play again** (straight to
+  question 1, with new questions) or **Back to the lobby** on the VIP's phone and the TV.
 
 ### Story Scenes (rewards)
 

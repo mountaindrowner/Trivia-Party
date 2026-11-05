@@ -23,7 +23,7 @@
     for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
     return n;
   };
-  const show = (...nodes) => { app.replaceChildren(...nodes); app.firstElementChild && app.firstElementChild.classList.add("pop"); };
+  const show = (...nodes) => { app.replaceChildren(...nodes.filter(Boolean)); app.firstElementChild && app.firstElementChild.classList.add("pop"); };
   const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
   const store = {
     get() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { return null; } },
@@ -170,21 +170,42 @@
     cancelAnimationFrame(timerRaf);
     const kind = s.screen || "lobby";
     if (kind === "lobby") return lobbyScreen();
-    if (kind === "wait") return show(meCard(), el("h2", {}, s.title || "Look at the TV!"), s.text ? el("p", { class: "center soft" }, s.text) : null);
-    if (kind === "message") return show(el("h2", {}, s.title || ""), el("p", { class: "center" }, s.text || ""));
+    if (kind === "wait") return show(meCard(), el("h2", {}, s.title || "Look at the TV!"), s.text ? el("p", { class: "center soft" }, s.text) : null, ...vipButtons(s));
+    if (kind === "message") return show(el("h2", {}, s.title || ""), el("p", { class: "center" }, s.text || ""), ...vipButtons(s));
     if (kind === "choices") return choicesScreen(s);
+    if (kind === "tap") return tapScreen(s);
+    if (kind === "order") return orderScreen(s);
+    if (kind === "multi") return multiScreen(s);
     if (kind === "result") {
       buzz(s.good ? [40, 40, 40] : 200);
       return show(el("div", { class: "result " + (s.good ? "good" : "bad") },
         el("div", { class: "big" }, s.title || (s.good ? "Correct!" : "Not quite")),
-        s.points != null ? el("p", { class: "big", style: "font-size:30px" }, (s.points > 0 ? "+" : "") + s.points) : null,
-        s.text ? el("p", {}, s.text) : null), el("p", { class: "center soft" }, "Look at the TV!"));
+        s.points != null ? el("p", { class: "big", style: "font-size:30px" }, (s.points > 0 ? "+" : "") + s.points.toLocaleString()) : null,
+        s.text ? el("p", {}, s.text) : null), el("p", { class: "center soft" }, "Look at the TV!"), ...vipButtons(s));
+    }
+    if (kind === "final") {
+      buzz([60, 60, 120]);
+      const medal = { 1: "🥇", 2: "🥈", 3: "🥉" }[s.place];
+      return show(el("div", { class: "result good" },
+        el("div", { class: "big", style: "font-size:64px" }, medal || (s.place ? `#${s.place}` : "🎉")),
+        el("div", { class: "big" }, s.audience ? "Thanks for playing!" : s.place === 1 ? "You won!" : `You finished ${ordinal(s.place)}!`),
+        s.points != null ? el("p", { class: "big", style: "font-size:30px" }, `${s.points.toLocaleString()} points`) : null),
+        el("p", { class: "center soft" }, "Look at the TV!"), ...vipButtons(s));
     }
     return lobbyScreen();
   }
+  const ordinal = (n) => n + (["th", "st", "nd", "rd"][((n % 100) - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+  /** Screens can carry buttons only the VIP sees: { label, action } or a list of them. */
+  function vipButtons(s) {
+    if (!s.vip || !me.vip) return [];
+    return [].concat(s.vip).map((b, i) => {
+      const btn = el("button", { class: i ? "ghost" : "", onclick: () => { if (send({ type: "vip", action: b.action })) { btn.disabled = true; buzz(30); } } }, b.label);
+      return btn;
+    });
+  }
   function meCard() {
     return el("div", { class: "me" }, el("div", { class: "face", "aria-hidden": "true" }, AVATAR_EMOJI[me.avatar] || "🐑"), el("div", { class: "name" }, me.name),
-      me.vip ? el("span", { class: "tag gold" }, "👑 VIP") : me.audience ? el("span", { class: "tag" }, "Audience") : null);
+      lastScreen.lost ? el("span", { class: "tag lost" }, "🌫️ Lost Sheep") : me.vip ? el("span", { class: "tag gold" }, "👑 VIP") : me.audience ? el("span", { class: "tag" }, "Audience") : null);
   }
   function lobbyScreen() {
     const parts = [meCard(), el("h2", {}, "You're in!"), el("p", { class: "center soft" }, "Find your name on the TV.")];
@@ -210,7 +231,7 @@
       } }, el("span", { class: "k", "aria-hidden": "true" }, keys[i % 4]), o)));
     const note = el("p", { class: "center soft" }, "Tap your answer.");
     const timer = el("div", { class: "timer", "aria-hidden": "true" }, el("i"));
-    show(el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note);
+    show(s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note);
     if (s.seconds) {
       // The TV keeps the real time; this bar is only a guide, counted from when the question arrived.
       const fill = timer.firstChild, total = s.seconds * 1000, end = Date.now() + total;
@@ -222,6 +243,73 @@
       };
       tick();
     }
+  }
+  /** The time bar under a prompt: only a guide, counted from when the screen arrived (the TV keeps the real time). */
+  function timeBar(seconds, onEnd) {
+    const bar = el("div", { class: "timer", "aria-hidden": "true" }, el("i"));
+    const fill = bar.firstChild, total = seconds * 1000, end = Date.now() + total;
+    const tick = () => {
+      const left = Math.max(0, end - Date.now());
+      fill.style.transform = `scaleX(${left / total})`;
+      if (left > 0) timerRaf = requestAnimationFrame(tick);
+      else if (onEnd) onEnd();
+    };
+    timerRaf = requestAnimationFrame(tick);
+    return bar;
+  }
+  /** Tap as fast as you can: the count goes to the TV a few times a second. */
+  function tapScreen(s) {
+    let n = 0, over = false, sentN = -1;
+    const count = el("div", { class: "big center", style: "font-size:56px" }, "0");
+    const flush = () => { if (n !== sentN) { sentN = n; send({ type: "taps", round: s.round, n }); } };
+    const pump = setInterval(flush, 250);
+    const btn = el("button", { class: "tapper", onpointerdown: (e) => { e.preventDefault(); if (over) return; n++; count.textContent = n; if (n % 5 === 0) buzz(10); } }, s.label || "TAP!");
+    const bar = timeBar(s.seconds || 7, () => { over = true; clearInterval(pump); flush(); btn.disabled = true; btn.textContent = "Time!"; });
+    show(el("h2", {}, s.title || "Tap!"), el("p", { class: "center soft" }, s.text || ""), bar, count, btn);
+  }
+  /** Tap the items in the right order, first to last. */
+  function orderScreen(s) {
+    const seq = [];
+    const list = el("div", { class: "choices order" }, ...s.items.map((it, k) =>
+      el("button", { onclick: (e) => {
+        if (seq.includes(k) || seq.length >= s.items.length) return;
+        seq.push(k);
+        buzz(15);
+        const b = e.currentTarget;
+        b.setAttribute("aria-pressed", "true");
+        b.querySelector(".k").textContent = seq.length;
+        if (seq.length === s.items.length) { send({ type: "order", round: s.round, seq }); note.textContent = "Locked in! Look at the TV."; list.classList.add("done"); }
+      } }, el("span", { class: "k", "aria-hidden": "true" }, "•"), it)));
+    const note = el("p", { class: "center soft" }, "Tap them first to last.");
+    const undo = el("button", { class: "ghost", onclick: () => {
+      if (!seq.length || seq.length === s.items.length) return;
+      const k = seq.pop(), b = list.children[k];
+      b.setAttribute("aria-pressed", "false"); b.querySelector(".k").textContent = "•";
+    } }, "Undo");
+    show(el("p", { class: "prompt" }, s.title || "In order!"), timeBar(s.seconds || 20), list, note, undo);
+  }
+  /** Tap all that apply, then lock it in. */
+  function multiScreen(s) {
+    const chosen = new Set();
+    let done = false;
+    const list = el("div", { class: "choices multi" }, ...s.options.map((o, k) =>
+      el("button", { "aria-pressed": "false", onclick: (e) => {
+        if (done) return;
+        chosen.has(k) ? chosen.delete(k) : chosen.add(k);
+        e.currentTarget.setAttribute("aria-pressed", chosen.has(k) ? "true" : "false");
+        e.currentTarget.querySelector(".k").textContent = chosen.has(k) ? "✔" : "○";
+        buzz(10);
+      } }, el("span", { class: "k", "aria-hidden": "true" }, "○"), o)));
+    const lock = el("button", { onclick: () => lockIn() }, "Lock it in!");
+    const lockIn = () => {
+      if (done) return;
+      done = true;
+      send({ type: "multi", round: s.round, picks: [...chosen] });
+      list.classList.add("done");
+      lock.disabled = true;
+      lock.textContent = "Locked in!";
+    };
+    show(el("p", { class: "prompt" }, s.prompt || ""), timeBar(s.seconds || 15, lockIn), el("p", { class: "center soft" }, "Tap ALL that fit. Wrong taps cost a step!"), list, lock);
   }
   function endScreen(text) {
     setBar(null);

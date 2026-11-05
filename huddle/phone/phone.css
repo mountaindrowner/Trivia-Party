@@ -76,3 +76,13 @@ button:focus-visible { outline: 4px solid var(--white); outline-offset: 3px; }
 @keyframes pop { from { transform: scale(0.85); opacity: 0.4; } }
 .foot { font-size: 13px; text-align: center; color: var(--soft); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .pop, .dots::after { animation: none; } }
+
+/* Trials and the race */
+.tag.lost { background: #8d8aa8; color: #fff; }
+.tapper { min-height: 42vh; font-size: 44px; border-radius: 28px; background: var(--pink); color: var(--white); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.tapper:active { transform: scale(0.97); }
+.choices.order button, .choices.multi button { background: rgba(255, 255, 255, 0.14); border-color: rgba(26, 11, 61, 0.7); }
+.choices.order button[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+.choices.multi button[aria-pressed="true"] { background: var(--green); }
+.choices.multi.done button { opacity: 0.6; }
+.choices.order.done button { opacity: 1; }
