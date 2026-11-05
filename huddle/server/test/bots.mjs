@@ -4,6 +4,11 @@
 //           node test/bots.mjs http://127.0.0.1:8787 http://localhost:3000
 //   live:   node test/bots.mjs https://holyhuddle-relay.thecrossroads.workers.dev https://holyhuddle.pages.dev --live
 // The --live run skips the tests that need the short idle timer and low lookup limit of the local run.
+// Behind a network proxy (HTTPS_PROXY set), route fetch and WebSocket through it.
+if (process.env.HTTPS_PROXY || process.env.https_proxy) {
+  const { EnvHttpProxyAgent, setGlobalDispatcher } = await import("undici");
+  setGlobalDispatcher(new EnvHttpProxyAgent());
+}
 const BASE = process.argv[2] || "http://127.0.0.1:8787";
 const ORIGIN = process.argv[3] || "http://localhost:3000";
 const LIVE = process.argv.includes("--live");
@@ -107,10 +112,13 @@ async function main() {
   const ids = joinedMsgs.map((m) => m && m.id);
   const playersN = joinedMsgs.filter((m) => m && !m.audience).length, audN = joinedMsgs.filter((m) => m && m.audience).length;
   check(playersN === 8 && audN === 12, `8 players and 12 audience (got ${playersN} + ${audN})`);
-  check(joinedMsgs.filter((m) => m && m.vip).length === 1 && joinedMsgs.find((m) => m && m.vip).id === ids[0], "the first phone in is the VIP");
+  const vipIdx = joinedMsgs.findIndex((m) => m && m.vip);
+  check(joinedMsgs.filter((m) => m && m.vip).length === 1 && !joinedMsgs[vipIdx].audience, "exactly one VIP, and it's a player");
   let last = null;
   for (let i = 0; i < 20; i++) { const m = await tv.next((x) => x.t === "room" && x.event.kind === "join", 3000); if (m) last = m; }
   check(last && last.room.players.length === 20, "the TV saw all 20 names arrive", last && last.room.players.length);
+  const firstIn = last && last.room.players.filter((p) => !p.audience).sort((x, y) => x.joinedAt - y.joinedAt)[0];
+  check(firstIn && last.room.vip === firstIn.id && firstIn.id === ids[vipIdx], "the VIP is the first player who got in");
   check(last && last.room.players.every((p) => !("keyHash" in p) && !("key" in p)), "rejoin keys never reach the TV");
 
   section("Names are checked");
@@ -175,47 +183,48 @@ async function main() {
   imp.close();
 
   section("The host is in charge");
-  tv.send({ t: "kick", id: ids[0] });
-  const kickedMsg = await phones[0].next((m) => m.t === "kicked");
-  check(!!kickedMsg && (await phones[0].waitClosed()) !== null, "a removed player is told and disconnected");
-  const vipNow = await phones[1].next((m) => m.t === "you" && m.vip);
-  check(!!vipNow, "the VIP passes to the next player");
+  tv.send({ t: "kick", id: ids[vipIdx] });
+  const kickedMsg = await phones[vipIdx].next((m) => m.t === "kicked");
+  check(!!kickedMsg && (await phones[vipIdx].waitClosed()) !== null, "a removed player is told and disconnected");
+  const vipNow = await Promise.all(phones.map((p, i) => (i === vipIdx ? null : p.next((m) => m.t === "you" && m.vip, 1500))));
+  check(vipNow.filter(Boolean).length === 1, "the VIP passes to one other player");
   const back = new Line(`${WS_BASE}/ws/${code}?role=player`);
   await back.opened; await back.next((m) => m.t === "hello");
-  back.send({ t: "rejoin", id: joinedMsgs[0].id, key: joinedMsgs[0].key });
+  back.send({ t: "rejoin", id: joinedMsgs[vipIdx].id, key: joinedMsgs[vipIdx].key });
   const backR = await back.next((m) => m.t === "joined" || m.t === "error");
   check(backR && backR.t === "error", "a removed player can't rejoin with their key");
   back.close();
+  const pick = (i) => (i === vipIdx ? 19 : i); // the VIP was removed above
   tv.send({ t: "lock", locked: true });
   await tv.next((m) => m.t === "room" && m.event.kind === "lock");
   const late = await phone(code, "Latecomer", "ox");
   check(late.joined && late.joined.code === "locked", "a locked room turns new phones away");
   late.p.close();
-  phones[6].close();
+  phones[pick(6)].close();
   await tv.next((m) => m.t === "room" && m.event.kind === "leave");
   const re6 = new Line(`${WS_BASE}/ws/${code}?role=player`);
   await re6.opened; await re6.next((m) => m.t === "hello");
-  re6.send({ t: "rejoin", id: joinedMsgs[6].id, key: joinedMsgs[6].key });
+  re6.send({ t: "rejoin", id: joinedMsgs[pick(6)].id, key: joinedMsgs[pick(6)].key });
   check((await re6.next((m) => m.t === "joined" || m.t === "error"))?.t === "joined", "players already in can still rejoin a locked room");
-  phones[6] = re6;
+  phones[pick(6)] = re6;
 
   section("Misbehaving phones");
-  const flood = phones[7];
+  const flood = phones[pick(7)];
   for (let i = 0; i < 200; i++) { try { flood.send({ t: "input", data: { i } }); } catch (e) { break; } }
   check((await flood.waitClosed()) === 4029, "a phone flooding messages is cut off");
-  const big = phones[8];
+  const big = phones[pick(8)];
   big.send({ t: "input", data: "x".repeat(5000) });
   check((await big.waitClosed()) === 1009, "an oversized message is refused");
 
   section("The TV drops and comes back");
   tv.close();
-  const off = await phones[11].next((m) => m.t === "host" && m.on === false);
+  const off = await phones[pick(11)].next((m) => m.t === "host" && m.on === false);
   check(!!off, "phones hear the TV went away");
   tv = new Line(`${WS_BASE}/ws/${code}?role=host&key=${hostKey}`);
   check(await tv.opened, "the TV reconnects with its key");
   const snap = await tv.next((m) => m.t === "room");
   check(snap && snap.room.players.length === 19, "the room is still there with everyone in it", snap && snap.room.players.length);
-  check(!!(await phones[11].next((m) => m.t === "host" && m.on === true)), "phones hear the TV is back");
+  check(!!(await phones[pick(11)].next((m) => m.t === "host" && m.on === true)), "phones hear the TV is back");
   const tv2 = new Line(`${WS_BASE}/ws/${code}?role=host&key=${hostKey}`);
   await tv2.opened;
   check(!!(await tv.next((m) => m.t === "replaced")), "a second TV with the key takes over from the first");
@@ -224,7 +233,7 @@ async function main() {
 
   section("Ending the room");
   tv.send({ t: "end" });
-  const ended = await phones[12].next((m) => m.t === "ended");
+  const ended = await phones[pick(12)].next((m) => m.t === "ended");
   check(!!ended, "phones are told the game ended");
   await sleep(300);
   check((await api(`/api/rooms/${code}`)).status === 404, "the room is gone afterwards");

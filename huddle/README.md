@@ -12,8 +12,14 @@ The multiplayer party mode for Trivia Holy Party: the TV shows a room code, ever
 cd huddle/server
 npm install
 npm run dev     # local relay on http://127.0.0.1:8787
-npm test        # 64 checks with a fake TV and 20 fake phones (see the top of test/bots.mjs for the dev flags)
+npm test        # 65 checks with a fake TV and 20 fake phones (62 against the live server; see the top of test/bots.mjs)
 npm run deploy  # needs a Cloudflare API token with Workers edit access
 ```
 
 Cost: the Cloudflare free plan (no card on file). Over a free limit, requests fail; nothing is ever charged.
+
+## Where it runs
+
+- Relay: `https://holyhuddle-relay.thecrossroads.workers.dev` (the church's Cloudflare account, free plan).
+- Phone page (phase 2): `https://holyhuddle.pages.dev`, claimed and waiting.
+- Testing the live relay: `node test/bots.mjs <relay-url> https://holyhuddle.pages.dev --live`.
