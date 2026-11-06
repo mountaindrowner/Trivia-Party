@@ -13,6 +13,45 @@
 <body>
   <!-- One 1280×720 stage, scaled to fit whatever screen or projector it's on. -->
   <div id="frame"><main id="stage" aria-live="polite"></main></div>
+  <!-- Barnabas, the host (the same donkey as in Trivia Holy Party, in his cap and shades). core.js puts him on the stage. -->
+  <template id="barnabas">
+      <svg class="donkey" viewBox="0 0 200 210" aria-hidden="true">
+        <g class="ears">
+          <g class="ear ear-l"><ellipse cx="62" cy="52" rx="17" ry="46" transform="rotate(-20 62 52)" class="fur"/><ellipse cx="62" cy="56" rx="8" ry="32" transform="rotate(-20 62 56)" class="ear-in"/></g>
+          <g class="ear ear-r"><ellipse cx="138" cy="52" rx="17" ry="46" transform="rotate(20 138 52)" class="fur"/><ellipse cx="138" cy="56" rx="8" ry="32" transform="rotate(20 138 56)" class="ear-in"/></g>
+        </g>
+        <path class="scarf" d="M48 176 Q100 206 152 176 L160 200 Q100 222 40 200 Z"/>
+        <path class="scarf-stripe" d="M44 188 Q100 214 156 188"/>
+        <ellipse cx="100" cy="112" rx="60" ry="62" class="fur"/>
+        <path class="mane" d="M78 56 Q86 34 98 50 Q106 30 114 52 Q126 40 124 62 Q100 54 78 56Z"/>
+        <ellipse cx="100" cy="158" rx="46" ry="32" class="muzzle"/>
+        <ellipse cx="84" cy="150" rx="5" ry="7" class="ink"/>
+        <ellipse cx="116" cy="150" rx="5" ry="7" class="ink"/>
+        <g class="eyes">
+          <circle cx="76" cy="104" r="15" class="eye-white"/><circle cx="124" cy="104" r="15" class="eye-white"/>
+          <circle cx="78" cy="107" r="7" class="ink"/><circle cx="122" cy="107" r="7" class="ink"/>
+          <circle cx="81" cy="103" r="2.5" class="glint"/><circle cx="125" cy="103" r="2.5" class="glint"/>
+        </g>
+        <g class="shades">
+          <path class="shades-bridge" d="M90 102 Q100 96 110 102"/>
+          <path class="shades-lens" d="M54 94 H94 Q96 116 80 120 Q60 121 56 108 Z"/>
+          <path class="shades-lens" d="M106 94 H146 Q144 108 140 112 Q134 121 120 120 Q104 116 106 94 Z"/>
+          <path class="shades-shine" d="M62 99 L72 99"/><path class="shades-shine" d="M114 99 L124 99"/>
+        </g>
+        <g class="cap">
+          <path class="cap-crown" d="M56 72 Q56 30 100 28 Q144 30 144 72 Q100 60 56 72 Z"/>
+          <path class="cap-brim" d="M126 64 Q164 52 186 66 Q170 80 130 76 Z"/>
+          <circle class="cap-button" cx="100" cy="29" r="5"/>
+          <path class="cap-logo" d="M100 38 V58 M92 45 H108"/>
+        </g>
+        <path class="brow brow-l" d="M62 84 Q76 76 90 82"/>
+        <path class="brow brow-r" d="M110 82 Q124 76 138 84"/>
+        <path class="mouth-closed" d="M82 172 Q100 184 118 172"/>
+        <ellipse class="mouth-open" cx="100" cy="176" rx="15" ry="9"/>
+        <ellipse cx="62" cy="130" rx="9" ry="5" class="blush"/><ellipse cx="138" cy="130" rx="9" ry="5" class="blush"/>
+      </svg>
+
+  </template>
   <!-- The questions are shared with Trivia Holy Party (ages 9 and up). -->
   <script src="../js/data.js"></script>
   <script src="../js/data-modes.js"></script>

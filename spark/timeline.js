@@ -37,7 +37,7 @@
           el("div", { class: "jar wide" }, el("span", {}, "⚡"), el("strong", {}, "up to +500"), el("small", {}, "for being quick")),
           el("div", { class: "jar wide" }, el("span", {}, "🔥"), el("strong", {}, "+100 a card"), el("small", {}, "for every card in your streak"))),
         foot: `${SECS} seconds a card. The card always lands in its real place, so the line is right for everyone.`,
-        phone: "Tap where each card goes in the line!",
+        phone: "Tap where each card goes in the line!", host: "rules.timeline",
       });
       if (!go) return null;
 
@@ -65,6 +65,7 @@
         const line = [order[0]]; // placed cards, kept in true order
         const misses = {};
         const label = `Set ${si + 1} of ${deck.length}: ${set.title}`;
+        sw.say("set", { set: set.title }, { now: true });
         for (let c = 1; c < order.length; c++) {
           const card = order[c];
           const ids = cast().map((p) => p.id);
@@ -133,8 +134,8 @@
           S(right.length ? "right" : "wrong");
           later0(() => fx.burstAt(document.querySelector(".timeline .card.landed"), 50));
           const share = right.length / Math.max(1, ids.filter((id) => byId(id)).length);
-          if (share >= 0.8) fx.confetti(90);
-          else if (!right.length) { fx.shake(true); fx.callout("Nobody got that one!", { icon: "😱", color: "#ff4d6d", small: true }); }
+          if (share >= 0.8) { fx.confetti(90); sw.say("allRight", null, { minor: true }); }
+          else if (!right.length) { fx.shake(true); fx.callout("Nobody got that one!", { icon: "😱", color: "#ff4d6d", small: true }); sw.say("noneRight", null, { minor: true, mood: "worried" }); }
           for (const id of right) if ([3, 5, 8].includes(g.streak[id])) fx.callout(`${byId(id).name}: ${g.streak[id]} in a row!`, { icon: "🔥", color: "#ff6a3d", small: true });
           for (const id of ids) {
             if (!byId(id)) continue;

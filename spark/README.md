@@ -24,6 +24,21 @@ and family game.
   Shuffle, lock, sound and end are small round buttons.
   - The music is Trivia Holy Party's band (`../js/music.js`).
 
+## The host: Barnabas
+
+Trivia Holy Party's donkey hosts here too, in his cap and shades, drawn in the Sticker colors (`<template
+id="barnabas">` in `index.html`, styles at the end of `spark.css`). He stands in a corner and talks in a bubble:
+
+- **Where:** at the bottom of the join column in the lobby; bottom left on the title, rules and results screens;
+  during play he pops in to say something and ducks back out, so he never covers the game for long.
+- **What:** all his lines are in `LINES` in `core.js`: hellos as players join (or "12 more just rolled in!" when
+  lots arrive at once), each game's rules, Double Time, lead changes, jackpots, steals and swaps, Bluff reveals,
+  Timeline streaks, the winner, and the War Points leader back in the lobby. Small lines are skipped when he's
+  already talking.
+- **His voice:** the device's own text-to-speech for now (🗣 in the lobby turns it off). Recorded lines will replace
+  it: `window.SPARK_VOICE = { key: ["url of line 1", ...] }` plays a clip for a line when there is one, and the
+  device's voice otherwise. The recordings are being tried with Chatterbox, an open-source voice model.
+
 ## A night of Spark Wars
 
 - **The lobby:** the QR code, the join address and the code, and 30 seats that fill as phones join (a burst of

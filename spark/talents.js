@@ -57,7 +57,7 @@
         steps: [["Answer questions on your phone, ", el("em", {}, "at your own pace")], ["Get one right? ", el("em", {}, "Pick 1 of 3 jars")], [sw.teams.length ? "Most talents wins it for your team" : "Most talents when time runs out wins"]],
         extra: el("div", { class: "jars" }, ...jars.map(([i, a, b]) => el("div", { class: "jar" }, el("span", {}, i), el("strong", {}, a), el("small", {}, b)))),
         foot: "The last minute is ⚡ Double Time: every jar pays double!",
-        phone: "Answer at your own pace. Right answers open jars. Most talents wins!",
+        phone: "Answer at your own pace. Right answers open jars. Most talents wins!", host: "rules.talents",
       });
       if (!go) return null;
 
@@ -79,7 +79,7 @@
         if (t) { t.textContent = clock(left); t.classList.toggle("low", left < 10e3); }
         const sec = Math.ceil(left / 1000);
         if (sec !== lastSec && sec <= 5 && sec > 0) { S("tick"); fx.shake(); }
-        if (sec !== lastSec && sec === 10) { fx.energy(1, "rgba(255,77,109,0.06)"); fx.callout("10 seconds left!", { icon: "⏱", color: "#ff4d6d", small: true }); }
+        if (sec !== lastSec && sec === 10) { fx.energy(1, "rgba(255,77,109,0.06)"); fx.callout("10 seconds left!", { icon: "⏱", color: "#ff4d6d", small: true }); sw.say("tenSeconds", null, { now: true, mood: "wow" }); }
         lastSec = sec;
         if (!g.double && left <= 60e3) {
           g.double = true;
@@ -89,6 +89,7 @@
           news("⚡ Double Time! Every jar pays double!");
           fx.energy(0.95, "rgba(255,210,63,0.05)"); fx.flash("#ffd23f"); fx.shake(true);
           fx.callout("DOUBLE TIME!", { icon: "⚡" });
+          sw.say("double", null, { now: true, mood: "wow" });
           sw.music("gate");
         }
         if (left <= 0) end();
@@ -187,7 +188,7 @@
         if (j.gain) {
           const n = j.gain * x2;
           s.talents += n;
-          if (n >= 100) { news(`💰 ${me.name} found a jar of ${n}!`); S("big"); fx.callout(`${me.name} hit the jackpot! +${n}`, { icon: "💰", small: true }); }
+          if (n >= 100) { news(`💰 ${me.name} found a jar of ${n}!`); S("big"); fx.callout(`${me.name} hit the jackpot! +${n}`, { icon: "💰", small: true }); sw.say("jackpot", { name: me.name }, { minor: true }); }
           return done({ good: true, title: n >= 100 ? "Jackpot!" : "Talents!", points: n });
         }
         if (j.key === "double") {
@@ -225,7 +226,7 @@
           t.talents -= n; s.talents += n;
           t.news = `🧾 ${me.name} took ${n} from you!`;
           news(`🧾 ${me.name} took ${n} from ${them.name}!`); S("steal");
-          if (n >= 50) { fx.callout(`${me.name} taxed ${them.name}! −${fmt(n)}`, { icon: "🧾", color: "#ff4d6d" }); fx.shake(); }
+          if (n >= 50) { fx.callout(`${me.name} taxed ${them.name}! −${fmt(n)}`, { icon: "🧾", color: "#ff4d6d" }); fx.shake(); sw.say("tax", { name: me.name }, { minor: true }); }
           send(id, { screen: "result", good: true, title: `Took ${fmt(n)}!`, points: n, text: `from ${them.name}`, after: "" });
         } else {
           const mine = s.talents;
@@ -233,6 +234,7 @@
           t.news = `🔄 ${me.name} swapped with you!`;
           news(`🔄 ${me.name} swapped with ${them.name}!`); S("swap");
           fx.callout(`${me.name} SWAPPED with ${them.name}!`, { icon: "🔄", color: "#2ee6ff" }); fx.shake(t.talents < s.talents / 2);
+          sw.say("swap", { name: me.name }, { minor: true, mood: "wow" });
           send(id, { screen: "result", good: true, title: "Swapped!", text: `You have ${fmt(s.talents)} now. ${them.name} has ${fmt(t.talents)}.`, after: "" });
         }
         later(id, 2000, () => nextQ(id));
@@ -255,7 +257,7 @@
         if (bars) {
           const totals = sw.teamTotals(scores()), sum = Math.max(1, totals.reduce((n, t) => n + t.total, 0));
           const lead = totals[0].total > (totals[1] ? totals[1].total : 0) ? totals[0].key : null;
-          if (lead && g.teamLead && lead !== g.teamLead) { fx.callout(`Team ${totals[0].name} takes the lead!`, { icon: totals[0].icon, color: totals[0].color }); S("big"); }
+          if (lead && g.teamLead && lead !== g.teamLead) { fx.callout(`Team ${totals[0].name} takes the lead!`, { icon: totals[0].icon, color: totals[0].color }); S("big"); sw.say("lead", { team: totals[0].name }, { minor: true }); }
           if (lead) g.teamLead = lead;
           bars.replaceChildren(...sw.teams.map((t) => {
             const tt = totals.find((x) => x.key === t.key);

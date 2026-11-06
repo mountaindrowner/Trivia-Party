@@ -366,3 +366,59 @@ html[data-look="arena"] #frame { background: repeating-linear-gradient(-45deg, r
 html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- Barnabas, the host ---------- */
+.host { position: absolute; z-index: 3; display: flex; align-items: flex-end; gap: 12px; pointer-events: none; transition: transform 0.45s cubic-bezier(.2, 1.4, .4, 1), opacity 0.3s; }
+.host .donkey { width: 112px; flex: none; overflow: visible; filter: drop-shadow(4px 5px 0 var(--ink)); animation: bob 2.6s ease-in-out infinite; }
+.host.corner { left: 22px; bottom: 14px; }
+.host.lobby, .host.stack { left: 34px; bottom: 16px; width: 300px; flex-direction: column-reverse; align-items: flex-start; }
+.host.peek { left: 22px; bottom: 14px; transform: translateX(-180px) rotate(-12deg); opacity: 0; }
+.host.peek.on { transform: none; opacity: 1; }
+.host .bubble { position: relative; max-width: 560px; margin-bottom: 26px; padding: 13px 18px; border-radius: var(--r); background: #fff; color: #16112b; border: var(--border);
+  box-shadow: var(--lift); font: 700 19px/1.3 var(--body); animation: pop 0.25s ease-out; }
+.host:is(.lobby, .stack) .bubble { max-width: 290px; margin: 0 0 4px 6px; font-size: 16px; }
+.host .bubble::before { content: ""; position: absolute; left: -14px; bottom: 16px; border: 9px solid transparent; border-right: 12px solid var(--ink); }
+.host:is(.lobby, .stack) .bubble::before { left: 26px; bottom: -20px; border: 9px solid transparent; border-top: 12px solid var(--ink); }
+.host .bubble[hidden] { display: none; }
+.host .bubble p { margin: 0; }
+/* His look: Trivia Holy Party's donkey, in his cap and shades, drawn in Sticker colors. */
+.donkey .fur { fill: #b9b6e6; stroke: var(--ink); stroke-width: 5; }
+.donkey .ear-in { fill: #ff9ec4; }
+.donkey .mane { fill: var(--ink); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
+.donkey .muzzle { fill: #f3e6d0; stroke: var(--ink); stroke-width: 5; }
+.donkey .ink { fill: var(--ink); }
+.donkey .eye-white { fill: #fff; stroke: var(--ink); stroke-width: 4; }
+.donkey .glint { fill: #fff; }
+.donkey .blush { fill: #ff7aa8; opacity: 0.5; }
+.donkey .brow { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round; transition: transform 0.25s; transform-box: fill-box; transform-origin: center; }
+.donkey .mouth-closed { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round; }
+.donkey .mouth-open { fill: #7a1840; stroke: var(--ink); stroke-width: 4; opacity: 0; }
+.donkey .scarf { fill: var(--accent); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
+.donkey .scarf-stripe { fill: none; stroke: var(--ink); stroke-width: 6; stroke-dasharray: 10 8; }
+.donkey .shades-lens { fill: var(--ink); stroke: var(--ink); stroke-width: 4; }
+.donkey .shades-shine { stroke: var(--cool); stroke-width: 4; stroke-linecap: round; }
+.donkey .shades-bridge { fill: none; stroke: var(--ink); stroke-width: 5; }
+.donkey .cap-crown { fill: var(--hot); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
+.donkey .cap-brim { fill: var(--accent); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
+.donkey .cap-button { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
+.donkey .cap-logo { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; }
+.donkey .eyes { transform-box: fill-box; transform-origin: center; animation: blink 5s infinite; }
+.donkey .ear { transform-box: fill-box; transform-origin: 50% 100%; }
+.donkey .ear-l { animation: earL 3.2s ease-in-out infinite; }
+.donkey .ear-r { animation: earR 3.6s ease-in-out infinite; }
+.host.talking .mouth-open { animation: talk 0.2s steps(2, jump-none) infinite; }
+.host.talking .mouth-closed { animation: talk 0.2s steps(2, jump-none) infinite reverse; }
+.host[data-mood="wow"] .brow-l { transform: translateY(-7px); }
+.host[data-mood="wow"] .brow-r { transform: translateY(-7px); }
+.host[data-mood="worried"] .brow-l { transform: rotate(16deg) translateY(-4px); }
+.host[data-mood="worried"] .brow-r { transform: rotate(-16deg) translateY(-4px); }
+.host[data-mood="worried"] .ear-l { animation: none; rotate: -28deg; }
+.host[data-mood="worried"] .ear-r { animation: none; rotate: 28deg; }
+@keyframes talk { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes blink { 0%, 94%, 100% { scale: 1 1; } 97% { scale: 1 0.1; } }
+@keyframes earL { 50% { rotate: -8deg; } }
+@keyframes earR { 50% { rotate: 10deg; } }
+@keyframes bob { 50% { translate: 0 -4px; } }
+/* Make room for him in the lobby's join column. */
+.lobby .join { padding-bottom: 150px; }
+.icon-btn.off { opacity: 0.45; }

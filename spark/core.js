@@ -198,6 +198,131 @@ window.SW = (() => {
   })();
   fit();
 
+  /* ---------- Barnabas, the host ----------
+     He stands in a corner and talks in a bubble, out loud too (the device's own voice for now; recorded lines
+     can be dropped in as window.SPARK_VOICE = { key: [audio urls] }). Docks: "lobby" (bottom of the join column,
+     always there), "corner" (bottom left, always there), "peek" (pops in to say something, then ducks out). */
+  const LINES = {
+    title: ["Yo! I'm Barnabas, your host. Hit Open a room and let's start a war. A friendly one."],
+    lobby: ["Scan the code or type it in. Teams fill up as you join!", "Phones out! Scan the code and pick your icon.", "Room's open! Get in here."],
+    join: ["{name} has entered the arena!", "{name} is in. Let's gooo!", "Welcome, {name}!", "{name} just pulled up.", "Ayy, {name}! Good to see you.", "{name}, you made it!"],
+    joinTeam: ["{name} joins Team {team}!", "Team {team} gets {name}!", "{name} is repping Team {team}."],
+    joinMany: ["{n} more just rolled in!", "The room is filling up. {n} more!"],
+    full: ["Thirty players! The room is full. Extras can still watch."],
+    lobbyBack: ["Pick the next game!", "What's next? Pick a game!"],
+    lobbyWar: ["Team {team} leads the war with {n}. Pick the next game!", "Team {team} is on top with {n} War Points. Who's catching them?"],
+    "rules.talents": ["Talents! Answer at your own pace. Right answers open jars. Stack 'em up, and whatever you do, don't bury yours."],
+    "rules.bluff": ["Bluff the Bible! Every fact is real, but one word is missing. Make up a fake so good your friends pick it. Just for this game, I promise."],
+    "rules.timeline": ["Timeline! I deal a card, you tap where it goes. Spoiler: creation comes first."],
+    go: ["Phones up!", "Here we go!", "Let's go!"],
+    double: ["Double time! Every jar pays double!", "Last minute! Everything's doubled!"],
+    tenSeconds: ["Ten seconds!", "Ten seconds! Finish strong!"],
+    lead: ["Team {team} takes the lead!", "Ooh, Team {team} is out in front!", "Team {team} is coming for it!"],
+    swap: ["{name} pulled a swap. Bold. Very bold.", "A swap! {name} said mine now."],
+    tax: ["{name} with the tax collector move!", "{name} is collecting. Zacchaeus would be proud. Before he changed, I mean."],
+    jackpot: ["{name} hit the jackpot!", "Jackpot for {name}!"],
+    write: ["Make it believable. Make it sneaky.", "Write something they'll fall for!", "Fakes are flying. Who's the best liar? In this game only!"],
+    pick: ["Which one is real? Pick on your phone!", "One of these is true. Find it!"],
+    fooledMany: ["{name}'s fake got {n} people! Sneaky.", "{n} people fell for {name}'s fake. Wow."],
+    nobodyTruth: ["Nobody?! The fakers win that round.", "Nobody found it! Y'all got played."],
+    allTruth: ["Too easy for you! Next one's harder.", "Everybody found it. Bible scholars, all of you."],
+    truth: ["And the real answer is...", "Here's the truth!"],
+    set: ["Next up: {set}.", "Let's do {set}!"],
+    allRight: ["Look at you, Bible scholars!", "Almost everybody got it!"],
+    noneRight: ["Oof. That one was sneaky.", "Nobody? That's a tough one."],
+    streak: ["{name} is on fire! {n} in a row!"],
+    winTeam: ["Team {team} takes it! Three War Points!", "That one goes to Team {team}!"],
+    winSolo: ["{name} wins it!", "And the winner is {name}!"],
+  };
+  const host = (() => {
+    const tpl = document.getElementById("barnabas");
+    const node = el("aside", { class: "host peek", "data-mood": "happy", "aria-live": "polite" });
+    if (tpl) node.append(tpl.content.cloneNode(true));
+    const bubble = el("div", { class: "bubble", hidden: true }, el("p"));
+    node.append(bubble);
+    let busy = Promise.resolve(), queued = 0, lastJoin = 0, pendingJoins = 0, joinTimer = 0, voice = null, typing = 0, hideTimer = 0;
+    const pickVoice = () => {
+      try {
+        const all = speechSynthesis.getVoices().filter((v) => /^en(-|_|$)/i.test(v.lang));
+        const like = ["Google US English", "Aaron", "Samantha", "Microsoft Guy", "Microsoft Aria", "Alex", "Daniel"];
+        voice = like.map((n) => all.find((v) => v.name.includes(n))).find(Boolean) || all.find((v) => /en-US/i.test(v.lang)) || all[0] || null;
+      } catch (e) {}
+    };
+    if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+    const fill = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => (v && v[k] != null ? v[k] : ""));
+    /** Speak: a recorded clip for this line if there is one, else the device's voice. */
+    function speak(key, i, text) {
+      if (prefs.muted || prefs.voice === false) return Promise.resolve();
+      const clips = window.SPARK_VOICE && window.SPARK_VOICE[key];
+      if (clips && clips[i]) {
+        return new Promise((resolve) => {
+          const a = new Audio(clips[i]);
+          a.onended = a.onerror = resolve;
+          a.play().catch(resolve);
+          setTimeout(resolve, 9000);
+        });
+      }
+      if (!("speechSynthesis" in window)) return Promise.resolve();
+      return new Promise((resolve) => {
+        try {
+          speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}/gu, ""));
+          if (voice) u.voice = voice;
+          u.rate = 1.08; u.pitch = 1.05;
+          const guard = setTimeout(resolve, 1500 + text.length * 85);
+          u.onend = u.onerror = () => { clearTimeout(guard); resolve(); };
+          speechSynthesis.speak(u);
+        } catch (e) { resolve(); }
+      });
+    }
+    function show(text, mood) {
+      clearTimeout(hideTimer); clearInterval(typing);
+      node.dataset.mood = mood || "happy";
+      node.classList.add("on", "talking");
+      bubble.hidden = false;
+      const p = bubble.firstChild;
+      p.textContent = "";
+      let i = 0;
+      typing = setInterval(() => { p.textContent = text.slice(0, ++i * 2); if (i * 2 >= text.length) { clearInterval(typing); p.textContent = text; } }, 22);
+    }
+    function done(hold) {
+      node.classList.remove("talking");
+      hideTimer = setTimeout(() => { bubble.hidden = true; node.classList.remove("on"); }, hold);
+    }
+    return {
+      node,
+      /** Where he stands: "lobby", "corner" or "peek". */
+      dock(where) { node.classList.remove("lobby", "corner", "peek", "stack"); node.classList.add(where); },
+      /** Say a line: a key from LINES (one of its lines at random) or plain text. Lines wait their turn. */
+      say(key, vars, o = {}) {
+        const list = LINES[key];
+        const i = list ? Math.floor(Math.random() * list.length) : 0;
+        const text = fill(list ? list[i] : key, vars);
+        if (o.now) { busy = Promise.resolve(); queued = 0; try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
+        else if (o.minor && queued) return busy; // small stuff only when he's free
+        queued++;
+        const run = async () => {
+          show(text, o.mood);
+          await Promise.all([speak(key, i, text), new Promise((r) => setTimeout(r, Math.min(4000, 700 + text.length * 30)))]);
+          done(o.hold != null ? o.hold : 1600);
+          queued = Math.max(0, queued - 1);
+        };
+        busy = busy.then(run, run);
+        return busy;
+      },
+      /** A player joined: greet them, or count them up when lots arrive at once. */
+      join(p, team) {
+        const now = Date.now();
+        if (now - lastJoin > 3500) { lastJoin = now; return host.say(team ? "joinTeam" : "join", { name: p.name, team: team && team.name }); }
+        pendingJoins++;
+        clearTimeout(joinTimer);
+        joinTimer = setTimeout(() => { if (pendingJoins > 1) host.say("joinMany", { n: pendingJoins }); else if (pendingJoins === 1) host.say(team ? "joinTeam" : "join", { name: p.name, team: team && team.name }); pendingJoins = 0; lastJoin = Date.now(); }, 3500);
+      },
+      quiet() { busy = Promise.resolve(); queued = 0; clearTimeout(joinTimer); pendingJoins = 0; try { speechSynthesis.cancel(); } catch (e) {} clearInterval(typing); bubble.hidden = true; node.classList.remove("on", "talking"); },
+    };
+  })();
+  stage.parentNode.append(host.node);
+
   /* ---------- The room ---------- */
   let ws = null, room = null, players = [], ending = false, retry = 0;
   let phase = "title", lobbyNode = null, cur = null, stepToken = 0;
@@ -236,6 +361,8 @@ window.SW = (() => {
 
   function titleScreen(note) {
     phase = "title";
+    host.dock("corner");
+    setTimeout(() => phase === "title" && host.say("title"), 600);
     show(el("section", { class: "title" },
       el("div", { class: "logo" }, el("span", { class: "spark", "aria-hidden": "true" }, "⚡"), el("h1", {}, "Spark ", el("em", {}, "Wars"))),
       el("p", { class: "tag" }, "The game night for the whole youth group. Up to 30 players, one phone each, teams at war."),
@@ -291,8 +418,13 @@ window.SW = (() => {
       room.locked = m.room.locked;
       const ev = m.event || {}, p = byId(ev.id);
       if (ev.kind === "join" && p) {
-        if (phase === "lobby") { S("join"); setTimeout(() => fx.burstAt(stage.querySelector(`.tile[data-key="${p.id}"]`), 26), 60); }
         if (!p.audience && night.teams.length) placeInTeam(p.id);
+        if (phase === "lobby") {
+          S("join");
+          setTimeout(() => fx.burstAt(stage.querySelector(`.tile[data-key="${p.id}"]`), 26), 60);
+          if (!p.audience) host.join(p, teamOf(p.id));
+          if (cast().length === MAX_PLAYERS) host.say("full");
+        }
         if (cur && cur.join && !p.audience) cur.join(p.id);
         sendTo([p.id], screenFor(p.id));
       }
@@ -395,6 +527,11 @@ window.SW = (() => {
         el("div", { class: "settings" })));
     show(lobbyNode);
     fx.clear();
+    host.dock("lobby");
+    if (night.games.length && night.teams.length) {
+      const lead = night.teams.slice().sort((a, b) => (night.war[b.key] || 0) - (night.war[a.key] || 0))[0];
+      host.say("lobbyWar", { team: lead.name, n: night.war[lead.key] || 0 });
+    } else host.say(night.games.length ? "lobbyBack" : "lobby");
     setTeams(false);
     // A rotating tip under the code while everyone joins.
     const TIPS = ["📱 No app needed: just the website", "👑 First one in is the VIP", "⚔ Teams stay together all night", "🏆 Win games to earn War Points",
@@ -457,6 +594,7 @@ window.SW = (() => {
         prefs.teams ? el("button", { class: "icon-btn", title: "Shuffle the teams", "aria-label": "Shuffle the teams", onclick: () => { setTeams(true); refresh(); S("swap"); fx.shake(); } }, "🔀") : null,
         el("button", { class: "icon-btn lock", title: room.locked ? "Unlock the room" : "Lock the room (no new players)", "aria-label": room.locked ? "Unlock the room" : "Lock the room", onclick: () => hostSend({ t: "lock", locked: !room.locked }) }, room.locked ? "🔓" : "🔒"),
         el("button", { class: "icon-btn", title: "Sound and music", "aria-label": prefs.muted ? "Turn sound on" : "Turn sound off", onclick: () => { prefs.muted = !prefs.muted; savePrefs(); drawSettings(); try { THP.Music.refresh(); } catch (e) {} } }, prefs.muted ? "🔇" : "🔊"),
+        el("button", { class: "icon-btn" + (prefs.voice === false ? " off" : ""), title: "Barnabas's voice", "aria-label": prefs.voice === false ? "Turn Barnabas's voice on" : "Turn Barnabas's voice off", onclick: () => { prefs.voice = prefs.voice === false; savePrefs(); drawSettings(); if (prefs.voice) host.say("Voice on! Can you hear me?"); else host.quiet(); } }, "🗣"),
         el("button", { class: "icon-btn", title: "End the room", "aria-label": "End the room", onclick: endRoom }, "✕")));
   }
 
@@ -501,6 +639,9 @@ window.SW = (() => {
   function rules(token, r) {
     phase = "rules";
     S("start");
+    host.quiet();
+    host.dock("corner");
+    host.say(r.host || "rules", r.hostVars, { now: true, hold: 4000 });
     music(r.music || "manna");
     fx.energy(0.5);
     const secs = r.seconds || 16;
@@ -529,6 +670,8 @@ window.SW = (() => {
       if (!(await wait(900, token))) return false;
     }
     S("go");
+    host.quiet();
+    host.dock("peek");
     fx.burst(640, 360, 90);
     fx.energy(0.7);
     phase = "game";
@@ -542,7 +685,8 @@ window.SW = (() => {
       get players() { return players; },
       get token() { return token; },
       get teams() { return night.teams; },
-      teamTotals, warBoard, every, later, fx, music,
+      teamTotals, warBoard, every, later, fx, music, host,
+      say: (key, vars, o) => host.say(key, vars, o),
       live: () => live(token),
       wait: (ms) => wait(ms, token),
       /** Rules, then 3-2-1. Resolves true when the game should start. */
@@ -616,6 +760,8 @@ window.SW = (() => {
     night.games.push({ key: def.key, winner: totals ? totals[0].key : r[0] && r[0].id });
     phase = "results";
     music("strut");
+    host.dock("stack");
+    later(2400, () => totals ? host.say("winTeam", { team: totals[0].name }) : r[0] && host.say("winSolo", { name: r[0].name }));
     fx.energy(0.6);
     later(400, () => fx.confetti(220, totals ? [totals[0].color, "#ffffff", "#ffd23f"] : null));
     later(2600, () => { const w = stage.querySelector(".results .war"); if (w) { fx.burstAt(w, 60); S("big"); } });

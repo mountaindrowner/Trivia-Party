@@ -37,7 +37,7 @@
           el("div", { class: "jar wide" }, el("span", {}, "🎭"), el("strong", {}, "+500 each"), el("small", {}, "for everyone your fake fools")),
           el("div", { class: "jar wide" }, el("span", {}, "🧼"), el("strong", {}, "Keep it clean"), el("small", {}, "Typing is checked, and the leader can hide anything"))),
         foot: cast().length > WRITERS ? `With ${cast().length} players, ${WRITERS} write each question and everyone else plays detective. Everyone gets turns.` : "Stuck? Tap 🎲 Lie for me.",
-        phone: "Write fake answers that sound real. Find the real one!",
+        phone: "Write fake answers that sound real. Find the real one!", host: "rules.bluff",
       });
       if (!go) return null;
 
@@ -74,6 +74,7 @@
         g.phase = "write";
         sw.music("redsea");
         fx.energy(0.55);
+        sw.say("write", null, { minor: true });
         const status = el("div", { class: "writers" });
         const timer = el("div", { class: "qbar" }, el("i"));
         show(el("section", { class: "bluff" },
@@ -130,6 +131,7 @@
           el("p", { class: "do" }, "Which one is TRUE? Pick on your phone."), ptimer, grid, lockins,
           el("p", { class: "fine" }, "Leader: click an answer twice to hide it.")));
         fx.energy(0.7);
+        sw.say("pick", null, { minor: true });
         const drawGrid = () => grid.replaceChildren(...options.flatMap((o, k) => {
           if (o.gone) return [];
           const card = el("button", { class: "opt", onclick: () => {
@@ -192,7 +194,7 @@
             el("p", { class: "by" }, o.house ? "That one was ours! 😎" : `Written by ${names(o.authors)} · +${fmt(pts)}`));
           S("fool");
           fx.shake(o.pickers.length >= 5);
-          if (!o.house && o.pickers.length >= 5) fx.callout(`${names(o.authors)} fooled ${o.pickers.length} people!`, { icon: "🎭", color: "#c77dff" });
+          if (!o.house && o.pickers.length >= 5) { fx.callout(`${names(o.authors)} fooled ${o.pickers.length} people!`, { icon: "🎭", color: "#c77dff" }); sw.say("fooledMany", { name: names(o.authors), n: o.pickers.length }, { minor: true, mood: "wow" }); }
           if (!(await sw.wait(2400))) return false;
         }
         const t = options.find((o) => o.truth);
@@ -205,7 +207,8 @@
         S("right");
         fx.flash("#2ee58a");
         if (t.pickers.length) fx.confetti(Math.min(240, 60 + t.pickers.length * 8), ["#2ee58a", "#ffffff", "#ffd23f"]);
-        else { fx.shake(true); fx.callout("Nobody found the truth!", { icon: "😱", color: "#ff4d6d" }); }
+        else { fx.shake(true); fx.callout("Nobody found the truth!", { icon: "😱", color: "#ff4d6d" }); sw.say("nobodyTruth", null, { now: true, mood: "worried" }); }
+        if (t.pickers.length && t.pickers.length >= ids.filter((id) => byId(id)).length * 0.8) sw.say("allTruth", null, { minor: true });
         for (const id of ids) {
           if (!byId(id)) continue;
           const mine = options.filter((o) => o.authors.includes(id)), fooled = mine.reduce((n, o) => n + o.pickers.length, 0);
