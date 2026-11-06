@@ -229,7 +229,7 @@ window.SW = (() => {
   /** What a phone shows when it (re)joins. */
   function screenFor(id) {
     const p = byId(id);
-    if (phase === "lobby" || phase === "title") return { screen: "lobby" };
+    if (phase === "lobby" || phase === "title") return badge(id) ? { screen: "lobby", badge: badge(id) } : { screen: "lobby" };
     if (p && p.audience) return { screen: "wait", title: "You're in the audience", text: "The game is full (30 players). Watch the big screen!" };
     return shown[id] || { screen: "wait", title: "Jump in!", text: "You'll be in from the next question.", badge: badge(id) };
   }
@@ -237,7 +237,7 @@ window.SW = (() => {
   function titleScreen(note) {
     phase = "title";
     show(el("section", { class: "title" },
-      el("div", { class: "logo" }, el("span", { class: "spark", "aria-hidden": "true" }, "⚡"), el("h1", {}, "Spark Wars")),
+      el("div", { class: "logo" }, el("span", { class: "spark", "aria-hidden": "true" }, "⚡"), el("h1", {}, "Spark ", el("em", {}, "Wars"))),
       el("p", { class: "tag" }, "The game night for the whole youth group. Up to 30 players, one phone each, teams at war."),
       note ? el("p", { class: "warn" }, note) : null,
       el("div", { class: "row" },
@@ -328,8 +328,9 @@ window.SW = (() => {
     night.teamOf[id] = sizes.sort((a, b) => a.n - b.n || Math.random() - 0.5)[0].t.key;
   }
   /** Teams for the night: made once, kept across games. A new team count (or Shuffle) makes new teams. */
-  function setTeams(reshuffle) {
-    const n = prefs.teams ? Math.min(prefs.teams, Math.max(1, cast().length)) : 0;
+  /** In the lobby the teams fill as players join; a game starting with fewer players than teams uses fewer teams. */
+  function setTeams(reshuffle, starting) {
+    const n = prefs.teams ? (starting ? Math.min(prefs.teams, Math.max(1, cast().length)) : prefs.teams) : 0;
     if (!n) { night.teams = []; night.teamOf = {}; return; }
     if (reshuffle || night.teams.length !== n) {
       night.teams = TEAMS.slice(0, n);
@@ -337,6 +338,7 @@ window.SW = (() => {
       for (const t of night.teams) night.war[t.key] = night.war[t.key] || 0;
       shuffle(cast()).forEach((p) => placeInTeam(p.id));
     } else cast().forEach((p) => placeInTeam(p.id));
+    if (phase === "lobby") players.forEach((p) => p.connected && !p.audience && sendTo([p.id], screenFor(p.id)));
   }
   /** Team scores from player scores. Smaller teams are evened up, so a team of 7 isn't behind a team of 8 just for size. */
   function teamTotals(scores) {
@@ -380,7 +382,7 @@ window.SW = (() => {
     const url = `${BASE}/?room=${room.code}`;
     lobbyNode = el("section", { class: "lobby" },
       el("aside", { class: "join" },
-        el("div", { class: "logo small" }, el("span", { class: "spark", "aria-hidden": "true" }, "⚡"), el("h1", {}, "Spark Wars")),
+        el("div", { class: "logo small" }, el("span", { class: "spark", "aria-hidden": "true" }, "⚡"), el("h1", {}, "Spark ", el("em", {}, "Wars"))),
         el("p", { class: "label" }, "Join on your phone"),
         el("div", { class: "qr" }, qrSvg(url)),
         el("p", { class: "url" }, JOIN_TEXT),
@@ -393,6 +395,7 @@ window.SW = (() => {
         el("div", { class: "settings" })));
     show(lobbyNode);
     fx.clear();
+    setTeams(false);
     // A rotating tip under the code while everyone joins.
     const TIPS = ["📱 No app needed: just the website", "👑 First one in is the VIP", "⚔ Teams stay together all night", "🏆 Win games to earn War Points",
       "🎭 Bluff the Bible: fool your friends", "💰 Talents: steal, swap, double up", "🧭 Timeline: put the Bible in order"];
@@ -427,31 +430,34 @@ window.SW = (() => {
       return tile;
     }));
     const lock = lobbyNode.querySelector(".lock");
-    if (lock) lock.textContent = room.locked ? "🔓 Unlock" : "🔒 Lock";
+    if (lock) lock.textContent = room.locked ? "🔓" : "🔒";
     const go = lobbyNode.querySelector(".start");
     if (go) go.disabled = !list.length;
   }
 
+  /** One setting as a pill: its name and value; a click moves on to the next value. */
   function chips(label, options, current, onPick) {
-    return el("div", { class: "setting" }, el("span", { class: "label" }, label),
-      el("div", { class: "chips" }, ...options.map(([v, text]) => el("button", { class: "chip" + (v === current ? " on" : ""), "aria-pressed": v === current ? "true" : "false", onclick: () => { onPick(v); savePrefs(); drawSettings(); refresh(); } }, text))));
+    const i = Math.max(0, options.findIndex(([v]) => v === current));
+    const next = options[(i + 1) % options.length];
+    return el("button", { class: "pill", title: `${label}: click to change`, "aria-label": `${label}: ${options[i][1]}. Click for ${next[1]}.`,
+      onclick: () => { onPick(next[0]); savePrefs(); drawSettings(); refresh(); S("tick"); } }, el("small", {}, label), el("strong", {}, options[i][1]));
   }
   function drawSettings() {
     if (!lobbyNode) return;
     const g = GAMES.find((x) => x.key === prefs.game) || GAMES[0];
     const box = lobbyNode.querySelector(".settings");
     box.replaceChildren(
-      el("div", { class: "games" }, ...GAMES.map((x) => el("button", { class: "game" + (x.key === g.key ? " on" : ""), "aria-pressed": x.key === g.key ? "true" : "false", onclick: () => { prefs.game = x.key; savePrefs(); drawSettings(); } },
+      el("div", { class: "games" }, ...GAMES.map((x) => el("button", { class: "game" + (x.key === g.key ? " on" : ""), "aria-pressed": x.key === g.key ? "true" : "false", onclick: () => { prefs.game = x.key; savePrefs(); drawSettings(); S("tick"); } },
         el("span", { class: "icon" }, x.icon), el("strong", {}, x.name), el("small", {}, x.about)))),
       el("div", { class: "opts" },
         chips("Teams", [[0, "Off"], [2, "2"], [3, "3"], [4, "4"]], prefs.teams, (v) => { prefs.teams = v; if (phase === "lobby") setTeams(); }),
         ...(g.settings ? g.settings(chips, prefs, () => { savePrefs(); drawSettings(); }) : [])),
       el("div", { class: "buttons" },
-        el("button", { class: "btn go start", disabled: !cast().length, onclick: () => startGame(g.key) }, `▶ Start ${g.name}`),
-        prefs.teams ? el("button", { class: "btn ghost", onclick: () => { setTeams(true); refresh(); S("swap"); fx.shake(); } }, "🔀 Shuffle teams") : null,
-        el("button", { class: "btn ghost lock", onclick: () => hostSend({ t: "lock", locked: !room.locked }) }, room.locked ? "🔓 Unlock" : "🔒 Lock"),
-        el("button", { class: "btn ghost", title: "Sound and music", onclick: () => { prefs.muted = !prefs.muted; savePrefs(); drawSettings(); try { THP.Music.refresh(); } catch (e) {} } }, prefs.muted ? "🔇" : "🔊"),
-        el("button", { class: "btn ghost", onclick: endRoom }, "End")));
+        el("button", { class: "btn go start", disabled: !cast().length, onclick: () => startGame(g.key) }, `Start ${g.name}`),
+        prefs.teams ? el("button", { class: "icon-btn", title: "Shuffle the teams", "aria-label": "Shuffle the teams", onclick: () => { setTeams(true); refresh(); S("swap"); fx.shake(); } }, "🔀") : null,
+        el("button", { class: "icon-btn lock", title: room.locked ? "Unlock the room" : "Lock the room (no new players)", "aria-label": room.locked ? "Unlock the room" : "Lock the room", onclick: () => hostSend({ t: "lock", locked: !room.locked }) }, room.locked ? "🔓" : "🔒"),
+        el("button", { class: "icon-btn", title: "Sound and music", "aria-label": prefs.muted ? "Turn sound on" : "Turn sound off", onclick: () => { prefs.muted = !prefs.muted; savePrefs(); drawSettings(); try { THP.Music.refresh(); } catch (e) {} } }, prefs.muted ? "🔇" : "🔊"),
+        el("button", { class: "icon-btn", title: "End the room", "aria-label": "End the room", onclick: endRoom }, "✕")));
   }
 
   function endRoom() {
@@ -475,7 +481,7 @@ window.SW = (() => {
     if (!def || !cast().length) return;
     lastGame = key;
     if (cur && cur.stop) cur.stop();
-    setTeams(false);
+    setTeams(false, true);
     lobbyNode = null;
     for (const k in shown) delete shown[k];
     put(players.filter((p) => p.audience).map((p) => p.id), { screen: "wait", title: "You're in the audience", text: "The game is full (30 players). Watch the big screen!" });
@@ -639,6 +645,9 @@ window.SW = (() => {
   }
 
   function boot() {
+    // The look: ?look=sticker or ?look=arena on the address (saved), otherwise the default.
+    const look = qs.get("look") || prefs.look;
+    if (look) { prefs.look = look; savePrefs(); document.documentElement.dataset.look = look; }
     // For tests and recordings.
     window.SPARK = { get phase() { return cur && cur.state && cur.state.phase ? cur.state.phase : phase; }, get core() { return phase; }, get game() { return cur && cur.state; }, get night() { return night; }, base: BASE };
     titleScreen();

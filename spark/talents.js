@@ -23,17 +23,11 @@
 
   SW.game({
     key: "talents", name: "Talents", icon: "💰", about: "Answer at your own pace. Right answers open jars.",
-    settings(chips, prefs, redraw) {
-      const pack = PACKS.find((p) => p.key === prefs.pack) || PACKS[0];
-      const el = (t, a, ...k) => { const n = document.createElement(t); Object.assign(n, a); n.append(...k); return n; };
-      const cycle = (d) => () => { prefs.pack = PACKS[(PACKS.indexOf(pack) + d + PACKS.length) % PACKS.length].key; redraw(); };
+    settings(chips, prefs) {
       return [
         chips("Time", [3, 5, 7, 10].map((m) => [m, `${m} min`]), prefs.minutes, (v) => { prefs.minutes = v; }),
         chips("Steals", [[true, "On"], [false, "Off"]], prefs.steals, (v) => { prefs.steals = v; }),
-        el("div", { className: "setting pack" }, el("span", { className: "label" }, "Questions"),
-          el("div", { className: "chips" }, el("button", { className: "chip", onclick: cycle(-1), ariaLabel: "Previous pack" }, "◀"),
-            el("span", { className: "packname" }, el("strong", {}, pack.name), el("small", {}, `${pack.about} · ${poolFor(pack).length} questions`)),
-            el("button", { className: "chip", onclick: cycle(1), ariaLabel: "Next pack" }, "▶"))),
+        chips("Questions", PACKS.map((p) => [p.key, p.name]), prefs.pack, (v) => { prefs.pack = v; }),
       ];
     },
 

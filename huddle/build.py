@@ -23,9 +23,9 @@ assert "phone.css" not in base and 'src="phone.js"' not in base
 write(os.path.join(static, "holy", "phone.html"), base)
 spark = (base.replace('<html lang="en">', '<html lang="en" data-game="spark">')
          .replace("<title>Holy Huddle</title>", "<title>Spark Wars</title>")
-         .replace('content="#2b1a7a"', 'content="#07060f"')
-         .replace("family=Lilita+One&", "family=Bungee&family=Lilita+One&"))
-assert 'data-game="spark"' in spark and "Bungee" in spark
+         .replace("family=Lilita+One&", "family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Lilita+One&")
+         .replace('content="#2b1a7a"', 'content="#23104f"'))
+assert 'data-game="spark"' in spark and "Bricolage" in spark
 write(os.path.join(static, "spark", "phone.html"), spark)
 
 # Trivia Holy Party: the whole game, for the TV.

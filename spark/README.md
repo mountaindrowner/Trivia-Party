@@ -15,6 +15,13 @@ and family game.
   - `data/bluff.js` (72 facts) and `data/timeline.js` (28 sets): Spark Wars' own questions. Talents uses Trivia Holy
     Party's questions for ages 9 and up (`../js/data.js`, `../js/data-modes.js`, `../js/more/l2.js` to `l7.js`).
   - `spark.css`, `index.html`. `../huddle/build.py` inlines it all into one page for the server.
+- **The look: Sticker.** Bricolage Grotesque (Google Fonts) for everything, an electric-violet dotted background,
+  chunky black outlines with offset shadows, and yellow for what matters (the code, the start button, scores). The
+  phones match (`../huddle/phone/phone.css`, the `data-game="spark"` part). Everything on the TV is drawn from the
+  tokens at the top of `spark.css`; an alternate look, **Arena** (Anton + Space Grotesk, black and orange, sharp
+  and sporty), is kept for trying: open `/tv?look=arena` (and `/tv?look=sticker` to switch back).
+- **The lobby:** each setting is one pill (Teams 3, Time 5 min, Steals On, Questions Bible Mix); tap to change it.
+  Shuffle, lock, sound and end are small round buttons.
   - The music is Trivia Holy Party's band (`../js/music.js`).
 
 ## A night of Spark Wars
