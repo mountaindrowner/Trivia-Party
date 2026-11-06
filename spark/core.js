@@ -170,6 +170,8 @@ window.SW = (() => {
       flash(color) { if (reduced) return; const f = el("div", { class: "flash", style: `--c:${color || "#fff"}` }); frame.append(f); setTimeout(() => f.remove(), 600); },
       /** A big line that flies in over everything: { icon, color, small }. Callouts queue up; old ones are dropped. */
       callout(text, o = {}) { queue.push([text, o]); if (queue.length > 3) queue.splice(0, queue.length - 3); if (!showing) nextCall(); },
+      /** Drop any callouts still waiting (a new screen is coming). */
+      clear() { queue.length = 0; for (const c of calls.children) c.classList.add("out"); },
       /** Count a number up (or down) in an element. */
       count(node, from, to, ms = 900) {
         if (!node) return;
@@ -390,6 +392,7 @@ window.SW = (() => {
         el("div", { class: "grid" }),
         el("div", { class: "settings" })));
     show(lobbyNode);
+    fx.clear();
     // A rotating tip under the code while everyone joins.
     const TIPS = ["📱 No app needed: just the website", "👑 First one in is the VIP", "⚔ Teams stay together all night", "🏆 Win games to earn War Points",
       "🎭 Bluff the Bible: fool your friends", "💰 Talents: steal, swap, double up", "🧭 Timeline: put the Bible in order"];
@@ -593,7 +596,7 @@ window.SW = (() => {
     const token = step();
     phase = "timeup";
     S("end");
-    fx.shake(true); fx.flash("#ffffff"); fx.energy(0.3);
+    fx.clear(); fx.shake(true); fx.flash("#ffffff"); fx.energy(0.3);
     show(el("section", { class: "countin" }, el("div", { class: "count pop" }, result.finale || "TIME!")));
     put("players", { screen: "wait", title: result.finale === "DONE!" ? "That's the game!" : "Time's up!", text: "Look at the big screen!" });
     if (!(await wait(2000, token))) return;
