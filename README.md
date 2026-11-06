@@ -5,6 +5,17 @@ Trial Room minigames, and race Grumbles the Goat to the Narrow Gate. Your host i
 
 It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to answer).
 
+**Two games live in this repo, on the same bones:**
+
+| | Trivia Holy Party (this game) | Spark Wars (`spark/`) |
+| --- | --- | --- |
+| For | Kids and families | The middle school youth group |
+| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams |
+| Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` |
+
+The shared bones are in `huddle/`: the room server (one code, deployed once per game), the phone page (one code,
+each game with its own look) and the Bible questions in `js/data.js` and `js/more/`. See `spark/README.md`.
+
 ## Play
 
 There's no build step. Open `index.html` in a browser, or serve the folder:

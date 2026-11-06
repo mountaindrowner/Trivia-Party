@@ -1,10 +1,19 @@
-/* Holy Huddle phone page. A phone joins a room with the code from the TV, then shows whatever screen the TV sends.
+/* The phone page for our party games (Holy Huddle and Spark Wars; huddle/build.py makes one copy per game and sets
+   <html data-game>). A phone joins a room with the code from the TV, then shows whatever screen the TV sends.
    It never runs the game: it draws screens from a small kit (lobby, wait, choices, result, message) and sends taps
    back. If the connection drops (phone locked, Wi-Fi blip) it rejoins on its own with the key it saved.
    Messages are described in huddle/PROTOCOL.md. */
 (() => {
-  const AVATAR_EMOJI = { sheep: "🐑", donkey: "🫏", lion: "🦁", dove: "🕊️", fish: "🐟", camel: "🐫", whale: "🐋", raven: "🐦", frog: "🐸", ox: "🐂", goat: "🐐", eagle: "🦅" };
-  const SAVE_KEY = "holyhuddle-session";
+  const AVATAR_EMOJI = {
+    sheep: "🐑", donkey: "🫏", lion: "🦁", dove: "🕊️", fish: "🐟", camel: "🐫", whale: "🐋", raven: "🐦", frog: "🐸", ox: "🐂", goat: "🐐", eagle: "🦅",
+    bolt: "⚡", flame: "🔥", rocket: "🚀", comet: "☄️", fox: "🦊", wolf: "🐺", shark: "🦈", tiger: "🐯", panda: "🐼", owl: "🦉", octopus: "🐙", dino: "🦖",
+    dragon: "🐉", robot: "🤖", alien: "👾", ghost: "👻", ball: "🏀", guitar: "🎸", skate: "🛹", pizza: "🍕", crown: "👑", gem: "💎", cactus: "🌵", eagle2: "🦅",
+  };
+  const GAME = document.documentElement.dataset.game === "spark" ? "spark" : "holy";
+  const BRAND = GAME === "spark"
+    ? { name: "Spark Wars", logo: "⚡", face: "⚡", pick: "Pick your icon:", find: "Find your name on the big screen.", look: "Look at the big screen!" }
+    : { name: "Holy Huddle", logo: "🐑", face: "🐑", pick: "Pick your animal:", find: "Find your name on the TV.", look: "Look at the TV!" };
+  const SAVE_KEY = GAME === "spark" ? "sparkwars-session" : "holyhuddle-session";
   const SESSION_HOURS = 3;
   const app = document.getElementById("app");
   const bar = document.getElementById("bar");
@@ -59,7 +68,7 @@
       el("label", { for: "code" }, "Room code", codeIn),
       el("label", { for: "name" }, "Nickname", nameIn),
       err, go);
-    show(el("div", { class: "logo" }, el("div", { class: "sheep", "aria-hidden": "true" }, "🐑"), el("h1", {}, "Holy Huddle")),
+    show(el("div", { class: "logo" }, el("div", { class: "sheep", "aria-hidden": "true" }, BRAND.logo), el("h1", {}, BRAND.name)),
       el("p", { class: "center soft" }, "Type the code on the TV and pick a nickname."), form,
       el("p", { class: "foot" }, "Only your nickname is used, and it's gone when the game ends."));
     (error && prefillCode ? nameIn : prefillCode ? nameIn : codeIn).focus();
@@ -70,14 +79,14 @@
     const saved = (store.get() || {}).avatar;
     let pick = info.avatars.includes(saved) ? saved : info.avatars[Math.floor(Math.random() * info.avatars.length)];
     const err = el("p", { class: "err", role: "alert" }, error || "");
-    const grid = el("div", { class: "avatars", role: "group", "aria-label": "Pick your animal" }, ...info.avatars.map((a) =>
+    const grid = el("div", { class: "avatars", role: "group", "aria-label": BRAND.pick.replace(":", "") }, ...info.avatars.map((a) =>
       el("button", { type: "button", "aria-pressed": a === pick ? "true" : "false", "aria-label": a, onclick: (e) => {
         pick = a;
         grid.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b === e.currentTarget ? "true" : "false"));
-      } }, AVATAR_EMOJI[a] || "🐑")));
+      } }, AVATAR_EMOJI[a] || BRAND.face)));
     // A refused nickname goes back to the name box; anything else stays here to try again.
     const go = el("button", { onclick: () => { go.disabled = true; connect({ code, join: { name, avatar: pick } }, (e2, nameProblem) => (nameProblem ? joinScreen(code, e2, name) : avatarScreen(code, name, info, e2))); } }, "I'm ready!");
-    show(el("h2", {}, `Hi, ${name}!`), el("p", { class: "center soft" }, "Pick your animal:"), grid, err, go,
+    show(el("h2", {}, `Hi, ${name}!`), el("p", { class: "center soft" }, BRAND.pick), grid, err, go,
       el("button", { class: "ghost", onclick: () => joinScreen(code) }, "Back"));
   }
 
@@ -170,7 +179,7 @@
     cancelAnimationFrame(timerRaf);
     const kind = s.screen || "lobby";
     if (kind === "lobby") return lobbyScreen();
-    if (kind === "wait") return show(meCard(), el("h2", {}, s.title || "Look at the TV!"), s.text ? el("p", { class: "center soft" }, s.text) : null, ...vipButtons(s));
+    if (kind === "wait") return show(meCard(), el("h2", {}, s.title || BRAND.look), s.text ? el("p", { class: "center soft" }, s.text) : null, ...vipButtons(s));
     if (kind === "message") return show(el("h2", {}, s.title || ""), el("p", { class: "center" }, s.text || ""), ...vipButtons(s));
     if (kind === "choices") return choicesScreen(s);
     if (kind === "tap") return tapScreen(s);
@@ -178,10 +187,10 @@
     if (kind === "multi") return multiScreen(s);
     if (kind === "result") {
       buzz(s.good ? [40, 40, 40] : 200);
-      return show(el("div", { class: "result " + (s.good ? "good" : "bad") },
+      return show(header(s), el("div", { class: "result " + (s.good ? "good" : "bad") },
         el("div", { class: "big" }, s.title || (s.good ? "Correct!" : "Not quite")),
         s.points != null ? el("p", { class: "big", style: "font-size:30px" }, (s.points > 0 ? "+" : "") + s.points.toLocaleString()) : null,
-        s.text ? el("p", {}, s.text) : null), el("p", { class: "center soft" }, "Look at the TV!"), ...vipButtons(s));
+        s.text ? el("p", {}, s.text) : null), s.after === "" ? null : el("p", { class: "center soft" }, s.after || BRAND.look), ...vipButtons(s));
     }
     if (kind === "final") {
       buzz([60, 60, 120]);
@@ -189,8 +198,9 @@
       return show(el("div", { class: "result good" },
         el("div", { class: "big", style: "font-size:64px" }, medal || (s.place ? `#${s.place}` : "🎉")),
         el("div", { class: "big" }, s.audience ? "Thanks for playing!" : s.place === 1 ? "You won!" : `You finished ${ordinal(s.place)}!`),
-        s.points != null ? el("p", { class: "big", style: "font-size:30px" }, `${s.points.toLocaleString()} points`) : null),
-        el("p", { class: "center soft" }, "Look at the TV!"), ...vipButtons(s));
+        s.points != null ? el("p", { class: "big", style: "font-size:30px" }, `${s.points.toLocaleString()} ${s.unit || "points"}`) : null,
+        s.text ? el("p", {}, s.text) : null),
+        el("p", { class: "center soft" }, BRAND.look), ...vipButtons(s));
     }
     return lobbyScreen();
   }
@@ -203,12 +213,17 @@
       return btn;
     });
   }
+  /** Your face and name. A screen can add a `badge` ({ text, color }), e.g. your team. */
   function meCard() {
-    return el("div", { class: "me" }, el("div", { class: "face", "aria-hidden": "true" }, AVATAR_EMOJI[me.avatar] || "🐑"), el("div", { class: "name" }, me.name),
+    const b = lastScreen.badge;
+    return el("div", { class: "me", style: b && b.color ? `--team:${b.color}` : null }, el("div", { class: "face", "aria-hidden": "true" }, AVATAR_EMOJI[me.avatar] || BRAND.face), el("div", { class: "name" }, me.name),
+      b ? el("span", { class: "tag team" }, b.text) : null,
       lastScreen.lost ? el("span", { class: "tag lost" }, "☁️ Lost Sheep") : me.vip ? el("span", { class: "tag gold" }, "👑 VIP") : me.audience ? el("span", { class: "tag" }, "Audience") : null);
   }
+  /** A thin line above a prompt: your score, your team ({ text, color }). */
+  const header = (s) => s.header ? el("p", { class: "header", style: s.badge && s.badge.color ? `--team:${s.badge.color}` : null }, s.header) : null;
   function lobbyScreen() {
-    const parts = [meCard(), el("h2", {}, "You're in!"), el("p", { class: "center soft" }, "Find your name on the TV.")];
+    const parts = [meCard(), el("h2", {}, "You're in!"), el("p", { class: "center soft" }, BRAND.find)];
     if (me.audience) parts.push(el("p", { class: "center" }, "The game is full, so you're in the audience. You'll still get to play along."));
     if (me.vip) {
       const btn = el("button", { onclick: () => { if (send({ type: "start" })) { btn.disabled = true; btn.textContent = "Starting..."; } } }, "Everybody's in!");
@@ -219,7 +234,7 @@
   function choicesScreen(s) {
     const keys = ["◆", "●", "▲", "★"];
     let done = false;
-    const list = el("div", { class: "choices" }, ...(s.options || []).map((o, i) =>
+    const list = el("div", { class: "choices" + (s.look ? " " + s.look : "") }, ...(s.options || []).map((o, i) =>
       el("button", { onclick: (e) => {
         if (done) return;
         done = true;
@@ -227,11 +242,11 @@
         buzz(30);
         e.currentTarget.setAttribute("aria-pressed", "true");
         list.classList.add("done");
-        note.textContent = "Locked in! Look at the TV.";
-      } }, el("span", { class: "k", "aria-hidden": "true" }, keys[i % 4]), o)));
-    const note = el("p", { class: "center soft" }, "Tap your answer.");
+        note.textContent = s.locked || "Locked in! Look at the TV.";
+      } }, el("span", { class: "k", "aria-hidden": "true" }, (s.keys || keys)[i % (s.keys || keys).length]), o)));
+    const note = el("p", { class: "center soft" }, s.hint || "Tap your answer.");
     const timer = el("div", { class: "timer", "aria-hidden": "true" }, el("i"));
-    show(s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note);
+    show(header(s), s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note);
     if (s.seconds) {
       // The TV keeps the real time; this bar is only a guide, counted from when the question arrived.
       const fill = timer.firstChild, total = s.seconds * 1000, end = Date.now() + total;
@@ -314,7 +329,7 @@
   function endScreen(text) {
     setBar(null);
     me = null;
-    show(el("div", { class: "logo" }, el("div", { class: "sheep", "aria-hidden": "true" }, "🐑"), el("h1", {}, "Holy Huddle")),
+    show(el("div", { class: "logo" }, el("div", { class: "sheep", "aria-hidden": "true" }, BRAND.logo), el("h1", {}, BRAND.name)),
       el("h2", {}, text), el("button", { onclick: () => joinScreen("") }, "Join another game"));
   }
 

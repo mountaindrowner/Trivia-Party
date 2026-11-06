@@ -86,3 +86,28 @@ button:focus-visible { outline: 4px solid var(--white); outline-offset: 3px; }
 .choices.multi button[aria-pressed="true"] { background: var(--green); }
 .choices.multi.done button { opacity: 0.6; }
 .choices.order.done button { opacity: 1; }
+
+/* Team badges and the line above a prompt (Spark Wars) */
+.me { border: 3px solid var(--team, transparent); }
+.tag.team { background: var(--team, var(--gold)); color: var(--ink); }
+.header { text-align: center; font-size: 16px; font-weight: 900; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.3); border: 2px solid var(--team, rgba(255, 255, 255, 0.3)); }
+
+/* ---------- Spark Wars: same page, its own look ---------- */
+html[data-game="spark"] {
+  --ink: #07060f; --sky: #191431; --sky-hi: #2a2156; --night: #07060f; --gold: #ffd23f; --pink: #ff4d6d; --soft: #c9c3ef;
+}
+html[data-game="spark"] body { background: radial-gradient(ellipse at 50% -10%, #3b2a8a, #151029 50%, #07060f 100%) fixed; }
+html[data-game="spark"] h1 { font-family: "Bungee", "Lilita One", system-ui, sans-serif; font-size: 40px; color: var(--gold); text-shadow: 0 0 18px rgba(255, 210, 63, 0.55), 0 4px 0 #000; }
+html[data-game="spark"] h2, html[data-game="spark"] .prompt, html[data-game="spark"] .big { font-family: "Bungee", "Lilita One", system-ui, sans-serif; letter-spacing: 0; }
+html[data-game="spark"] h2 { font-size: 24px; }
+html[data-game="spark"] .prompt { font-size: 21px; line-height: 1.25; }
+html[data-game="spark"] .result .big { font-size: 34px; }
+html[data-game="spark"] button { font-family: "Bungee", "Lilita One", system-ui, sans-serif; font-size: 22px; border-color: #000; box-shadow: 0 6px 0 #000; }
+html[data-game="spark"] .choices button { font-family: "Nunito", sans-serif; font-size: 20px; }
+html[data-game="spark"] .choices.jars button { justify-content: center; font-family: "Bungee", sans-serif; font-size: 22px; min-height: 84px; }
+html[data-game="spark"] .choices.jars button:nth-child(n) { background: linear-gradient(180deg, #ffe27a, #e6a700); color: var(--ink); }
+html[data-game="spark"] .me { background: rgba(255, 255, 255, 0.07); }
+html[data-game="spark"] .avatars button { font-size: 34px; }
+html[data-game="spark"] .avatars { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+html[data-game="spark"] .avatars button { padding: 4px 0; border-width: 3px; }
+html[data-game="spark"] .bar { background: var(--gold); }

@@ -1,30 +1,44 @@
-# Holy Huddle
+# The party-game bones: Holy Huddle and Spark Wars
 
-The multiplayer party mode for Trivia Holy Party: the TV shows a room code, everyone joins on their phone at
-`holyhuddle.thecrossroads.workers.dev`, and the game plays on the TV. The plan is in the "Party Room Platform Plan" doc.
+Two games run on these bones. In both, the TV shows a room code, everyone joins on their phone, and the TV runs the
+game:
 
-- `server/`: the server (Cloudflare Workers + Durable Objects): rooms, plus the join page and the game for the TV.
-- `phone/`: the join page phones open.
-- `../js/huddle.js`: Holy Huddle on the TV, inside the game (the **📱 Holy Huddle** button on the title screen).
+| Game | Players | Phones join at | The TV opens |
+| --- | --- | --- | --- |
+| **Holy Huddle**, inside Trivia Holy Party | 8, then up to 40 watching | `holyhuddle.thecrossroads.workers.dev` | `/tv` there (the whole game), or the game on itch.io |
+| **Spark Wars**, for the youth group (`../spark/`) | 30, then up to 20 watching | `sparkwars.thecrossroads.workers.dev` | `/tv` there |
+
+- `server/`: the room server (Cloudflare Workers + Durable Objects). `src/relay.js` is the shared relay: rooms, codes,
+  joining, name checks, limits, passing messages. `src/holy.js` and `src/spark.js` are the two sites: each serves its
+  own pages and makes rooms only for its own game. Each game's room size and icons are in `GAMES` in `relay.js`.
+- `phone/`: the phone page, shared. `build.py` makes a copy for each game with its own look (`<html data-game>`).
+- `../js/huddle.js`: Holy Huddle on the TV. `../spark/spark.js`: Spark Wars on the TV.
 - `PROTOCOL.md`: every message between the TV, the phones and the relay.
 
-## Server
+## Build, run, test, deploy
 
 ```
-python3 huddle/build.py   # builds server/static/phone.html and tv.html
+python3 huddle/build.py     # builds server/static/holy/ and server/static/spark/ (phone.html and tv.html for each)
 cd huddle/server
 npm install
-npm run dev     # local relay on http://127.0.0.1:8787
-npm test        # 68 checks with a fake TV and 20 fake phones (65 against the live server; see the top of test/bots.mjs)
-npm run deploy  # needs a Cloudflare API token with Workers edit access
+npm run dev                 # Holy Huddle on http://127.0.0.1:8787
+npm run dev:spark           # Spark Wars on http://127.0.0.1:8788
+npm test                    # 68 relay checks against the Holy Huddle site (a fake TV and 20 fake phones)
+npm run test:spark          # 13 checks against the Spark Wars site (34 fake phones: 30 players, 4 watching)
+npm run deploy              # Holy Huddle (needs a Cloudflare API token with Workers edit access)
+npm run deploy:spark        # Spark Wars
 ```
 
-Cost: the Cloudflare free plan (no card on file). Over a free limit, requests fail; nothing is ever charged.
+Always run `build.py` before deploying: each site ships the pages built last.
+
+Cost: the Cloudflare free plan (no card on file). Over a free limit, requests fail; nothing is ever charged. A game
+of Spark Wars with 30 players sends a few thousand messages, far inside the free daily allowance.
 
 ## Where it runs
 
-- `https://holyhuddle.thecrossroads.workers.dev`: the join page for phones, and the server.
-- `https://holyhuddle.thecrossroads.workers.dev/tv`: the game, ready for the TV (Holy Huddle on the title screen).
+- `https://holyhuddle.thecrossroads.workers.dev`: the Holy Huddle join page, and `/tv` the whole of Trivia Holy Party.
+- `https://sparkwars.thecrossroads.workers.dev`: the Spark Wars join page, and `/tv` Spark Wars for the TV.
 - The church's Cloudflare account, free plan, no card. `holyhuddle.pages.dev` is reserved too, but uploads to
-  Cloudflare Pages don't work from a cloud session, so the server hands out the pages itself.
-- Testing the live server: `node test/bots.mjs https://holyhuddle.thecrossroads.workers.dev https://holyhuddle.thecrossroads.workers.dev --live`.
+  Cloudflare Pages don't work from a cloud session, so the servers hand out the pages themselves.
+- Testing the live sites: `node test/bots.mjs https://holyhuddle.thecrossroads.workers.dev https://holyhuddle.thecrossroads.workers.dev --live`
+  and `node test/spark.mjs https://sparkwars.thecrossroads.workers.dev`.

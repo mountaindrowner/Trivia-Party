@@ -1,4 +1,5 @@
-/* Holy Huddle relay: the small server between the TV and the phones.
+/* The room relay shared by our phone party games (Holy Huddle in Trivia Holy Party, and Spark Wars): the small
+   server between the TV and the phones.
    It knows nothing about any game. It only runs rooms: makes room codes, lets phones join with a nickname, passes
    messages between the TV (the host) and the phones, and lets phones that drop out rejoin. The TV runs the game.
 
@@ -6,15 +7,17 @@
    See huddle/PROTOCOL.md for every message. */
 import { DurableObject } from "cloudflare:workers";
 import { checkName } from "./names.js";
-// Built by huddle/build.py: the join page for phones, and the whole game for the TV.
-import PHONE_PAGE from "../static/phone.html";
-import TV_PAGE from "../static/tv.html";
 
 const CODE_LETTERS = "BCDFGHJKLMNPRSTVWZ"; // no vowels, so a code can't spell a word; no Q, X or Y
-const AVATARS = ["sheep", "donkey", "lion", "dove", "fish", "camel", "whale", "raven", "frog", "ox", "goat", "eagle"];
-const GAMES = ["holy-trivia"];
-const MAX_PLAYERS = 8;
-const MAX_AUDIENCE = 40;
+/** Each game's room rules. A site only makes rooms for its own games (see holy.js and spark.js). */
+export const GAMES = {
+  "holy-trivia": { maxPlayers: 8, maxAudience: 40,
+    avatars: ["sheep", "donkey", "lion", "dove", "fish", "camel", "whale", "raven", "frog", "ox", "goat", "eagle"] },
+  "spark-wars": { maxPlayers: 30, maxAudience: 20,
+    avatars: ["bolt", "flame", "rocket", "comet", "fox", "wolf", "shark", "tiger", "panda", "owl", "octopus", "dino",
+      "dragon", "robot", "alien", "ghost", "ball", "guitar", "skate", "pizza", "crown", "gem", "cactus", "eagle2"] },
+};
+const rules = (game) => GAMES[game] || GAMES["holy-trivia"];
 const MAX_LIFETIME_MS = 12 * 3600e3; // a room never lives longer than this, even if it's busy
 const HOST_MSG_BYTES = 16384;
 const PLAYER_MSG_BYTES = 2048;
@@ -73,13 +76,14 @@ const page = (html) => new Response(html, { headers: {
 } });
 
 /* ---------- The front door: plain web requests ---------- */
-export default {
-  async fetch(request, env) {
+/** One site: its phone page at /, its game at /tv, and rooms for its own games. */
+export function site({ phone, tv, games }) {
+  return { async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("origin");
     const ip = request.headers.get("cf-connecting-ip") || "local";
     if (url.pathname === "/health") return json({ ok: true });
-    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? PHONE_PAGE : TV_PAGE);
+    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? phone : tv);
     if (!originAllowed(origin, env)) return json({ error: "origin" }, 403);
     const h = origin ? cors(origin) : {};
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: h });
@@ -91,7 +95,7 @@ export default {
     if (url.pathname === "/api/rooms" && request.method === "POST") {
       if (await limited("create", env.LIMIT_CREATE)) return json({ error: "slow-down" }, 429, h);
       const body = await request.json().catch(() => ({}));
-      const game = GAMES.includes(body.game) ? body.game : GAMES[0];
+      const game = games.includes(body.game) ? body.game : games[0];
       for (let i = 0; i < 12; i++) {
         const code = randomCode();
         const made = await env.ROOMS.get(env.ROOMS.idFromName(code)).create(code, game);
@@ -119,8 +123,8 @@ export default {
       return env.ROOMS.get(env.ROOMS.idFromName(code)).fetch(request);
     }
     return json({ error: "not-found" }, 404, h);
-  },
-};
+  } };
+}
 
 /* ---------- Rate limits by address (one small object per address, kept in memory) ---------- */
 export class Gate extends DurableObject {
@@ -187,7 +191,7 @@ export class Room extends DurableObject {
     return {
       code: this.room.code, game: this.room.game, locked: this.room.locked,
       players: list.filter((p) => !p.audience).length, audience: list.filter((p) => p.audience).length,
-      maxPlayers: MAX_PLAYERS, avatars: AVATARS,
+      maxPlayers: rules(this.room.game).maxPlayers, avatars: rules(this.room.game).avatars,
     };
   }
 
@@ -250,7 +254,7 @@ export class Room extends DurableObject {
     } else if (role === "player") {
       this.ctx.acceptWebSocket(server);
       server.serializeAttachment({ role: "player", id: null }); // joins or rejoins with its first message
-      this.send(server, { t: "hello", code: this.room.code, game: this.room.game, avatars: AVATARS, now: Date.now() });
+      this.send(server, { t: "hello", code: this.room.code, game: this.room.game, avatars: rules(this.room.game).avatars, now: Date.now() });
     } else {
       return json({ error: "role" }, 400);
     }
@@ -261,7 +265,7 @@ export class Room extends DurableObject {
 
   /** A simple budget per connection: about `rate` messages a second, with room for a burst. */
   allowed(ws, host) {
-    const rate = host ? 60 : 12, burst = host ? 200 : 30, now = Date.now();
+    const rate = host ? 100 : 12, burst = host ? 400 : 30, now = Date.now(); // the TV may talk to 30 phones at once
     const b = this.buckets.get(ws) || { tokens: burst, at: now };
     b.tokens = Math.min(burst, b.tokens + ((now - b.at) / 1000) * rate);
     b.at = now;
@@ -346,10 +350,11 @@ export class Room extends DurableObject {
       const name = checkName(msg.name);
       if (!name.ok) return fail("name-" + name.reason);
       if (Object.values(r.players).some((p) => p.name.toLowerCase() === name.name.toLowerCase())) return fail("name-taken");
-      const avatar = AVATARS.includes(msg.avatar) ? msg.avatar : AVATARS[0];
+      const game = rules(r.game);
+      const avatar = game.avatars.includes(msg.avatar) ? msg.avatar : game.avatars[0];
       const list = Object.values(r.players);
-      const audience = list.filter((p) => !p.audience).length >= MAX_PLAYERS;
-      if (audience && list.filter((p) => p.audience).length >= MAX_AUDIENCE) return fail("full");
+      const audience = list.filter((p) => !p.audience).length >= game.maxPlayers;
+      if (audience && list.filter((p) => p.audience).length >= game.maxAudience) return fail("full");
       const id = randomKey(6), key = randomKey();
       r.players[id] = { id, name: name.name, avatar, audience, connected: true, joinedAt: Date.now(), keyHash: await hash(key) };
       if (!r.vip && !audience) r.vip = id;

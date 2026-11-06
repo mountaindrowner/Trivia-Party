@@ -266,6 +266,9 @@ play has a "Watch the intro again" button. With reduced motion it skips the anim
 
 ### Holy Huddle (everyone on their own phone)
 
+(Its big sibling for youth groups, **Spark Wars**, is a separate game with up to 30 players: see `spark/README.md`.
+Both run on the same room server and phone page in `huddle/`.)
+
 The **📱 Holy Huddle** button on the title screen turns the TV into a party-game host, Jackbox-style
 (`js/huddle.js`, with the server and the phone page in `huddle/`). It needs the internet, so it works from
 `holyhuddle.thecrossroads.workers.dev/tv` and from itch.io, but not from a saved copy of the game.

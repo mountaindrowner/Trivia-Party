@@ -1,19 +1,40 @@
-"""Builds the pages the Holy Huddle server hands out, into huddle/server/static/ (not committed):
-  phone.html  the join page, with its CSS and JS inlined
-  tv.html     the whole game in one file, for opening on the TV at /tv
-Run before `npx wrangler deploy` or `npx wrangler dev`."""
-import os, subprocess, sys
+"""Builds the pages each party-game site hands out, into huddle/server/static/<site>/ (not committed):
+  holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
+  spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
+The phone page is the same code for both, with its own look (<html data-game="...">).
+Run before `npx wrangler deploy` (Holy Huddle) or `npx wrangler deploy --env spark` (Spark Wars), or `wrangler dev`."""
+import os, re, subprocess, sys
 
 here = os.path.dirname(os.path.abspath(__file__))
+root = os.path.dirname(here)
 static = os.path.join(here, "server", "static")
-os.makedirs(static, exist_ok=True)
+read = lambda *p: open(os.path.join(*p), encoding="utf-8").read()
+def write(path, html):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w", encoding="utf-8").write(html)
+    print(os.path.relpath(path, root), len(html), "bytes")
 
+# The phone page, once per game.
 phone = os.path.join(here, "phone")
-html = open(os.path.join(phone, "index.html"), encoding="utf-8").read()
-html = html.replace('<link rel="stylesheet" href="phone.css">', "<style>\n" + open(os.path.join(phone, "phone.css"), encoding="utf-8").read() + "</style>")
-html = html.replace('<script src="phone.js"></script>', "<script>\n" + open(os.path.join(phone, "phone.js"), encoding="utf-8").read() + "</script>")
-assert "phone.css" not in html and 'src="phone.js"' not in html
-open(os.path.join(static, "phone.html"), "w", encoding="utf-8").write(html)
-print("phone.html", len(html), "bytes")
+base = read(phone, "index.html")
+base = base.replace('<link rel="stylesheet" href="phone.css">', "<style>\n" + read(phone, "phone.css") + "</style>")
+base = base.replace('<script src="phone.js"></script>', "<script>\n" + read(phone, "phone.js") + "</script>")
+assert "phone.css" not in base and 'src="phone.js"' not in base
+write(os.path.join(static, "holy", "phone.html"), base)
+spark = (base.replace('<html lang="en">', '<html lang="en" data-game="spark">')
+         .replace("<title>Holy Huddle</title>", "<title>Spark Wars</title>")
+         .replace('content="#2b1a7a"', 'content="#07060f"')
+         .replace("family=Lilita+One&", "family=Bungee&family=Lilita+One&"))
+assert 'data-game="spark"' in spark and "Bungee" in spark
+write(os.path.join(static, "spark", "phone.html"), spark)
 
-subprocess.run([sys.executable, os.path.join(os.path.dirname(here), "tools", "build.py"), os.path.join(static, "tv.html")], check=True)
+# Trivia Holy Party: the whole game, for the TV.
+subprocess.run([sys.executable, os.path.join(root, "tools", "build.py"), os.path.join(static, "holy", "tv.html")], check=True)
+
+# Spark Wars: spark/index.html with its css and js (and the shared question files) inlined.
+html = read(root, "spark", "index.html")
+html = re.sub(r'<link rel="stylesheet" href="([^"]+\.css)">', lambda m: "<style>\n" + read(root, "spark", m.group(1)) + "\n</style>", html)
+html = re.sub(r'<script src="([^"]+\.js)"></script>',
+              lambda m: "<script>\n" + read(root, "spark", m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
+assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Spark Wars file was not inlined"
+write(os.path.join(static, "spark", "tv.html"), html)

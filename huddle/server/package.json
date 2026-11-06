@@ -1,12 +1,15 @@
 {
-  "name": "holy-huddle-relay",
+  "name": "party-game-relay",
   "private": true,
-  "description": "Holy Huddle room relay: rooms, codes, joining and message passing between the TV and the phones. Runs on Cloudflare Workers + Durable Objects.",
+  "description": "The room relay for Holy Huddle and Spark Wars: rooms, codes, joining and message passing between the TV and the phones. Runs on Cloudflare Workers + Durable Objects.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:spark": "wrangler dev --env spark --port 8788",
     "deploy": "wrangler deploy",
-    "test": "node test/bots.mjs"
+    "deploy:spark": "wrangler deploy --env spark",
+    "test": "node test/bots.mjs",
+    "test:spark": "node test/spark.mjs"
   },
   "devDependencies": {
     "wrangler": "4.45.0"

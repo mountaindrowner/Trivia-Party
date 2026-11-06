@@ -1,7 +1,9 @@
-# Holy Huddle on Cloudflare Workers: the room relay, the phone join page (/) and the game for the TV (/tv).
-# Run `python3 huddle/build.py` first, then `npx wrangler deploy` (see huddle/README.md).
+# Two sites from the same relay code (src/relay.js), each with its own pages and its own rooms:
+#   holyhuddle  Holy Huddle, in Trivia Holy Party (8 players)   npx wrangler deploy
+#   sparkwars   Spark Wars, the youth group game (30 players)   npx wrangler deploy --env spark
+# Run `python3 huddle/build.py` first (see huddle/README.md).
 name = "holyhuddle"
-main = "src/index.js"
+main = "src/holy.js"
 compatibility_date = "2025-09-01"
 workers_dev = true
 account_id = "ec288a6a02dc7158129ffbbe7b819f48"
@@ -34,3 +36,35 @@ LIMIT_WINDOW_SEC = "600"
 LIMIT_CREATE = "20"
 LIMIT_LOOK = "200"
 LIMIT_WS = "400"
+
+# ---------- Spark Wars ----------
+[env.spark]
+name = "sparkwars"
+main = "src/spark.js"
+workers_dev = true
+
+[[env.spark.rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[[env.spark.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[env.spark.durable_objects.bindings]]
+name = "GATES"
+class_name = "Gate"
+
+[[env.spark.migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Gate"]
+
+[env.spark.vars]
+ALLOWED_ORIGINS = "https://sparkwars.thecrossroads.workers.dev"
+IDLE_MINUTES = "120"
+# 30 phones on one church Wi-Fi share one address, and each may reconnect a few times.
+LIMIT_WINDOW_SEC = "600"
+LIMIT_CREATE = "20"
+LIMIT_LOOK = "300"
+LIMIT_WS = "600"
