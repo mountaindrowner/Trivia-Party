@@ -24,7 +24,7 @@ npm install
 npm run dev                 # Holy Huddle on http://127.0.0.1:8787
 npm run dev:spark           # Spark Wars on http://127.0.0.1:8788
 npm test                    # 68 relay checks against the Holy Huddle site (a fake TV and 20 fake phones)
-npm run test:spark          # 13 checks against the Spark Wars site (34 fake phones: 30 players, 4 watching)
+npm run test:spark          # 16 checks against the Spark Wars site (34 fake phones: 30 players, 4 watching)
 npm run deploy              # Holy Huddle (needs a Cloudflare API token with Workers edit access)
 npm run deploy:spark        # Spark Wars
 ```

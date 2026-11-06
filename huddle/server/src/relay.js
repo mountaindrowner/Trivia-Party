@@ -6,7 +6,7 @@
    One room = one Durable Object, named by its 4-letter code. The TV and every phone keep a WebSocket open to it.
    See huddle/PROTOCOL.md for every message. */
 import { DurableObject } from "cloudflare:workers";
-import { checkName } from "./names.js";
+import { checkName, checkText } from "./names.js";
 
 const CODE_LETTERS = "BCDFGHJKLMNPRSTVWZ"; // no vowels, so a code can't spell a word; no Q, X or Y
 /** Each game's room rules. A site only makes rooms for its own games (see holy.js and spark.js). */
@@ -379,6 +379,13 @@ export class Room extends DurableObject {
       return;
     }
     if (msg.t === "input" && att.id && r.players[att.id]) {
+      // Anything typed is checked here, before the TV (and the room) can see it.
+      const d = msg.data;
+      if (d && typeof d === "object" && "text" in d) {
+        const c = checkText(d.text);
+        if (!c.ok) return this.send(ws, { t: "error", code: "text-" + c.reason, round: d.round });
+        d.text = c.text;
+      }
       const host = this.hostSocket();
       if (host) this.send(host, { t: "input", id: att.id, data: msg.data, at: Date.now() });
     }

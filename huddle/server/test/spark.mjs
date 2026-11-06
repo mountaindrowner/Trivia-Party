@@ -74,6 +74,20 @@ await sleep(1500);
 const inputs = tv.got.filter((m) => m.t === "input");
 check(inputs.length === 30 && new Set(inputs.map((m) => m.id)).size === 30, "30 answers at once all reach the TV", inputs.length);
 
+// Typing is checked by the server: a bad word comes back as an error and never reaches the TV; a clean one goes through.
+const writer = phones.find((p) => !p.joined.audience);
+tv.got.length = 0;
+writer.send({ t: "input", data: { type: "write", round: 7, text: "sh1t" } });
+const refused = await writer.next((m) => m.t === "error" && /^text-/.test(m.code), 3000);
+writer.send({ t: "input", data: { type: "write", round: 7, text: "  A   third-story window  " } });
+await sleep(800);
+const typed = tv.got.filter((m) => m.t === "input");
+check(refused && refused.code === "text-word" && refused.round === 7, "a bad word typed on a phone is refused, with its round", refused);
+check(typed.length === 1 && typed[0].data.text === "A third-story window", "only the clean answer reaches the TV, tidied up", typed.map((m) => m.data));
+writer.send({ t: "input", data: { type: "write", round: 7, text: "🍆" } });
+const emoji = await writer.next((m) => m.t === "error", 3000);
+check(emoji && emoji.code === "text-chars", "emoji can't be typed", emoji);
+
 tv.send({ t: "end" });
 await sleep(800);
 check(phones.every((p) => p.got.some((m) => m.t === "ended")), "ending the room tells every phone");

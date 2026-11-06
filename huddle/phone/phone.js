@@ -125,6 +125,7 @@
       if (m.t === "error") {
         if (m.code === "rejoin") { store.clear(); leaving = true; line.close(); return joinScreen(how.code, "Your spot in that game is gone. Join again?"); }
         if (onJoinError && !me) { leaving = true; line.close(); return onJoinError(NAME_ERRORS[m.code] || "Something went wrong. Try again.", /^name-/.test(m.code)); }
+        if (/^text-/.test(m.code) && textRefused) textRefused(m.code);
         return;
       }
       if (m.t === "kicked") { store.clear(); leaving = true; return endScreen("The host removed you from this game."); }
@@ -185,6 +186,8 @@
     if (kind === "tap") return tapScreen(s);
     if (kind === "order") return orderScreen(s);
     if (kind === "multi") return multiScreen(s);
+    if (kind === "write") return writeScreen(s);
+    if (kind === "slots") return slotsScreen(s);
     if (kind === "result") {
       buzz(s.good ? [40, 40, 40] : 200);
       return show(header(s), el("div", { class: "result " + (s.good ? "good" : "bad") },
@@ -234,7 +237,7 @@
   function choicesScreen(s) {
     const keys = ["◆", "●", "▲", "★"];
     let done = false;
-    const list = el("div", { class: "choices" + (s.look ? " " + s.look : "") }, ...(s.options || []).map((o, i) =>
+    const list = el("div", { class: "choices" + (s.look ? " " + s.look : "") + ((s.options || []).length > 6 ? " many" : "") }, ...(s.options || []).map((o, i) =>
       el("button", { onclick: (e) => {
         if (done) return;
         done = true;
@@ -326,6 +329,63 @@
     };
     show(el("p", { class: "prompt" }, s.prompt || ""), timeBar(s.seconds || 15, lockIn), el("p", { class: "center soft" }, "Tap ALL that fit. Wrong taps cost a step!"), list, lock);
   }
+  /** Type a short answer (Bluff the Bible). The server checks the words; a refusal comes back as an error. */
+  let textRefused = null;
+  function writeScreen(s) {
+    const max = s.max || 40;
+    const box = el("input", { class: "write", maxlength: max, autocomplete: "off", autocapitalize: "sentences", spellcheck: "false", placeholder: s.placeholder || "Type here", enterkeyhint: "send", "aria-label": "Your answer" });
+    const err = el("p", { class: "err", role: "alert" });
+    const count = el("span", { class: "count" }, `0/${max}`);
+    let done = false;
+    const lock = (text) => {
+      done = true;
+      box.disabled = true; go.disabled = true; if (auto) auto.disabled = true;
+      go.textContent = "Sent!";
+      note.textContent = s.locked || "Sent! Look at the big screen.";
+      if (text) box.value = text;
+    };
+    const submit = () => {
+      if (done) return;
+      const text = box.value.trim();
+      if (!text) { err.textContent = "Type something first!"; return box.focus(); }
+      if (send({ type: "write", round: s.round, text })) { lock(); buzz(30); }
+    };
+    const go = el("button", { onclick: submit }, s.button || "Send it!");
+    const auto = s.auto ? el("button", { class: "ghost", onclick: () => { if (!done && send({ type: "write", round: s.round, auto: true })) { lock(); buzz(30); } } }, s.auto) : null;
+    const note = el("p", { class: "center soft" }, s.hint || "");
+    box.addEventListener("input", () => { count.textContent = `${[...box.value].length}/${max}`; err.textContent = ""; });
+    box.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+    const reasons = { "text-word": "Let's keep it clean. Try another!", "text-chars": "Letters, numbers and simple punctuation only (no emoji).", "text-long": `${max} characters at most.`, "text-empty": "Type something first!" };
+    textRefused = (code) => {
+      if (lastScreen !== s) return;
+      done = false; box.disabled = false; go.disabled = false; if (auto) auto.disabled = false; go.textContent = s.button || "Send it!";
+      note.textContent = s.hint || ""; err.textContent = reasons[code] || "Try another!"; buzz(200); box.focus(); box.select();
+    };
+    show(header(s), s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""),
+      s.seconds ? timeBar(s.seconds) : null, el("div", { class: "writebox" }, box, count), err, go, auto, note);
+    setTimeout(() => { try { box.focus(); } catch (e) {} }, 50);
+  }
+  /** Where does this card go? Tap a gap in the line (Timeline). Sends the gap's index: 0 = before the first card. */
+  function slotsScreen(s) {
+    let done = false;
+    const items = s.items || [];
+    const pick = (at, btn) => {
+      if (done) return;
+      done = true;
+      send({ type: "slot", round: s.round, at });
+      buzz(30);
+      btn.classList.add("picked");
+      btn.textContent = "📍 Here!";
+      list.classList.add("done");
+      note.textContent = s.locked || "Locked in! Look at the big screen.";
+    };
+    const gap = (at) => { const b = el("button", { class: "gap", onclick: () => pick(at, b) }, at === 0 ? "⬆ Before" : at === items.length ? "⬇ After" : "➕ Here"); return b; };
+    const list = el("div", { class: "line" }, gap(0), ...items.flatMap((t, i) => [el("div", { class: "card" }, t), gap(i + 1)]));
+    const note = el("p", { class: "center soft" }, s.hint || "Tap where it goes.");
+    show(header(s), el("p", { class: "center soft", style: "margin-bottom:-8px" }, s.title || "Where does this go?"), el("div", { class: "newcard" }, s.card || ""),
+      s.seconds ? timeBar(s.seconds, () => { if (!done) { done = true; list.classList.add("done"); note.textContent = "Time's up!"; } }) : null, list, note);
+  }
+
   function endScreen(text) {
     setBar(null);
     me = null;

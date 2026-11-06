@@ -101,7 +101,14 @@ The phone page draws these; anything it doesn't know shows the lobby. Every scre
 | `tap` | `round`, `title`, `text`, `seconds`, `label` | A big button to tap as fast as you can | `{ type: "taps", round, n }` a few times a second |
 | `order` | `round`, `title`, `items`, `seconds` | Items to tap first to last, with Undo | `{ type: "order", round, seq }` (indexes into `items`) |
 | `multi` | `round`, `prompt`, `options`, `seconds` | Tap all that apply, then **Lock it in!** | `{ type: "multi", round, picks }` |
+| `write` | `round`, `prompt`, `placeholder`, `max` (40), `auto` (a button label, e.g. "🎲 Lie for me"), `seconds`, `hint`, `locked`, `note`, `button` | A text box to type a short answer (Spark Wars' Bluff the Bible) | `{ type: "write", round, text }`, or `{ type: "write", round, auto: true }` |
+| `slots` | `round`, `title`, `card`, `items` (the line so far, first to last), `seconds`, `hint`, `locked` | The new card, and the line with a gap button before, between and after the cards (Timeline) | `{ type: "slot", round, at }` (0 = before the first card) |
 | `result` | `good`, `title`, `points`, `text`, `after` (the line under it; `""` for none) | Right or wrong, and the points | |
 | `final` | `place`, `points`, `of`, `audience`, `unit` (default "points"), `text` | The medal or place, and the points | |
 
 The TV numbers every question, trial and race round (`round`) and ignores answers for any other round.
+
+**Typing is checked by the relay.** Any input with a `text` field is run through `checkText` (`server/src/names.js`:
+at most 40 characters of letters, numbers, spaces and simple punctuation, no emoji, and the same bad-word filter as
+names, minus Bible words like "devil" or "dead"). A refused text never reaches the TV; the phone gets
+`{ t: "error", code: "text-word" | "text-chars" | "text-long" | "text-empty", round }` and asks for another.

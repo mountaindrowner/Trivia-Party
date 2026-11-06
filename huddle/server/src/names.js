@@ -40,3 +40,27 @@ export function checkName(raw) {
   if (words.some((w) => WORDS.includes(w))) return { ok: false, reason: "word" };
   return { ok: true, name };
 }
+
+/* Typed answers (Spark Wars' Bluff the Bible): short text that shows on the TV. Same filter as names, but Bible words
+   are fine here ("the devil", "the Dead Sea", "to kill a giant"), and so is a little punctuation. No emoji. */
+const TEXT_MAX = 40;
+const TEXT_ALLOWED = /^[\p{Script=Latin}0-9 '\-.,!?&:()/"]+$/u;
+const TEXT_WORDS = ["ass", "damn", "sex", "crap", "piss", "kms", "gay", "loser", "stupid", "idiot", "dumb", "ugly", "rape", "cock",
+  "cum", "arse", "pedo", "fag", "kys", "stfu", "wtf", "omfg", "lmfao"];
+
+/** Returns { ok: true, text } or { ok: false, reason } where reason is "empty", "long", "chars" or "word". */
+export function checkText(raw) {
+  if (typeof raw !== "string") return { ok: false, reason: "empty" };
+  const text = raw.normalize("NFKC").replace(/\s+/g, " ").trim();
+  if (!text) return { ok: false, reason: "empty" };
+  if ([...text].length > TEXT_MAX) return { ok: false, reason: "long" };
+  if (!TEXT_ALLOWED.test(text)) return { ok: false, reason: "chars" };
+  const p = plain(text);
+  const words = p.split(/[^a-z]+/).filter(Boolean);
+  // Strong words anywhere inside a word or across spaced-out letters ("f u c k"), but not across real words.
+  const spaced = p.replace(/\b([a-z]) (?=[a-z]\b)/g, "$1").split(/[^a-z]+/).filter(Boolean);
+  const pieces = [...words, ...spaced].flatMap((w) => [w, dedupe(w)]);
+  if (pieces.some((w) => STRONG.some((s) => w.includes(s)))) return { ok: false, reason: "word" };
+  if (pieces.some((w) => TEXT_WORDS.includes(w))) return { ok: false, reason: "word" };
+  return { ok: true, text };
+}
