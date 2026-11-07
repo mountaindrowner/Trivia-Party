@@ -14,6 +14,7 @@ for (const l of (global.SPARK_DATA && SPARK_DATA.LESSONS) || []) for (const q of
   const b = await chromium.launch();
   const tv = await (await b.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errs = []; tv.on('pageerror', (e) => errs.push(e.message));
+  tv.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errs.push('blocked by the page rules: ' + m.text()); });
   await tv.addInitScript((n) => localStorage.setItem('sparkwars-prefs', JSON.stringify({ game: 'lightning', teams: 2, muted: true, lesson: n[0], lessonMix: 'week', lqCount: 3, lqTime: 15, lqTables: n[1] })), [LESSON, TABLES]);
   await tv.goto(BASE + '/tv'); await tv.click('text=Open a room', { force: true }); await tv.waitForSelector('.lobby .code span');
   const code = await tv.$$eval('.lobby .code span', (s) => s.map((x) => x.textContent).join(''));

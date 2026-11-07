@@ -74,3 +74,29 @@ Edit `js/data.js` (age levels) or `js/data-modes.js` (Challenge Modes). The firs
 ```js
 { lvl: 1, cat: "Noah's Ark", q: "Who built the ark?", a: ["Noah", "Abraham", "Adam", "Elijah"], ref: "Genesis 6:13–14", fact: "God told Noah exactly how big to build it." }
 ```
+
+## Working on the code
+
+| Folder | What's in it |
+| --- | --- |
+| `index.html`, `js/`, `css/` | Trivia Holy Party (plain browser scripts sharing `THP`; `js/data.js`, `js/more/` are the questions) |
+| `spark/` | Spark Wars, the TV side (see `spark/README.md`) |
+| `huddle/phone/` | The phone page both games use |
+| `huddle/server/` | The room server (a Cloudflare Worker) and its tests, `huddle/build.py` builds its pages |
+| `itch/` | The itch.io build of Trivia Holy Party |
+| `tools/` | `build.py` (one-file build), `check-content.mjs`, `run-tests.mjs` |
+| `tests/e2e/` | Whole games in a real browser (Playwright) |
+
+Install once: `npm install` here and in `huddle/server/`. Then:
+
+```sh
+npm run lint            # ESLint (JavaScript) and Stylelint (CSS); `ruff check .` for the Python tools
+npm run check:content   # every question, fact, timeline set, lesson and Barnabas line
+npm run build           # the pages the server hands out (huddle/build.py)
+npm run test:relay      # the room server, against local copies of both sites
+npm run test:e2e        # whole games in a browser (about 15 minutes)
+npm run check           # lint + content + build + relay tests (what GitHub runs on every push)
+```
+
+How the online games keep kids safe (names, typed answers, rooms, limits) is in
+[CONTENT-SAFETY.md](CONTENT-SAFETY.md#the-online-games-holy-huddle-and-spark-wars).

@@ -26,7 +26,9 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 
 - TV: `wss://…/ws/:code?role=host&key=<hostKey>`. A second TV connection with the key takes over (the first gets
   `replaced`).
-- Phone: `wss://…/ws/:code?role=player`, then `join` or `rejoin` as its first message.
+- Phone: `wss://…/ws/:code?role=player`, then `join` or `rejoin` as its first message, within 30 seconds. A room
+  takes at most 20 phones waiting to join at once (and players + audience + 20 lines in all); past that it answers
+  `429 busy`.
 
 ### TV → relay
 
@@ -72,10 +74,16 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 ## Limits and safety
 
 - Names: 1–12 letters, numbers, spaces, hyphens and apostrophes, with a bad-word filter that sees through
-  leetspeak, spacing and repeated letters (`server/src/names.js`). Names are unique in a room.
-- Each phone may send about 12 messages a second (bursts of 30) and 2 KB per message; the TV 100 a second (bursts of
+  leetspeak, spacing, repeated letters and lookalike letters (`server/src/names.js`). Names are unique in a room.
+  Typed answers (`text` in an input) go through the same filter before the TV sees them.
+- The pages are served with a Content-Security-Policy: only their own inline scripts (by hash) run, and they only
+  connect to their own site.
+- Each phone may send about 8 messages a second (bursts of 30) and 2 KB per message; the TV 40 a second (bursts of
   400, enough to send 30 phones their screens several times over at once) and 16 KB. Over that, the line is closed.
-- Per internet address, per 10 minutes: 20 rooms made, 200 code lookups (300 for Spark Wars), 400 live lines (600 for
+  A whole 30-player night peaks around 25 a second from the TV, during Talents.
+- Each room's TV may send 60,000 messages an hour (`HOST_PER_HOUR`); after that the TV is cut off until the next hour.
+  A Spark Wars night uses well under half of it.
+- Per internet address (per /64 network for IPv6), per 10 minutes: 20 rooms made, 200 code lookups (300 for Spark Wars), 400 live lines (600 for
   Spark Wars, where 30 phones on one church Wi-Fi share an address).
 - Other websites can't connect from a browser: a request that names another page (`Origin`) must be on
   `ALLOWED_ORIGINS` (this site, the TV page on itch.io). This site's own pages send no Origin on plain requests.

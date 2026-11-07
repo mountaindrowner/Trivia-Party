@@ -26,6 +26,7 @@ const ORDER_SETS = {
   const tvCtx = await b.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1280, height: 720 } });
   const tv = await tvCtx.newPage();
   tv.on('pageerror', (e) => errs.push('tv: ' + e.message));
+  tv.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errs.push('blocked by the page rules: ' + m.text()); });
   await tv.addInitScript(() => {
     localStorage.setItem('thp-intro-seen', 'true'); localStorage.setItem('thp-notice-thanksgiving-2026', 'true');
     localStorage.setItem('thp-huddle-prefs', JSON.stringify({ level: 1, voice: false }));
@@ -45,6 +46,7 @@ const ORDER_SETS = {
     const ctx = await b.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(`${who[i].name}: ` + e.message));
+    p.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errs.push('blocked by the page rules: ' + m.text()); });
     await p.goto(`${BASE}/?room=${code}`);
     await p.waitForSelector('#name');
     await p.fill('#name', who[i].name);

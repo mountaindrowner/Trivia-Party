@@ -241,3 +241,25 @@ These are all biblical and non-graphic. Some families or churches may choose dif
 - Every question needs a reference that contains the fact, and a lesson that is true to the text.
 - Wrong answers must be clearly wrong, never "arguably right."
 - Test any new mode at phone width before shipping.
+
+## The online games (Holy Huddle and Spark Wars)
+
+Phones join a room on the TV with a 4-letter code. What the room server (`huddle/server/`) does to keep that safe:
+
+- **Names and typed answers are checked on the server**, before the TV or any other phone sees them
+  (`huddle/server/src/names.js`). Bad and mean words are refused, including spelled-around ones (`sh1t`, `f.u.c.k`,
+  `sh it`, `fuuuck`), lookalike letters from other alphabets (`ɡ`, `ı`, `ƒ`), emoji, links and phrases like "kill
+  yourself". A refusal never says which word matched. Ordinary accents (José, Zoë) are fine, and Bible words are
+  fine in answers ("the devil", "the Dead Sea", "shittim wood").
+- **The leader is in charge of the room.** Click any player twice to remove them (the audience too, in Spark
+  Wars); **Lock** stops new joins; on the TV, click any typed answer twice to hide it.
+- **Nothing personal is kept.** A nickname and an icon are all a phone sends. A room and everything in it is deleted
+  when the game ends, after 2 hours with nothing happening, or after 12 hours at most. Nothing is logged.
+- **Only our own pages can connect**, and the pages only run their own scripts and only talk to their own server
+  (a Content-Security-Policy). The TV can't be pointed at another server from a link.
+- **The TV's key** is random and kept only as a hash on the server; phones can't act as the TV or as each other.
+- **Limits** stop a script from flooding a room or the site: messages per second for each TV and phone, an hourly
+  budget for each room's TV, at most 20 phones waiting to join a room, and per-address limits on making rooms,
+  checking codes and connecting (counted per home network for IPv6).
+- **For whoever runs the Cloudflare account:** the free plan has a daily limit on room traffic. Set up a usage
+  notification in the Cloudflare dashboard (Notifications), so a flood is noticed before game night.

@@ -44,6 +44,7 @@ const FAKES = ['A golden goat', 'Seven jars of honey', 'His left sandal', 'A ver
     const ctx = await b.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(`${who[i]}: ` + e.message));
+    p.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errs.push('blocked by the page rules: ' + m.text()); });
     await p.goto(`${BASE}/?room=${code}`);
     await p.waitForSelector('#name');
     await p.fill('#name', who[i]);

@@ -155,6 +155,6 @@ and perfect sets.
 ## How it scales
 
 The TV sends each phone its next screen as soon as it answers, so 30 players at their own pace is about 15
-messages a second each way, well inside the server's limits (a TV may send 100 a second). Phones that drop out
+messages a second each way, well inside the server's limits (a TV may send 40 a second, in bursts of 400). Phones that drop out
 rejoin on their own and pick up where they were. Tested with a TV, 3 real phones and 27 bot phones playing a whole
 night (Talents, Bluff the Bible, Timeline): see `../huddle/server/test/spark.mjs` for the server side.

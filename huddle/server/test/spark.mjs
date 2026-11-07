@@ -32,7 +32,10 @@ const api = (path, opts = {}) => fetch(BASE + path, { ...opts, headers: { "conte
 console.log(`Spark Wars site test → ${BASE}`);
 const phonePage = await fetch(BASE + "/").then((r) => r.text());
 check(phonePage.includes('data-game="spark"') && phonePage.includes("<title>Spark Wars</title>"), "the Spark Wars join page is served at /");
-const tvPage = await fetch(BASE + "/tv").then((r) => r.text());
+const tvRes = await fetch(BASE + "/tv"), tvPage = await tvRes.text();
+const csp = tvRes.headers.get("content-security-policy") || "";
+check(/script-src 'sha256-/.test(csp) && !csp.includes("unsafe-eval") && /frame-ancestors 'self'/.test(csp) && /connect-src 'self' wss?:\/\//.test(csp),
+  "the pages only run their own scripts and only talk to this site (Content-Security-Policy)", csp.slice(0, 120));
 check(tvPage.includes("window.SPARK") && !tvPage.includes("THP.Huddle"), "the Spark Wars game (not Trivia Holy Party) is served at /tv");
 
 const made = await api("/api/rooms", { method: "POST", body: JSON.stringify({ game: "holy-trivia" }) });
@@ -87,6 +90,21 @@ check(typed.length === 1 && typed[0].data.text === "A third-story window", "only
 writer.send({ t: "input", data: { type: "write", round: 7, text: "🍆" } });
 const emoji = await writer.next((m) => m.t === "error", 3000);
 check(emoji && emoji.code === "text-chars", "emoji can't be typed", emoji);
+for (const text of ["f.u.c.k", "sh it", "niɡɡa", "kill yourself", "dumbass"]) {
+  writer.send({ t: "input", data: { type: "write", round: 8, text } });
+  const no = await writer.next((m) => m.t === "error" && /^text-/.test(m.code), 3000);
+  check(no && (no.code === "text-word" || no.code === "text-chars"), `"${text}" is refused`, no);
+}
+tv.got.length = 0;
+for (const text of ["Finish it", "Hot water", "Shittim wood"]) writer.send({ t: "input", data: { type: "write", round: 9, text } });
+await sleep(800);
+check(tv.got.filter((m) => m.t === "input").length === 3, "ordinary answers that happen to hide a word still go through", tv.got.filter((m) => m.t === "input").map((m) => m.data.text));
+
+// Lines that never join don't pile up: past 20 waiting at once, the room says it's busy.
+const idle = Array.from({ length: 21 }, () => line(`${WS_BASE}/ws/${code}?role=player`));
+const opened = await Promise.all(idle.map((l) => l.opened));
+check(opened.slice(0, 20).every(Boolean) && !opened[20], "a room takes at most 20 phones waiting to join", opened.filter(Boolean).length);
+idle.forEach((l) => { try { l.ws.close(); } catch {} });
 
 tv.send({ t: "end" });
 await sleep(800);

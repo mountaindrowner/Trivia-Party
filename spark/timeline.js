@@ -93,7 +93,7 @@
           let endPlace;
           const placed = new Promise((r) => { endPlace = r; });
           handler = (id, d) => {
-            if (d.type !== "slot" || d.round !== rounds[id] || id in picks) return;
+            if (d.type !== "slot" || !(id in rounds) || d.round !== rounds[id] || id in picks) return;
             picks[id] = { at: d.at | 0, ms: Date.now() - started };
             drawCount();
             lockins.append(el("span", { title: (byId(id) || {}).name }, face(byId(id))));

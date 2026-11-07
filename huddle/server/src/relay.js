@@ -43,6 +43,15 @@ function cleanCode(raw) {
   const c = String(raw || "").toUpperCase().replace(/[^A-Z]/g, "");
   return c.length === 4 && [...c].every((ch) => CODE_LETTERS.includes(ch)) ? c : null;
 }
+/** The address to count limits by. IPv6 users get a whole /64 (their home or phone network), so one person can't
+    dodge the limits by hopping between addresses inside it. */
+export function addressKey(ip) {
+  if (!ip.includes(":")) return ip;
+  const [head, tail = ""] = ip.toLowerCase().split("::");
+  const a = head ? head.split(":") : [], b = tail ? tail.split(":") : [];
+  const full = ip.includes("::") ? [...a, ...Array(Math.max(0, 8 - a.length - b.length)).fill("0"), ...b] : a;
+  return full.slice(0, 4).map((x) => x.replace(/^0+(?=.)/, "")).join(":") + "::/64";
+}
 const num = (v, d) => (Number.isFinite(Number(v)) && v !== "" && v != null ? Number(v) : d);
 
 /** Only our own pages (the TV page on itch.io or here, the phone page) may connect from a browser. A browser always
@@ -70,10 +79,36 @@ const cors = (origin) => ({
   vary: "origin",
 });
 
-const page = (html) => new Response(html, { headers: {
-  "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff",
-  "referrer-policy": "no-referrer", "x-frame-options": "SAMEORIGIN",
-} });
+/** The page's own inline scripts, as CSP hashes (worked out once per page). Only these may run: a script slipped in
+    any other way, by a bug or a bad add-on, is refused by the browser. */
+const scriptHashes = new Map();
+async function hashesFor(html) {
+  if (!scriptHashes.has(html)) {
+    const list = [];
+    for (const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
+      const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(m[1]));
+      list.push(`'sha256-${btoa(String.fromCharCode(...new Uint8Array(d)))}'`);
+    }
+    scriptHashes.set(html, [...new Set(list)].join(" "));
+  }
+  return scriptHashes.get(html);
+}
+/** A page, with headers that keep it to itself: its own scripts, Google Fonts, its own server and nothing else. */
+async function page(html, url) {
+  const live = (url.protocol === "https:" ? "wss://" : "ws://") + url.host;
+  const csp = [
+    "default-src 'none'", `script-src ${await hashesFor(html)}`,
+    "style-src 'unsafe-inline' https://fonts.googleapis.com", "font-src https://fonts.gstatic.com",
+    "img-src 'self' data: blob:", "media-src 'self' blob:", `connect-src 'self' ${live}`,
+    "base-uri 'none'", "form-action 'self'", "frame-ancestors 'self'", "object-src 'none'",
+  ].join("; ");
+  return new Response(html, { headers: {
+    "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer", "x-frame-options": "SAMEORIGIN", "content-security-policy": csp,
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "cross-origin-opener-policy": "same-origin",
+  } });
+}
 
 /* ---------- The front door: plain web requests ---------- */
 /** One site: its phone page at /, its game at /tv, rooms for its own games, and any files it carries
@@ -82,9 +117,9 @@ export function site({ phone, tv, games, files = {} }) {
   return { async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("origin");
-    const ip = request.headers.get("cf-connecting-ip") || "local";
+    const ip = addressKey(request.headers.get("cf-connecting-ip") || "local");
     if (url.pathname === "/health") return json({ ok: true });
-    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? phone : tv);
+    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? phone : tv, url);
     const file = request.method === "GET" && files[url.pathname];
     if (file) return new Response(file.body, { headers: { "content-type": file.type, "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" } });
     if (!originAllowed(origin, env)) return json({ error: "origin" }, 403);
@@ -248,6 +283,7 @@ export class Room extends DurableObject {
     if (role === "host") {
       const key = url.searchParams.get("key") || "";
       if ((await hash(key)) !== this.room.hostKeyHash) return json({ error: "host-key" }, 403);
+      if (this.overBudget(0)) return json({ error: "slow-down" }, 429);
       const old = this.hostSocket();
       if (old) { this.send(old, { t: "replaced" }); try { old.close(4001, "replaced"); } catch (e) {} }
       this.ctx.acceptWebSocket(server);
@@ -255,8 +291,19 @@ export class Room extends DurableObject {
       this.send(server, { t: "room", event: { kind: "host-connected" }, room: this.snapshot(), now: Date.now() });
       for (const ws of this.sockets((a) => a.role === "player" && a.id)) this.send(ws, { t: "host", on: true });
     } else if (role === "player") {
+      // A phone has 30 seconds to join or rejoin; and a room only takes so many lines at once.
+      const now = Date.now(), lines = [];
+      let waiting = 0;
+      for (const w of this.sockets((a) => a.role === "player")) {
+        const a = w.deserializeAttachment() || {};
+        if (!a.id && now - (a.at || 0) > 30e3) { try { w.close(4008, "join-timeout"); } catch (e) {} continue; }
+        lines.push(w);
+        if (!a.id) waiting++;
+      }
+      const game = rules(this.room.game);
+      if (waiting >= 20 || lines.length >= game.maxPlayers + game.maxAudience + 20) return json({ error: "busy" }, 429);
       this.ctx.acceptWebSocket(server);
-      server.serializeAttachment({ role: "player", id: null }); // joins or rejoins with its first message
+      server.serializeAttachment({ role: "player", id: null, at: now }); // joins or rejoins with its first message
       this.send(server, { t: "hello", code: this.room.code, game: this.room.game, avatars: rules(this.room.game).avatars, now: Date.now() });
     } else {
       return json({ error: "role" }, 400);
@@ -268,13 +315,23 @@ export class Room extends DurableObject {
 
   /** A simple budget per connection: about `rate` messages a second, with room for a burst. */
   allowed(ws, host) {
-    const rate = host ? 100 : 12, burst = host ? 400 : 30, now = Date.now(); // the TV may talk to 30 phones at once
+    // The TV may talk to 30 phones at once (a burst), but not for long; a phone taps at most 4 times a second.
+    const rate = host ? 40 : 8, burst = host ? 400 : 30, now = Date.now();
     const b = this.buckets.get(ws) || { tokens: burst, at: now };
     b.tokens = Math.min(burst, b.tokens + ((now - b.at) / 1000) * rate);
     b.at = now;
     b.tokens -= 1;
     this.buckets.set(ws, b);
     return b.tokens >= 0;
+  }
+
+  /** A room's TV gets a fixed number of messages an hour (HOST_PER_HOUR). A whole Spark Wars night with 30 phones
+      uses well under half of it; a script left running in a room it made can't use up the site's daily quota. */
+  overBudget(add = 1) {
+    const hour = Math.floor(Date.now() / 3600e3), b = this.room.budget;
+    if (!b || b.hour !== hour) this.room.budget = { hour, n: 0 };
+    this.room.budget.n += add;
+    return this.room.budget.n > num(this.env.HOST_PER_HOUR, 60000);
   }
 
   async webSocketMessage(ws, message) {
@@ -285,7 +342,7 @@ export class Room extends DurableObject {
       try { ws.close(1009, "too-big"); } catch (e) {}
       return;
     }
-    if (!this.allowed(ws, host)) {
+    if (!this.allowed(ws, host) || (host && this.overBudget())) {
       this.send(ws, { t: "error", code: "too-fast" });
       try { ws.close(4029, "too-fast"); } catch (e) {}
       return;

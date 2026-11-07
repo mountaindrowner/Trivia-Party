@@ -91,7 +91,7 @@
         let endWrite;
         const written = new Promise((r) => { endWrite = r; });
         handler = (id, d) => {
-          if (d.type !== "write" || d.round !== rounds[id] || lies.some((l) => l.authors.includes(id))) return;
+          if (d.type !== "write" || !(id in rounds) || d.round !== rounds[id] || lies.some((l) => l.authors.includes(id))) return;
           let text = d.auto ? null : String(d.text || "").trim();
           if (d.auto) {
             const pick = houseLeft.find((h) => !lies.some((l) => norm(l.text) === norm(h)));
@@ -157,7 +157,7 @@
         let endPick;
         const picked = new Promise((r) => { endPick = r; });
         handler = (id, d) => {
-          if (d.type !== "pick" || d.round !== pickRounds[id] || id in picks) return;
+          if (d.type !== "pick" || !(id in pickRounds) || d.round !== pickRounds[id] || id in picks) return;
           const k = maps[id][d.pick | 0];
           if (k == null) return;
           picks[id] = k;

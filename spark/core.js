@@ -14,7 +14,8 @@ window.SW = (() => {
   const HOME = "https://sparkwars.thecrossroads.workers.dev";
   const qs = new URLSearchParams(location.search);
   // On the Spark Wars site itself (or a local test server) talk to this site; anywhere else, to the real one.
-  const BASE = (qs.get("server") || (/sparkwars|localhost|127\.0\.0\.1/.test(location.host) && location.protocol.startsWith("http") ? location.origin : HOME)).replace(/\/$/, "");
+  // (No way to point it at another server from the address bar: a shared link could send kids' phones anywhere.)
+  const BASE = /sparkwars|localhost|127\.0\.0\.1/.test(location.host) && location.protocol.startsWith("http") ? location.origin : HOME;
   const JOIN_TEXT = BASE.replace(/^https?:\/\//, "");
   const MAX_PLAYERS = 30;
   const ICONS = {
@@ -498,7 +499,9 @@ window.SW = (() => {
       if (cur && cur.input && phase !== "lobby" && phase !== "results") cur.input(m.id, d, m.at);
       return;
     }
-    if (phase === "game" && cur && cur.input) cur.input(m.id, d, m.at);
+    // Games only hear from players in a seat: the audience watches.
+    const p = byId(m.id);
+    if (phase === "game" && cur && cur.input && p && !p.audience) cur.input(m.id, d, m.at);
   }
 
   /* ---------- Teams and the war (for the whole night) ---------- */
@@ -601,9 +604,17 @@ window.SW = (() => {
 
   function refresh() {
     if (phase !== "lobby" || !lobbyNode) return;
-    const list = cast(), aud = players.filter((p) => p.audience).length;
+    const list = cast(), aud = players.filter((p) => p.audience);
     lobbyNode.querySelector(".count").textContent = `${list.length} / ${MAX_PLAYERS}`;
-    lobbyNode.querySelector(".aud").textContent = aud ? `+ ${aud} watching` : "";
+    // The audience by name, so the leader can remove one too (click twice).
+    lobbyNode.querySelector(".aud").replaceChildren(...(aud.length ? [`+ ${aud.length} watching: `, ...aud.map((p) => {
+      const chip = el("button", { class: "watcher", title: "Click twice to remove", onclick: () => {
+        if (chip.classList.contains("confirm")) return hostSend({ t: "kick", id: p.id });
+        chip.classList.add("confirm");
+        setTimeout(() => chip.classList.remove("confirm"), 3000);
+      } }, p.name);
+      return chip;
+    })] : []));
     lobbyNode.querySelector(".warslot").replaceChildren(night.games.length ? warBoard() : "");
     const grid = lobbyNode.querySelector(".grid");
     grid.replaceChildren(...Array.from({ length: MAX_PLAYERS }, (_, i) => {

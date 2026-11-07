@@ -128,12 +128,13 @@ async function main() {
   check(last && last.room.players.every((p) => !("keyHash" in p) && !("key" in p)), "rejoin keys never reach the TV");
 
   section("Names are checked");
-  for (const [name, why] of [["sh1t", "word"], ["Fuuuuck", "word"], ["f u c k", "word"], ["xXbitchXx", "word"], ["a s s", "word"], ["hell", "word"], ["Bob://x.com", "chars"], ["", "empty"], ["Abcdefghijklm", "long"], ["joy", "taken"]]) {
+  for (const [name, why] of [["sh1t", "word"], ["Fuuuuck", "word"], ["f u c k", "word"], ["xXbitchXx", "word"], ["a s s", "word"], ["hell", "word"], ["Bob://x.com", "chars"], ["", "empty"], ["Abcdefghijklm", "long"], ["joy", "taken"],
+    ["niɡɡa", "chars"], ["shıt", "chars"], ["ƒuck", "chars"], ["Dumbass", "word"], ["Phuck", "word"]]) {
     const { p, joined } = await phone(code, name, "sheep");
     check(joined && joined.t === "error" && joined.code === "name-" + why, `"${name}" refused (${why})`, joined);
     p.close();
   }
-  for (const name of ["Grapes", "Peacock", "Cassie", "Hellen", "Essex Kid", "Marsellus", "José"]) {
+  for (const name of ["Grapes", "Peacock", "Cassie", "Hellen", "Essex Kid", "Marsellus", "José", "Zoë", "Glass"]) {
     const { p, joined } = await phone(code, name, "dove");
     check(joined && joined.t === "joined", `"${name}" allowed`, joined);
     if (joined && joined.id) tv.send({ t: "kick", id: joined.id });
