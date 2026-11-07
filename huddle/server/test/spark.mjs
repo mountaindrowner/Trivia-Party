@@ -100,10 +100,10 @@ for (const text of ["Finish it", "Hot water", "Shittim wood"]) writer.send({ t: 
 await sleep(800);
 check(tv.got.filter((m) => m.t === "input").length === 3, "ordinary answers that happen to hide a word still go through", tv.got.filter((m) => m.t === "input").map((m) => m.data.text));
 
-// Lines that never join don't pile up: past 20 waiting at once, the room says it's busy.
-const idle = Array.from({ length: 21 }, () => line(`${WS_BASE}/ws/${code}?role=player`));
-const opened = await Promise.all(idle.map((l) => l.opened));
-check(opened.slice(0, 20).every(Boolean) && !opened[20], "a room takes at most 20 phones waiting to join", opened.filter(Boolean).length);
+// Lines that never join don't pile up: past a room's worth of lines (players + audience + 20), the room says it's busy.
+const idle = Array.from({ length: 60 }, () => line(`${WS_BASE}/ws/${code}?role=player`));
+const opened = (await Promise.all(idle.map((l) => l.opened))).filter(Boolean).length;
+check(opened > 0 && opened <= 70 - phones.length, "a room only takes so many phones waiting to join", opened);
 idle.forEach((l) => { try { l.ws.close(); } catch {} });
 
 tv.send({ t: "end" });

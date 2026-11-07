@@ -291,7 +291,7 @@ export class Room extends DurableObject {
       this.send(server, { t: "room", event: { kind: "host-connected" }, room: this.snapshot(), now: Date.now() });
       for (const ws of this.sockets((a) => a.role === "player" && a.id)) this.send(ws, { t: "host", on: true });
     } else if (role === "player") {
-      // A phone has 30 seconds to join or rejoin; and a room only takes so many lines at once.
+      // A phone has 30 seconds to join or rejoin, and a room only takes so many lines at once.
       const now = Date.now(), lines = [];
       let waiting = 0;
       for (const w of this.sockets((a) => a.role === "player")) {
@@ -301,7 +301,9 @@ export class Room extends DurableObject {
         if (!a.id) waiting++;
       }
       const game = rules(this.room.game);
-      if (waiting >= 20 || lines.length >= game.maxPlayers + game.maxAudience + 20) return json({ error: "busy" }, 429);
+      // (A whole room may scan the QR code at the same moment, so up to a room's worth may be waiting at once.)
+      const size = game.maxPlayers + game.maxAudience;
+      if (waiting >= size || lines.length >= size + 20) return json({ error: "busy" }, 429);
       this.ctx.acceptWebSocket(server);
       server.serializeAttachment({ role: "player", id: null, at: now }); // joins or rejoins with its first message
       this.send(server, { t: "hello", code: this.room.code, game: this.room.game, avatars: rules(this.room.game).avatars, now: Date.now() });

@@ -259,7 +259,7 @@ Phones join a room on the TV with a 4-letter code. What the room server (`huddle
   (a Content-Security-Policy). The TV can't be pointed at another server from a link.
 - **The TV's key** is random and kept only as a hash on the server; phones can't act as the TV or as each other.
 - **Limits** stop a script from flooding a room or the site: messages per second for each TV and phone, an hourly
-  budget for each room's TV, at most 20 phones waiting to join a room, and per-address limits on making rooms,
+  budget for each room's TV, a cap on how many phones can be connected to a room, and per-address limits on making rooms,
   checking codes and connecting (counted per home network for IPv6).
 - **For whoever runs the Cloudflare account:** the free plan has a daily limit on room traffic. Set up a usage
   notification in the Cloudflare dashboard (Notifications), so a flood is noticed before game night.

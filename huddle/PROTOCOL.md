@@ -27,8 +27,8 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 - TV: `wss://…/ws/:code?role=host&key=<hostKey>`. A second TV connection with the key takes over (the first gets
   `replaced`).
 - Phone: `wss://…/ws/:code?role=player`, then `join` or `rejoin` as its first message, within 30 seconds. A room
-  takes at most 20 phones waiting to join at once (and players + audience + 20 lines in all); past that it answers
-  `429 busy`.
+  takes at most players + audience + 20 lines in all (a room's worth may be waiting to join at once); past that it
+  answers `429 busy`.
 
 ### TV → relay
 
