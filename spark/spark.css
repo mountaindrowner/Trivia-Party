@@ -470,3 +470,42 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 .results:has(.anchor) .podium .block { font-size: 30px; padding-top: 6px; }
 .results:has(.anchor) .btn.go { padding: 12px 26px; font-size: 19px; }
 .results .anchor { max-width: 600px; }
+
+/* Lightning Round at tables: the scramble */
+.scramble { display: grid; grid-template-rows: auto 1fr auto; gap: 18px; }
+.scramble-title { text-align: center; font-size: calc(46px * var(--ds)); text-shadow: 4px 4px 0 var(--ink); }
+.table-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 12px; align-items: start; }
+.table-col { display: grid; gap: 8px; align-content: start; }
+.table-col h3 { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--team); color: var(--ink); border: var(--border);
+  box-shadow: 4px 4px 0 var(--ink); font-size: calc(19px * var(--ds)); opacity: 0; transform: translateY(-10px); transition: opacity 0.4s, transform 0.4s; }
+.table-col h3 b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--team); font-size: 18px; }
+.table-col.ready h3 { opacity: 1; transform: none; }
+.seats { display: grid; gap: 6px; }
+.seat { display: block; padding: 7px 12px; border-radius: 999px; background: var(--surface-hi); border: var(--border); box-shadow: 3px 3px 0 var(--ink);
+  font: 700 16px/1.2 var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scramble.flying .seat { transition: transform 0.5s cubic-bezier(.3, 1.4, .5, 1); position: relative; z-index: 2; }
+.scramble.landing .seat { transition: transform 0.6s cubic-bezier(.2, 1.2, .4, 1); }
+.table-col.ready .seat { border-color: var(--ink); box-shadow: inset 5px 0 0 var(--team), 3px 3px 0 var(--ink); }
+.seated { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+
+/* ...during questions: a chip per table (how many have locked in, then the points it got) */
+.table-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.tchip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px; background: var(--surface); border: var(--border); box-shadow: 3px 3px 0 var(--ink); font-weight: 800; }
+.tchip b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--team); color: var(--ink); font: 800 16px var(--display); }
+.tchip i { font-style: normal; font-size: 17px; }
+.tchip.all { background: var(--team); color: var(--ink); }
+.tchip.all b { background: var(--ink); color: var(--team); }
+
+/* ...the tables' scoreboard */
+.table-board { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.table-board li { display: grid; grid-template-columns: 40px 190px 1fr 120px; align-items: center; gap: 14px; padding: 10px 16px; border-radius: var(--r-sm); background: var(--surface); border: var(--border); box-shadow: 4px 4px 0 var(--ink); }
+.table-board .rank { font: 800 22px var(--display); color: var(--soft); }
+.table-board .tname { display: flex; align-items: center; gap: 10px; font: 800 calc(20px * var(--ds)) var(--display); color: var(--team); }
+.table-board .tname b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--team); color: var(--ink); font-size: 17px; }
+.table-board .tbar { height: 24px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); border: 3px solid var(--ink); position: relative; overflow: hidden; }
+.table-board .tbar i { position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--team); transition: width 0.8s; }
+.table-board .talents { text-align: right; font: 800 calc(22px * var(--ds)) var(--display); color: var(--accent); }
+
+/* ...and the tables' podium */
+.results.tables .podium .tableno { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--team); color: var(--ink); border: var(--border); box-shadow: 4px 4px 0 var(--ink); font: 800 32px var(--display); }
+.results.tables .podium .members { font-size: 13px; color: var(--soft); text-align: center; max-width: 220px; line-height: 1.3; }

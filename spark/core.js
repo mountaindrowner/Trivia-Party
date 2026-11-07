@@ -210,7 +210,7 @@ window.SW = (() => {
     if (tpl) node.append(tpl.content.cloneNode(true));
     const bubble = el("div", { class: "bubble", hidden: true }, el("p"));
     node.append(bubble);
-    let busy = Promise.resolve(), queued = 0, lastJoin = 0, pendingJoins = 0, joinTimer = 0, voice = null, typing = 0, hideTimer = 0;
+    let busy = Promise.resolve(), queued = 0, gen = 0, lastJoin = 0, pendingJoins = 0, joinTimer = 0, voice = null, typing = 0, hideTimer = 0;
     const pickVoice = () => {
       try {
         const all = speechSynthesis.getVoices().filter((v) => /^en(-|_|$)/i.test(v.lang));
@@ -343,10 +343,12 @@ window.SW = (() => {
         const i = list ? (o.i != null && list[o.i] ? o.i : Math.floor(Math.random() * list.length)) : 0;
         const item = list ? list[i] : key;
         const text = fill(item.t || item, vars);
-        if (o.now) { busy = Promise.resolve(); queued = 0; stopClip(); try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
+        if (o.now) { gen++; busy = Promise.resolve(); queued = 0; stopClip(); try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
         else if (o.minor && queued) return busy; // small stuff only when he's free
         queued++;
+        const mine = gen;
         const run = async () => {
+          if (mine !== gen) return; // he was told to stop (or to say something else right now) since this was queued
           const talk = !(prefs.muted || prefs.voice === false);
           const url = talk && clipFor(key, i, vars);
           const audio = url ? await loadClip(url) : null;
@@ -366,7 +368,7 @@ window.SW = (() => {
         clearTimeout(joinTimer);
         joinTimer = setTimeout(() => { if (pendingJoins > 1) host.say("joinMany", { n: pendingJoins }); else if (pendingJoins === 1) host.say(team ? "joinTeam" : "join", { name: p.name, team: team && team.name }); pendingJoins = 0; lastJoin = Date.now(); }, 3500);
       },
-      quiet() { busy = Promise.resolve(); queued = 0; clearTimeout(joinTimer); pendingJoins = 0; stopClip(); try { speechSynthesis.cancel(); } catch (e) {} clearInterval(typing); bubble.hidden = true; node.classList.remove("on", "talking"); },
+      quiet() { gen++; busy = Promise.resolve(); queued = 0; clearTimeout(joinTimer); pendingJoins = 0; stopClip(); try { speechSynthesis.cancel(); } catch (e) {} clearInterval(typing); bubble.hidden = true; node.classList.remove("on", "talking"); },
     };
   })();
   stage.parentNode.append(host.node);
@@ -492,6 +494,8 @@ window.SW = (() => {
       if (d.action === "skip" && phase === "rules") return skipRules && skipRules();
       if (d.action === "again" && phase === "results") return startGame(lastGame);
       if (d.action === "lobby" && phase === "results") return backToLobby();
+      // Anything else is the game's own button (e.g. "We're all seated").
+      if (cur && cur.input && phase !== "lobby" && phase !== "results") cur.input(m.id, d, m.at);
       return;
     }
     if (phase === "game" && cur && cur.input) cur.input(m.id, d, m.at);
@@ -679,6 +683,9 @@ window.SW = (() => {
     for (const k in shown) delete shown[k];
     put(players.filter((p) => p.audience).map((p) => p.id), { screen: "wait", title: "You're in the audience", text: "The game is full (30 players). Watch the big screen!" });
     cur = { def };
+    host.quiet(); // no leftover hellos from the lobby
+    host.dock("corner");
+    phase = "game"; // until the rules: a game may do things first (the Lightning Round scrambles the tables)
     const a = api(step());
     try {
       const result = await def.run(a);
@@ -796,7 +803,8 @@ window.SW = (() => {
   }
 
   /* ---------- The end of a game ---------- */
-  /** result: { scores: {id: n}, unit, title, awards: [[label, text]], anchor: { title, text } (a lesson's Gospel Anchor) } */
+  /** result: { scores: {id: n}, unit, title, awards: [[label, text]], anchor: { title, text } (a lesson's Gospel Anchor),
+      tables: [{ name, color, total, ids }] (a game played at tables: the tables are ranked instead of players) } */
   async function results(def, result) {
     const token = step();
     phase = "timeup";
@@ -816,15 +824,22 @@ window.SW = (() => {
     phase = "results";
     music("strut");
     host.dock("stack");
-    later(2400, () => totals ? host.say("winTeam", { team: totals[0].name }) : r[0] && host.say("winSolo", { name: r[0].name }));
+    const tables = result.tables && result.tables.length ? result.tables.slice().sort((a, b) => b.total - a.total) : null;
+    later(2400, () => tables ? host.say("winTable", { n: tables[0].n }) : totals ? host.say("winTeam", { team: totals[0].name }) : r[0] && host.say("winSolo", { name: r[0].name }));
     fx.energy(0.6);
-    later(400, () => fx.confetti(220, totals ? [totals[0].color, "#ffffff", "#ffd23f"] : null));
+    later(400, () => fx.confetti(220, tables ? [tables[0].color, "#ffffff", "#ffd23f"] : totals ? [totals[0].color, "#ffffff", "#ffd23f"] : null));
+    const firstNames = (ids) => ids.map((id) => (byId(id) || {}).name).filter(Boolean).join(" · ");
     later(2600, () => { const w = stage.querySelector(".results .war"); if (w) { fx.burstAt(w, 60); S("big"); } });
-    show(el("section", { class: "results" },
-      totals ? el("div", { class: "winner", style: `--team:${totals[0].color}` }, el("h1", {}, `${totals[0].icon} Team ${totals[0].name} wins ${def.name}!`),
+    show(el("section", { class: "results" + (tables ? " tables" : "") },
+      tables ? el("div", { class: "winner", style: `--team:${tables[0].color}` }, el("h1", {}, `🏆 ${tables[0].name} wins ${def.name}!`),
+        el("div", { class: "totals" }, ...tables.map((t) => el("span", { style: `--team:${t.color}` }, `${t.name} ${fmt(t.total)}`))))
+      : totals ? el("div", { class: "winner", style: `--team:${totals[0].color}` }, el("h1", {}, `${totals[0].icon} Team ${totals[0].name} wins ${def.name}!`),
         el("div", { class: "totals" }, ...totals.map((t) => el("span", { style: `--team:${t.color}` }, `${t.icon} ${t.name} ${fmt(t.total)}`))))
         : el("div", { class: "winner" }, el("h1", {}, r[0] ? `${face(r[0])} ${r[0].name} wins ${def.name}!` : "Time!")),
-      el("div", { class: "podium" }, ...[1, 0, 2].map((i) => r[i] ? el("div", { class: "step p" + (i + 1), style: teamOf(r[i].id) ? `--team:${teamOf(r[i].id).color}` : null },
+      tables ? el("div", { class: "podium" }, ...[1, 0, 2].map((i) => tables[i] ? el("div", { class: "step p" + (i + 1), style: `--team:${tables[i].color}` },
+        el("span", { class: "face tableno" }, tables[i].n), el("span", { class: "name" }, tables[i].name), el("span", { class: "talents" }, `${fmt(tables[i].total)} points`),
+        el("span", { class: "members" }, firstNames(tables[i].ids)), el("span", { class: "block" }, ["🥇", "🥈", "🥉"][i])) : el("div", { class: "step empty" })))
+      : el("div", { class: "podium" }, ...[1, 0, 2].map((i) => r[i] ? el("div", { class: "step p" + (i + 1), style: teamOf(r[i].id) ? `--team:${teamOf(r[i].id).color}` : null },
         el("span", { class: "face" }, face(r[i])), el("span", { class: "name" }, r[i].name), el("span", { class: "talents" }, `${fmt(scores[r[i].id])} ${unit}`),
         el("span", { class: "block" }, ["🥇", "🥈", "🥉"][i])) : el("div", { class: "step empty" }))),
       el("div", { class: "awards" }, ...(result.awards || []).filter(Boolean).map(([a, b]) => el("div", {}, el("small", {}, a), el("strong", {}, b)))),
@@ -834,8 +849,16 @@ window.SW = (() => {
     for (const p of cast()) {
       const place = r.findIndex((x) => x.id === p.id) + 1, t = teamOf(p.id);
       const won = totals && t && totals[0].key === t.key;
+      const tb = tables && tables.find((x) => x.ids.includes(p.id)), tplace = tb ? tables.indexOf(tb) + 1 : 0;
+      const warText = totals ? (won ? `Team ${t.name} wins! +${gained[t.key]} War Points 🏆` : t ? `Team ${totals[0].name} won this one. Team ${t.name}: +${gained[t.key] || 0} War Points` : "") : "";
+      if (tables) {
+        put(p.id, { screen: "final", place: tplace || null, of: tables.length, points: tb ? tb.total : null, unit: "table points", badge: tb ? { text: tb.name, color: tb.color } : null,
+          text: tb ? `${tb.name} finished ${nth(tplace)} of ${tables.length}.${warText ? " " + warText : ""}` : warText,
+          vip: [{ label: "Play again", action: "again" }, { label: "Pick another game", action: "lobby" }] });
+        continue;
+      }
       put(p.id, { screen: "final", place: place || null, of: r.length, points: p.id in scores ? scores[p.id] : null, unit,
-        text: totals ? (won ? `Team ${t.name} wins! +${gained[t.key]} War Points 🏆` : t ? `Team ${totals[0].name} won this one. Team ${t.name}: +${gained[t.key] || 0} War Points` : "") : "",
+        text: warText,
         vip: [{ label: "Play again", action: "again" }, { label: "Pick another game", action: "lobby" }] });
     }
   }

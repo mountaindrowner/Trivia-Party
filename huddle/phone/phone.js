@@ -180,7 +180,8 @@
     cancelAnimationFrame(timerRaf);
     const kind = s.screen || "lobby";
     if (kind === "lobby") return lobbyScreen();
-    if (kind === "wait") return show(meCard(), el("h2", {}, s.title || BRAND.look), s.text ? el("p", { class: "center soft" }, s.text) : null, ...vipButtons(s));
+    if (kind === "wait") return show(meCard(), s.banner ? el("div", { class: "banner", style: s.banner.color ? `--team:${s.banner.color}` : null }, el("small", {}, s.banner.small || ""), el("strong", {}, s.banner.text)) : null,
+      el("h2", {}, s.title || BRAND.look), s.text ? el("p", { class: "center soft" }, s.text) : null, ...vipButtons(s));
     if (kind === "message") return show(el("h2", {}, s.title || ""), el("p", { class: "center" }, s.text || ""), ...vipButtons(s));
     if (kind === "choices") return choicesScreen(s);
     if (kind === "tap") return tapScreen(s);

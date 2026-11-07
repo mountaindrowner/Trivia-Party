@@ -150,5 +150,19 @@ window.SPARK_VOICE = {
  ],
  "fastest": [
   "voice/clips/fastest-0.mp3"
+ ],
+ "tablesScramble": [
+  "voice/clips/tablesscramble-0.mp3"
+ ],
+ "tablesGo": [
+  "voice/clips/tablesgo-0.mp3",
+  "voice/clips/tablesgo-1.mp3"
+ ],
+ "tableSweep": [
+  "voice/clips/tablesweep-0.mp3",
+  "voice/clips/tablesweep-1.mp3"
+ ],
+ "winTable": [
+  "voice/clips/wintable-0.mp3"
  ]
 };

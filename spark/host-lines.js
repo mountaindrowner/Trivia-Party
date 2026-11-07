@@ -33,6 +33,10 @@ window.SPARK_LINES = {
   "rules.bluff": ["This is Bluff the Bible. Every fact is real, but one word is missing. Make up a fake answer so good, your friends pick it. Just for this game, okay? Let's not make it a habit."],
   "rules.lightning": ["This is the Lightning Round. Everybody gets the same question, at the same time. Right answers score, and fast right answers score more. So... were you listening this morning?"],
   lightningFinal: ["Last question. It's worth double. Now would be a great time to focus."],
+  tablesScramble: ["Okay, everybody up. New tables. No, you can't pick. It's random. That's the whole point."],
+  tablesGo: ["Go find your table. I'll wait. Not forever, though.", "Find your table, sit down, and say hi. You're a team now."],
+  tableSweep: ["The whole table got it. That's called teamwork. Look it up.", "Everybody at that table got it. Okay, I see you."],
+  winTable: [{ t: "Table {n} takes it. Nice work, all of you.", v: "And that table takes it. Nice work, all of you." }],
   fastest: [{ t: "{name} got it first. Show-off.", v: "Wow. Somebody got that one fast. Show-off." }],
   "rules.timeline": ["This is Timeline. I deal a card, and you tap where it goes. Here's a hint: creation comes first. You're welcome."],
 

@@ -103,6 +103,15 @@ the same colors and shapes as the phones, faces popping up as players lock in; t
 each option, the fastest player and the verse; then the scoreboard, with movers sliding up. Awards: most right,
 quickest on average, longest streak. It ends on the lesson's Gospel Anchor.
 
+**At tables** (Tables: 2 to 6): the TV scrambles everyone into random tables, with every name flying around the
+screen before landing at its table, and every phone shows a big "Your table: 3" in that table's color. The room
+moves; the leader clicks **Everyone's seated** (or the VIP taps it on their phone, or it goes on by itself after 30
+seconds). Then each table talks it over and everyone still locks in on their own phone. A table scores the average
+of its players' points (so a table of 4 and a table of 6 are even), plus 200 when the whole table gets it right (a
+sweep). The TV shows how many at each table have locked in, then each table's points; the scoreboard and the podium
+are the tables'. Late joiners go to the smallest table. Everyone's own points still count for their team's War
+Points.
+
 ### 💰 Talents (Matthew 25:14–30)
 
 Everyone answers at their own pace for 3, 5, 7 or 10 minutes, from a question pack (Bible Mix, Bible Basics,

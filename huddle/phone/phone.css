@@ -146,3 +146,9 @@ html[data-game="spark"] .line .card { background: #33206b; border: 3px solid var
 .line .gap { font: 900 15px/1 "Nunito", sans-serif; padding: 9px; min-height: 0; background: transparent; color: var(--gold); border: 3px dashed var(--gold); box-shadow: none; border-radius: 12px; }
 .line .gap.picked { background: var(--gold); color: var(--ink); border-style: solid; }
 .line.done .gap:not(.picked) { opacity: 0.3; }
+
+/* A big colored block, e.g. "Your table: 3" (Spark Wars' Lightning Round at tables) */
+.banner { display: grid; justify-items: center; padding: 14px 10px 6px; border-radius: 22px; background: var(--team, var(--gold)); color: #0d0820;
+  border: 4px solid #0d0820; box-shadow: 6px 6px 0 #0d0820; transform: rotate(-2deg); animation: pop 0.4s ease-out; }
+.banner small { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.14em; }
+.banner strong { font: 800 112px/1 "Bricolage Grotesque", "Lilita One", system-ui, sans-serif; }
