@@ -10,8 +10,8 @@ recorded ahead of time with **Chatterbox** (open source, by Resemble AI, MIT lic
 
 ## The voice
 
-Chatterbox's own built-in voice on the original Chatterbox model, with expression ("exaggeration") at 0.75, then
-slowed to 80% speed without changing the pitch. Snark comes from the writing; punctuation (commas, periods, "...")
+Chatterbox's own built-in voice on the original Chatterbox model, with expression ("exaggeration") at 1.3, then
+slowed to 85% speed without changing the pitch (ffmpeg's `atempo`, which keeps speech from sounding robotic). Snark comes from the writing; punctuation (commas, periods, "...")
 gives him his pauses.
 
 ## Recording
@@ -26,7 +26,7 @@ cbenv/bin/python spark/voice/record.py path/to/model            # everything
 cbenv/bin/python spark/voice/record.py path/to/model --only double,lead   # just some lines
 ```
 
-It also needs `ffmpeg` (with rubberband and lame) and `node`.
+It also needs `ffmpeg` (with lame) and `node`.
 
 Notes from setting it up (November 2026): `chatterbox-tts` 0.1.7 on PyPI is older than the GitHub code (the
 newer files are on github.com/resemble-ai/chatterbox), and its watermark library needs `setuptools` below 81.

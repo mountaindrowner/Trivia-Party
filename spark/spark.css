@@ -369,7 +369,7 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 
 /* ---------- Barnabas, the host ---------- */
 .host { position: absolute; z-index: 3; display: flex; align-items: flex-end; gap: 12px; pointer-events: none; transition: transform 0.45s cubic-bezier(.2, 1.4, .4, 1), opacity 0.3s; }
-.host .donkey { width: 112px; flex: none; overflow: visible; filter: drop-shadow(4px 5px 0 var(--ink)); animation: bob 2.6s ease-in-out infinite; }
+.host .donkey { width: 136px; flex: none; overflow: visible; filter: drop-shadow(4px 5px 0 var(--ink)); animation: bob 2.6s ease-in-out infinite; }
 .host.corner { left: 22px; bottom: 14px; }
 .host.lobby, .host.stack { left: 34px; bottom: 16px; width: 300px; flex-direction: column-reverse; align-items: flex-start; }
 .host.peek { left: 22px; bottom: 14px; transform: translateX(-180px) rotate(-12deg); opacity: 0; }
@@ -406,8 +406,13 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 .donkey .ear { transform-box: fill-box; transform-origin: 50% 100%; }
 .donkey .ear-l { animation: earL 3.2s ease-in-out infinite; }
 .donkey .ear-r { animation: earR 3.6s ease-in-out infinite; }
-.host.talking .mouth-open { animation: talk 0.2s steps(2, jump-none) infinite; }
-.host.talking .mouth-closed { animation: talk 0.2s steps(2, jump-none) infinite reverse; }
+.host.talking:not(.lipsync) .mouth-open { animation: talk 0.2s steps(2, jump-none) infinite; }
+.host.talking:not(.lipsync) .mouth-closed { animation: talk 0.2s steps(2, jump-none) infinite reverse; }
+/* With a recording, core.js moves his mouth, head, ears and brows to the sound. */
+.host .donkey { transform-origin: 50% 85%; transition: transform 0.06s linear; }
+.host .mouth-open { transform-box: fill-box; transform-origin: center; }
+.host.lipsync .donkey { animation: none; }
+.host.talking .donkey { animation-duration: 0.9s; }
 .host[data-mood="wow"] .brow-l { transform: translateY(-7px); }
 .host[data-mood="wow"] .brow-r { transform: translateY(-7px); }
 .host[data-mood="worried"] .brow-l { transform: rotate(16deg) translateY(-4px); }
@@ -422,3 +427,4 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 /* Make room for him in the lobby's join column. */
 .lobby .join { padding-bottom: 150px; }
 .icon-btn.off { opacity: 0.45; }
+.host.lipsync .ear { animation: none; }

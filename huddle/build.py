@@ -1,6 +1,7 @@
 """Builds the pages each party-game site hands out, into huddle/server/static/<site>/ (not committed):
   holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
   spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
+  spark-assets/     files Spark Wars serves as they are (Barnabas's recorded lines, at /voice/clips/)
 The phone page is the same code for both, with its own look (<html data-game="...">).
 Run before `npx wrangler deploy` (Holy Huddle) or `npx wrangler deploy --env spark` (Spark Wars), or `wrangler dev`."""
 import os, re, subprocess, sys
@@ -38,3 +39,13 @@ html = re.sub(r'<script src="([^"]+\.js)"></script>',
               lambda m: "<script>\n" + read(root, "spark", m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
 assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Spark Wars file was not inlined"
 write(os.path.join(static, "spark", "tv.html"), html)
+
+# Spark Wars' files served as they are: Barnabas's recorded lines.
+import shutil
+assets = os.path.join(static, "spark-assets")
+shutil.rmtree(assets, ignore_errors=True)
+clips = os.path.join(root, "spark", "voice", "clips")
+os.makedirs(os.path.join(assets, "voice"), exist_ok=True)
+if os.path.isdir(clips):
+    shutil.copytree(clips, os.path.join(assets, "voice", "clips"))
+print("spark-assets:", sum(len(f) for _, _, f in os.walk(assets)), "files")

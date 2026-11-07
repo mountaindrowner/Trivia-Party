@@ -60,6 +60,10 @@ class_name = "Gate"
 tag = "v1"
 new_sqlite_classes = ["Room", "Gate"]
 
+# Files served as they are: Barnabas's recorded lines (/voice/clips/*.mp3), copied in by huddle/build.py.
+[env.spark.assets]
+directory = "./static/spark-assets"
+
 [env.spark.vars]
 ALLOWED_ORIGINS = "https://sparkwars.thecrossroads.workers.dev"
 IDLE_MINUTES = "120"

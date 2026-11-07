@@ -31,13 +31,17 @@ id="barnabas">` in `index.html`, styles at the end of `spark.css`). He stands in
 
 - **Where:** at the bottom of the join column in the lobby; bottom left on the title, rules and results screens;
   during play he pops in to say something and ducks back out, so he never covers the game for long.
-- **What:** all his lines are in `LINES` in `core.js`: hellos as players join (or "12 more just rolled in!" when
+- **What:** all his lines are in `host-lines.js` (snarky, never mean, never about faith): hellos as players join (or "A whole crowd just walked in" when
   lots arrive at once), each game's rules, Double Time, lead changes, jackpots, steals and swaps, Bluff reveals,
   Timeline streaks, the winner, and the War Points leader back in the lobby. Small lines are skipped when he's
   already talking.
-- **His voice:** the device's own text-to-speech for now (🗣 in the lobby turns it off). Recorded lines will replace
-  it: `window.SPARK_VOICE = { key: ["url of line 1", ...] }` plays a clip for a line when there is one, and the
-  device's voice otherwise. The recordings are being tried with Chatterbox, an open-source voice model.
+- **His voice:** recorded lines (Chatterbox, an open-source voice model, in a voice picked by ear: see `voice/README.md`),
+  served from `/voice/clips/` and listed in `voice/voice.js`. Lines with a player's name or a number in them say a
+  general version out loud ("Team Volt, meet your newest player") while the bubble shows the name. If a clip is
+  missing, he falls back to the device's own voice. 🗣 in the lobby turns his voice off.
+- **His face follows his voice:** while a clip plays, its loudness opens his mouth, bobs and tilts his head, and
+  flicks his ears and brows on the loud bits; the bubble types out at the pace he talks, so the words finish with
+  the sound.
 
 ## A night of Spark Wars
 

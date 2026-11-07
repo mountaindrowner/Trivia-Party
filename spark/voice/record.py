@@ -3,10 +3,10 @@
     python spark/voice/record.py <chatterbox_model_dir> [--only key,key] [--exaggeration 0.75] [--slower 0.8]
 
 Reads spark/host-lines.js (through node), records every line (the `v` version when a line has one; once per team
-when it says {team}), slows it down without changing the pitch (ffmpeg's rubberband), and writes MP3s to
+when it says {team}), slows it down without changing the pitch (ffmpeg's atempo), and writes MP3s to
 spark/voice/clips/ and the list the game plays from to spark/voice/voice.js.
 
-Needs: the chatterbox-tts package (with the fixes in README.md), torch, ffmpeg with rubberband and lame, node, and
+Needs: the chatterbox-tts package (with the fixes in README.md), torch, ffmpeg with lame, node, and
 the original Chatterbox model files (ResembleAI/chatterbox on Hugging Face: ve.safetensors, t3_cfg.safetensors,
 s3gen.safetensors, tokenizer.json, conds.pt). It runs on a CPU, at about eight seconds of work per second of speech.
 Every clip carries Chatterbox's built-in (inaudible) watermark that marks it as AI-made."""
@@ -16,8 +16,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SPARK = os.path.dirname(HERE)
 TEAMS = ["volt", "blaze", "surge", "nova"]
 TEAM_NAMES = {"volt": "Volt", "blaze": "Blaze", "surge": "Surge", "nova": "Nova"}
-# The voice: Chatterbox's own voice, seeded so a re-record sounds the same.
-SETTINGS = {"cfg_weight": 0.3, "temperature": 0.8, "seed": 7}
+# The voice ("option A, number 1"): Chatterbox's own voice with expression at 1.3, seeded so a re-record sounds the
+# same, then slowed to 85% with ffmpeg's atempo (gentler on speech than other stretchers, so it doesn't go robotic).
+SETTINGS = {"cfg_weight": 0.3, "temperature": 0.8, "seed": 11}
 
 
 def lines():
@@ -29,8 +30,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("model_dir")
     ap.add_argument("--only", default="")
-    ap.add_argument("--exaggeration", type=float, default=0.75)
-    ap.add_argument("--slower", type=float, default=0.8, help="playback speed: 0.8 = 20 percent slower")
+    ap.add_argument("--exaggeration", type=float, default=1.3)
+    ap.add_argument("--slower", type=float, default=0.85, help="playback speed: 0.85 = 15 percent slower")
     a = ap.parse_args()
     import torch, torchaudio as ta
     from chatterbox.tts import ChatterboxTTS
@@ -51,10 +52,10 @@ def main():
         with tempfile.TemporaryDirectory() as tmp:
             raw = os.path.join(tmp, "raw.wav")
             ta.save(raw, wav, model.sr)
-            # Slower without a pitch change, quiet edges trimmed, even loudness, small mono MP3.
+            # Slower without a pitch change, quiet edges trimmed, small mono MP3.
             subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", raw, "-af",
-                            f"rubberband=tempo={a.slower}:pitchq=quality,silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
-                            "silenceremove=start_periods=1:start_threshold=-50dB,areverse,loudnorm=I=-16:TP=-1.5",
+                            f"atempo={a.slower},silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
+                            "silenceremove=start_periods=1:start_threshold=-50dB,areverse",
                             "-ar", "24000", "-ac", "1", "-codec:a", "libmp3lame", "-b:a", "48k", os.path.join(out_dir, name)], check=True)
         print(name, flush=True)
         return f"voice/clips/{name}"

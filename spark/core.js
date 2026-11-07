@@ -220,21 +220,89 @@ window.SW = (() => {
     };
     if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
     const fill = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => (v && v[k] != null ? v[k] : ""));
-    /** Speak: a recorded clip for this line if there is one (one per team where the line names a team), else the
-        device's voice. */
-    function speak(key, i, text, vars) {
-      if (prefs.muted || prefs.voice === false) return Promise.resolve();
+    /** The recorded clip for a line, if there is one (one per team where the line names a team). */
+    function clipFor(key, i, vars) {
       const clips = window.SPARK_VOICE && window.SPARK_VOICE[key];
       let clip = clips && clips[i];
       if (clip && typeof clip === "object") { const t = TEAMS.find((x) => vars && x.name === vars.team); clip = t ? clip[t.key] : null; }
-      if (clip) {
-        return new Promise((resolve) => {
-          const a = new Audio(clip);
-          a.onended = a.onerror = resolve;
-          a.play().catch(resolve);
-          setTimeout(resolve, 9000);
-        });
-      }
+      return clip || null;
+    }
+    /** Load a clip far enough to know how long it is (or give up after a moment). */
+    function loadClip(url) {
+      return new Promise((resolve) => {
+        const a = new Audio(url);
+        a.preload = "auto";
+        const t = setTimeout(() => resolve(null), 2500);
+        a.addEventListener("loadedmetadata", () => { clearTimeout(t); resolve(a); }, { once: true });
+        a.addEventListener("error", () => { clearTimeout(t); resolve(null); }, { once: true });
+        a.load();
+      });
+    }
+
+    /* Lip sync: while a clip plays, its loudness opens his mouth, bobs and tilts his head, and flicks his ears and
+       brows on the loud bits. (With the device's voice there's no sound to measure, so the mouth just flaps.) */
+    const svg = node.querySelector(".donkey");
+    const mouthOpen = node.querySelector(".mouth-open"), mouthShut = node.querySelector(".mouth-closed");
+    const brows = [...node.querySelectorAll(".brow")], ears = [...node.querySelectorAll(".ear")];
+    let playing = null, lipRaf = 0;
+    function lipSync(audio) {
+      const ctx = THP.Sound.context && THP.Sound.context();
+      let analyser = null, data = null;
+      try {
+        if (ctx) {
+          if (ctx.state === "suspended") ctx.resume();
+          const src = ctx.createMediaElementSource(audio);
+          analyser = ctx.createAnalyser();
+          analyser.fftSize = 512;
+          src.connect(analyser);
+          analyser.connect(ctx.destination);
+          data = new Uint8Array(analyser.fftSize);
+        }
+      } catch (e) { analyser = null; }
+      node.classList.add("lipsync");
+      let level = 0, t0 = performance.now();
+      cancelAnimationFrame(lipRaf);
+      const frame = (now) => {
+        if (playing !== audio) return rest();
+        let target = 0;
+        if (analyser) {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (let k = 0; k < data.length; k++) { const v = (data[k] - 128) / 128; sum += v * v; }
+          target = Math.min(1, Math.max(0, (Math.sqrt(sum / data.length) - 0.015) * 7));
+        } else target = audio.paused ? 0 : 0.5 + 0.5 * Math.sin((now - t0) / 70);
+        level += (target - level) * (target > level ? 0.6 : 0.3);
+        if (mouthOpen) { mouthOpen.style.opacity = level > 0.08 ? 1 : 0; mouthOpen.style.transform = `scale(${1 + level * 0.25}, ${0.35 + level * 1.5})`; }
+        if (mouthShut) mouthShut.style.opacity = level > 0.08 ? 0 : 1;
+        if (svg) svg.style.transform = `rotate(${Math.sin((now - t0) / 260) * 3 * (0.3 + level)}deg) translateY(${-level * 5}px) scale(${1 + level * 0.03})`;
+        brows.forEach((b) => { b.style.transform = level > 0.65 ? "translateY(-6px)" : ""; });
+        ears.forEach((e, k) => { e.style.rotate = `${(k ? 1 : -1) * level * 9}deg`; });
+        lipRaf = requestAnimationFrame(frame);
+      };
+      lipRaf = requestAnimationFrame(frame);
+    }
+    function rest() {
+      cancelAnimationFrame(lipRaf);
+      node.classList.remove("lipsync");
+      if (mouthOpen) { mouthOpen.style.opacity = ""; mouthOpen.style.transform = ""; }
+      if (mouthShut) mouthShut.style.opacity = "";
+      if (svg) svg.style.transform = "";
+      brows.forEach((b) => { b.style.transform = ""; });
+      ears.forEach((e) => { e.style.rotate = ""; });
+    }
+    function playClip(audio) {
+      return new Promise((resolve) => {
+        playing = audio;
+        const end = () => { if (playing === audio) { playing = null; rest(); } resolve(); };
+        audio.onended = audio.onerror = end;
+        setTimeout(end, (audio.duration || 8) * 1000 + 1500);
+        lipSync(audio);
+        audio.play().catch(end);
+      });
+    }
+    function stopClip() { if (playing) { try { playing.pause(); } catch (e) {} playing = null; rest(); } }
+    /** The device's own voice, when there's no recording. */
+    function speakTTS(text) {
       if (!("speechSynthesis" in window)) return Promise.resolve();
       return new Promise((resolve) => {
         try {
@@ -248,15 +316,18 @@ window.SW = (() => {
         } catch (e) { resolve(); }
       });
     }
-    function show(text, mood) {
+    /** Show the bubble and type the line out, over `ms` when we know how long he'll talk (so the words keep up with
+        the voice), or quickly otherwise. */
+    function show(text, mood, ms) {
       clearTimeout(hideTimer); clearInterval(typing);
       node.dataset.mood = mood || "happy";
       node.classList.add("on", "talking");
       bubble.hidden = false;
       const p = bubble.firstChild;
       p.textContent = "";
-      let i = 0;
-      typing = setInterval(() => { p.textContent = text.slice(0, ++i * 2); if (i * 2 >= text.length) { clearInterval(typing); p.textContent = text; } }, 22);
+      const step = 25, per = ms ? (text.length * step) / ms : 2;
+      let shown = 0;
+      typing = setInterval(() => { shown += per; p.textContent = text.slice(0, Math.ceil(shown)); if (shown >= text.length) { clearInterval(typing); p.textContent = text; } }, step);
     }
     function done(hold) {
       node.classList.remove("talking");
@@ -269,15 +340,18 @@ window.SW = (() => {
       /** Say a line: a key from LINES (one of its lines at random) or plain text. Lines wait their turn. */
       say(key, vars, o = {}) {
         const list = LINES[key];
-        const i = list ? Math.floor(Math.random() * list.length) : 0;
+        const i = list ? (o.i != null && list[o.i] ? o.i : Math.floor(Math.random() * list.length)) : 0;
         const item = list ? list[i] : key;
         const text = fill(item.t || item, vars);
-        if (o.now) { busy = Promise.resolve(); queued = 0; try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
+        if (o.now) { busy = Promise.resolve(); queued = 0; stopClip(); try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
         else if (o.minor && queued) return busy; // small stuff only when he's free
         queued++;
         const run = async () => {
-          show(text, o.mood);
-          await Promise.all([speak(key, i, text, vars), new Promise((r) => setTimeout(r, Math.min(4000, 700 + text.length * 30)))]);
+          const talk = !(prefs.muted || prefs.voice === false);
+          const url = talk && clipFor(key, i, vars);
+          const audio = url ? await loadClip(url) : null;
+          show(text, o.mood, audio && audio.duration ? audio.duration * 1000 * 0.92 : null);
+          await Promise.all([audio ? playClip(audio) : talk ? speakTTS(text) : null, new Promise((r) => setTimeout(r, Math.min(4000, 700 + text.length * 30)))]);
           done(o.hold != null ? o.hold : 1600);
           queued = Math.max(0, queued - 1);
         };
@@ -292,7 +366,7 @@ window.SW = (() => {
         clearTimeout(joinTimer);
         joinTimer = setTimeout(() => { if (pendingJoins > 1) host.say("joinMany", { n: pendingJoins }); else if (pendingJoins === 1) host.say(team ? "joinTeam" : "join", { name: p.name, team: team && team.name }); pendingJoins = 0; lastJoin = Date.now(); }, 3500);
       },
-      quiet() { busy = Promise.resolve(); queued = 0; clearTimeout(joinTimer); pendingJoins = 0; try { speechSynthesis.cancel(); } catch (e) {} clearInterval(typing); bubble.hidden = true; node.classList.remove("on", "talking"); },
+      quiet() { busy = Promise.resolve(); queued = 0; clearTimeout(joinTimer); pendingJoins = 0; stopClip(); try { speechSynthesis.cancel(); } catch (e) {} clearInterval(typing); bubble.hidden = true; node.classList.remove("on", "talking"); },
     };
   })();
   stage.parentNode.append(host.node);
@@ -769,7 +843,7 @@ window.SW = (() => {
     const look = qs.get("look") || prefs.look;
     if (look) { prefs.look = look; savePrefs(); document.documentElement.dataset.look = look; }
     // For tests and recordings.
-    window.SPARK = { get phase() { return cur && cur.state && cur.state.phase ? cur.state.phase : phase; }, get core() { return phase; }, get game() { return cur && cur.state; }, get night() { return night; }, base: BASE };
+    window.SPARK = { say: (key, vars, o) => host.say(key, vars, o), dock: (d) => host.dock(d), get phase() { return cur && cur.state && cur.state.phase ? cur.state.phase : phase; }, get core() { return phase; }, get game() { return cur && cur.state; }, get night() { return night; }, base: BASE };
     titleScreen();
   }
   return { game, boot };
