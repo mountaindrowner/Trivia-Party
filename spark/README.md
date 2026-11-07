@@ -59,6 +59,37 @@ id="barnabas">` in `index.html`, styles at the end of `spark.css`). He stands in
   **Pick another game**.
 - Settings are saved on that computer (`sparkwars-prefs`).
 
+## Spark's curriculum: "The Church Is Here"
+
+Spark Sunday teaches *The Church Is Here*, a 40-lesson middle school New Testament curriculum (Acts through
+Revelation, ESV; 30 minutes of teaching paired with 30 minutes of games). Its theme: **"The resurrection life begins
+now."** Every lesson has a passage, a Gospel Anchor (one sentence tying it to the good news of Jesus), a discussion
+question and a game idea; every book has a "unique angle" so books don't repeat each other.
+
+| Lessons | Book | | Lessons | Book |
+| --- | --- | --- | --- | --- |
+| 1–6 | Acts | | 25 | 1 & 2 Timothy + Titus |
+| 7–9 | Romans | | 26 | Philemon + Jude |
+| 10–12 | 1 Corinthians | | 27–29 | Hebrews |
+| 13–14 | 2 Corinthians | | 30–32 | James |
+| 15–16 | Galatians | | 33–35 | 1 Peter |
+| 17–19 | Ephesians | | 36 | 2 Peter |
+| 20–21 | Philippians | | 37 | 1, 2 & 3 John |
+| 22–23 | Colossians | | 38–40 | Revelation |
+| 24 | 1 & 2 Thessalonians | | | |
+
+`data/lessons/` has 15 questions for each lesson (on the passage, its context, and what it means), written from the
+curriculum and checked against the ESV, with the lesson's Gospel Anchor. Questions follow the ESV here (the rest of
+Trivia Holy Party uses the NIV).
+
+**In Talents:** Questions → **Spark lessons**, then **Lesson** (◀ ▶ through all 40) and **Mix**:
+
+- **This week:** that lesson's questions first, then earlier lessons from the same book, so nothing repeats too soon.
+- **Whole book:** every lesson in that book, up to this one (review).
+- **All so far:** lessons 1 through this one, this lesson first.
+
+The results screen ends on the lesson's Gospel Anchor.
+
 ## The games
 
 ### 💰 Talents (Matthew 25:14–30)

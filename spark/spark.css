@@ -278,7 +278,7 @@ section > header .count + .btn { margin-left: 16px; }
 .timeline .between { margin-top: 4px; }
 
 /* Results */
-.results { display: grid; grid-template-rows: auto 1fr auto auto auto; gap: 12px; justify-items: center; }
+.results { display: grid; grid-template-rows: auto 1fr auto auto auto auto; gap: 12px; justify-items: center; }
 .winner { text-align: center; display: grid; gap: 10px; justify-items: center; }
 .winner h1 { font-size: calc(50px * var(--ds)); color: var(--team, var(--accent)); animation: big 0.6s ease-out; }
 .totals { display: flex; gap: 10px; }
@@ -428,3 +428,12 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 .lobby .join { padding-bottom: 150px; }
 .icon-btn.off { opacity: 0.45; }
 .host.lipsync .ear { animation: none; }
+
+/* A lesson's Gospel Anchor at the end of a game */
+.results .anchor { max-width: 940px; text-align: center; padding: 10px 22px; border-radius: var(--r-sm); background: var(--surface); border: var(--border); box-shadow: 4px 4px 0 var(--ink); animation: pop 0.4s ease-out both; animation-delay: 2.7s; }
+.results .anchor small { display: block; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 800; margin-bottom: 3px; }
+.results .anchor p { font-size: 16px; line-height: 1.35; font-weight: 600; }
+.pill.stepper { cursor: default; }
+.pill.stepper .steps-row { display: flex; align-items: center; gap: 8px; }
+.pill.stepper .arrow { border: 0; background: none; color: var(--text); font-size: 14px; cursor: pointer; padding: 2px 4px; }
+.pill.stepper strong { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

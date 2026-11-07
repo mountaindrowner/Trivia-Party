@@ -31,7 +31,7 @@ window.SW = (() => {
   const SAVE = "sparkwars-tv"; // { code, hostKey } in this tab, so a reloaded TV gets its room back
   const PREFS = "sparkwars-prefs";
   const prefs = (() => {
-    const d = { game: "talents", teams: 2, pack: "mix", minutes: 7, steals: true, muted: false, bluffs: 6, sets: 3 };
+    const d = { game: "talents", teams: 2, pack: "spark", lesson: 1, lessonMix: "week", minutes: 7, steals: true, muted: false, bluffs: 6, sets: 3 };
     try { return Object.assign(d, JSON.parse(localStorage.getItem(PREFS) || "{}")); } catch (e) { return d; }
   })();
   const savePrefs = () => { try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch (e) {} };
@@ -620,6 +620,13 @@ window.SW = (() => {
     if (go) go.disabled = !list.length;
   }
 
+  /** A setting with ◀ ▶ to step through a long list (e.g. 40 lessons). */
+  function stepper(label, text, onPrev, onNext) {
+    const go = (fn) => () => { fn(); savePrefs(); drawSettings(); S("tick"); };
+    return el("div", { class: "pill stepper" }, el("small", {}, label),
+      el("div", { class: "steps-row" }, el("button", { class: "arrow", "aria-label": `Previous ${label}`, onclick: go(onPrev) }, "◀"),
+        el("strong", {}, text), el("button", { class: "arrow", "aria-label": `Next ${label}`, onclick: go(onNext) }, "▶")));
+  }
   /** One setting as a pill: its name and value; a click moves on to the next value. */
   function chips(label, options, current, onPick) {
     const i = Math.max(0, options.findIndex(([v]) => v === current));
@@ -636,7 +643,7 @@ window.SW = (() => {
         el("span", { class: "icon" }, x.icon), el("strong", {}, x.name), el("small", {}, x.about)))),
       el("div", { class: "opts" },
         chips("Teams", [[0, "Off"], [2, "2"], [3, "3"], [4, "4"]], prefs.teams, (v) => { prefs.teams = v; if (phase === "lobby") setTeams(); }),
-        ...(g.settings ? g.settings(chips, prefs, () => { savePrefs(); drawSettings(); }) : [])),
+        ...(g.settings ? g.settings(chips, prefs, () => { savePrefs(); drawSettings(); }, stepper) : [])),
       el("div", { class: "buttons" },
         el("button", { class: "btn go start", disabled: !cast().length, onclick: () => startGame(g.key) }, `Start ${g.name}`),
         prefs.teams ? el("button", { class: "icon-btn", title: "Shuffle the teams", "aria-label": "Shuffle the teams", onclick: () => { setTeams(true); refresh(); S("swap"); fx.shake(); } }, "🔀") : null,
@@ -789,7 +796,7 @@ window.SW = (() => {
   }
 
   /* ---------- The end of a game ---------- */
-  /** result: { scores: {id: n}, unit, title, awards: [[label, text]] } */
+  /** result: { scores: {id: n}, unit, title, awards: [[label, text]], anchor: { title, text } (a lesson's Gospel Anchor) } */
   async function results(def, result) {
     const token = step();
     phase = "timeup";
@@ -821,6 +828,7 @@ window.SW = (() => {
         el("span", { class: "face" }, face(r[i])), el("span", { class: "name" }, r[i].name), el("span", { class: "talents" }, `${fmt(scores[r[i].id])} ${unit}`),
         el("span", { class: "block" }, ["🥇", "🥈", "🥉"][i])) : el("div", { class: "step empty" }))),
       el("div", { class: "awards" }, ...(result.awards || []).filter(Boolean).map(([a, b]) => el("div", {}, el("small", {}, a), el("strong", {}, b)))),
+      result.anchor ? el("div", { class: "anchor" }, el("small", {}, `✝ Gospel Anchor · ${result.anchor.title}`), el("p", {}, result.anchor.text)) : null,
       totals ? warBoard(gained) : null,
       el("div", { class: "buttons" }, el("button", { class: "btn go", onclick: () => startGame(def.key) }, "↻ Play again"), el("button", { class: "btn ghost", onclick: backToLobby }, "Pick another game"))));
     for (const p of cast()) {
