@@ -3,6 +3,9 @@
 import { site, Room, Gate } from "./relay.js";
 import phone from "../static/spark/phone.html";
 import tv from "../static/spark/tv.html";
+// Barnabas's recorded lines, bundled in (built by huddle/build.py): { "/voice/clips/name.mp3": ArrayBuffer }.
+import clips from "../static/spark/clips.js";
 
-export default site({ phone, tv, games: ["spark-wars"] });
+const files = Object.fromEntries(Object.entries(clips).map(([path, body]) => [path, { body, type: "audio/mpeg" }]));
+export default site({ phone, tv, games: ["spark-wars"], files });
 export { Room, Gate };

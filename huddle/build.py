@@ -1,7 +1,7 @@
 """Builds the pages each party-game site hands out, into huddle/server/static/<site>/ (not committed):
   holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
   spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
-  spark-assets/     files Spark Wars serves as they are (Barnabas's recorded lines, at /voice/clips/)
+  spark/clips/, spark/clips.js   Barnabas's recorded lines, bundled into the Spark Wars Worker (/voice/clips/)
 The phone page is the same code for both, with its own look (<html data-game="...">).
 Run before `npx wrangler deploy` (Holy Huddle) or `npx wrangler deploy --env spark` (Spark Wars), or `wrangler dev`."""
 import os, re, subprocess, sys
@@ -40,12 +40,18 @@ html = re.sub(r'<script src="([^"]+\.js)"></script>',
 assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Spark Wars file was not inlined"
 write(os.path.join(static, "spark", "tv.html"), html)
 
-# Spark Wars' files served as they are: Barnabas's recorded lines.
+# Barnabas's recorded lines, bundled into the Spark Wars Worker: the MP3s next to a module that imports them all.
+# (Cloudflare's static-asset upload doesn't work from a cloud session, so they ride along in the Worker; at about
+# 1.7 MB they fit the free plan's 3 MB limit for a Worker.)
 import shutil
-assets = os.path.join(static, "spark-assets")
-shutil.rmtree(assets, ignore_errors=True)
-clips = os.path.join(root, "spark", "voice", "clips")
-os.makedirs(os.path.join(assets, "voice"), exist_ok=True)
-if os.path.isdir(clips):
-    shutil.copytree(clips, os.path.join(assets, "voice", "clips"))
-print("spark-assets:", sum(len(f) for _, _, f in os.walk(assets)), "files")
+clips_src = os.path.join(root, "spark", "voice", "clips")
+clips_dst = os.path.join(static, "spark", "clips")
+shutil.rmtree(clips_dst, ignore_errors=True)
+shutil.rmtree(os.path.join(static, "spark-assets"), ignore_errors=True)
+names = sorted(f for f in os.listdir(clips_src) if f.endswith(".mp3")) if os.path.isdir(clips_src) else []
+if names:
+    shutil.copytree(clips_src, clips_dst, ignore=shutil.ignore_patterns("*.wav"))
+lines = [f'import c{i} from "./clips/{n}";' for i, n in enumerate(names)]
+lines.append("export default {" + ", ".join(f'"/voice/clips/{n}": c{i}' for i, n in enumerate(names)) + "};")
+write(os.path.join(static, "spark", "clips.js"), "\n".join(lines) + "\n")
+print(len(names), "voice clips,", sum(os.path.getsize(os.path.join(clips_src, n)) for n in names) // 1024, "KB")

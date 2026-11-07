@@ -36,7 +36,7 @@ id="barnabas">` in `index.html`, styles at the end of `spark.css`). He stands in
   Timeline streaks, the winner, and the War Points leader back in the lobby. Small lines are skipped when he's
   already talking.
 - **His voice:** recorded lines (Chatterbox, an open-source voice model, in a voice picked by ear: see `voice/README.md`),
-  served from `/voice/clips/` and listed in `voice/voice.js`. Lines with a player's name or a number in them say a
+  bundled into the Spark Wars server at `/voice/clips/` (huddle/build.py) and listed in `voice/voice.js`. Lines with a player's name or a number in them say a
   general version out loud ("Team Volt, meet your newest player") while the bubble shows the name. If a clip is
   missing, he falls back to the device's own voice. 🗣 in the lobby turns his voice off.
 - **His face follows his voice:** while a clip plays, its loudness opens his mouth, bobs and tilts his head, and

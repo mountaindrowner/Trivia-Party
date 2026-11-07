@@ -76,14 +76,17 @@ const page = (html) => new Response(html, { headers: {
 } });
 
 /* ---------- The front door: plain web requests ---------- */
-/** One site: its phone page at /, its game at /tv, and rooms for its own games. */
-export function site({ phone, tv, games }) {
+/** One site: its phone page at /, its game at /tv, rooms for its own games, and any files it carries
+    (`files`: { "/path": { body, type } }, e.g. Spark Wars' recorded voice lines). */
+export function site({ phone, tv, games, files = {} }) {
   return { async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("origin");
     const ip = request.headers.get("cf-connecting-ip") || "local";
     if (url.pathname === "/health") return json({ ok: true });
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? phone : tv);
+    const file = request.method === "GET" && files[url.pathname];
+    if (file) return new Response(file.body, { headers: { "content-type": file.type, "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" } });
     if (!originAllowed(origin, env)) return json({ error: "origin" }, 403);
     const h = origin ? cors(origin) : {};
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: h });

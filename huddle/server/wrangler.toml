@@ -48,6 +48,12 @@ type = "Text"
 globs = ["**/*.html"]
 fallthrough = true
 
+# Barnabas's recorded lines are bundled into the Worker as data (static/spark/clips.js lists them).
+[[env.spark.rules]]
+type = "Data"
+globs = ["**/*.mp3"]
+fallthrough = true
+
 [[env.spark.durable_objects.bindings]]
 name = "ROOMS"
 class_name = "Room"
@@ -59,10 +65,6 @@ class_name = "Gate"
 [[env.spark.migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room", "Gate"]
-
-# Files served as they are: Barnabas's recorded lines (/voice/clips/*.mp3), copied in by huddle/build.py.
-[env.spark.assets]
-directory = "./static/spark-assets"
 
 [env.spark.vars]
 ALLOWED_ORIGINS = "https://sparkwars.thecrossroads.workers.dev"
