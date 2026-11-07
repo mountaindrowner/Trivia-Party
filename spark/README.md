@@ -11,7 +11,8 @@ and family game.
 - **Files:**
   - `core.js`: the room, lobby, teams and War Points, rules screens, countdowns, scoreboards, results, and the
     effects (sparks, confetti, callouts, shakes, sliding boards, music).
-  - `talents.js`, `bluff.js`, `timeline.js`: one file per game. Each registers with `SW.game({...})`.
+  - `lightning.js`, `talents.js`, `bluff.js`, `timeline.js`: one file per game. Each registers with `SW.game({...})`.
+  - `lessons.js`: Spark's curriculum for any game that asks questions (pick a lesson and a mix).
   - `data/bluff.js` (72 facts) and `data/timeline.js` (28 sets): Spark Wars' own questions. Talents uses Trivia Holy
     Party's questions for ages 9 and up (`../js/data.js`, `../js/data-modes.js`, `../js/more/l2.js` to `l7.js`).
   - `spark.css`, `index.html`. `../huddle/build.py` inlines it all into one page for the server.
@@ -82,7 +83,8 @@ question and a game idea; every book has a "unique angle" so books don't repeat 
 curriculum and checked against the ESV, with the lesson's Gospel Anchor. Questions follow the ESV here (the rest of
 Trivia Holy Party uses the NIV).
 
-**In Talents:** Questions → **Spark lessons**, then **Lesson** (◀ ▶ through all 40) and **Mix**:
+**In the Lightning Round** (made for this) and **in Talents** (Questions → Spark lessons): pick the **Lesson**
+(◀ ▶ through all 40) and the **Mix**:
 
 - **This week:** that lesson's questions first, then earlier lessons from the same book, so nothing repeats too soon.
 - **Whole book:** every lesson in that book, up to this one (review).
@@ -91,6 +93,15 @@ Trivia Holy Party uses the NIV).
 The results screen ends on the lesson's Gospel Anchor.
 
 ## The games
+
+### ⚡ Lightning Round (this week's lesson)
+
+Head to head: everyone gets the same question at the same time, from Spark's curriculum (8, 10, 12 or 15
+questions; 15, 20 or 30 seconds each). A right answer scores 500 to 1,000 points (quicker is more), plus 100 for each
+answer in a row after the first (up to 500); the last question is worth double. The TV shows the four answers in
+the same colors and shapes as the phones, faces popping up as players lock in; then the answer, how many picked
+each option, the fastest player and the verse; then the scoreboard, with movers sliding up. Awards: most right,
+quickest on average, longest streak. It ends on the lesson's Gospel Anchor.
 
 ### 💰 Talents (Matthew 25:14–30)
 

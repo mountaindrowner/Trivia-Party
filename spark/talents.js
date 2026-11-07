@@ -15,24 +15,6 @@
     const seen = new Set();
     return ((window.THP && THP.QUESTIONS) || []).filter((q) => pack.lvls.includes(q.lvl) && q.a && q.a.length >= 2 && !seen.has(q.q) && seen.add(q.q));
   }
-  /* Spark's own curriculum, "The Church Is Here" (spark/data/lessons/): 40 lessons, Acts to Revelation, ESV. Pick a
-     lesson and how to mix it:
-       This week   the lesson first, then earlier lessons from the same book (so it doesn't repeat too soon)
-       Whole book  every lesson in that book, up to this one
-       All so far  every lesson from 1 to this one */
-  const lessons = () => ((window.SPARK_DATA && SPARK_DATA.LESSONS) || []).slice().sort((a, b) => a.n - b.n);
-  const MIXES = [["week", "This week"], ["book", "Whole book"], ["sofar", "All so far"]];
-  function lessonPool(prefs) {
-    const all = lessons();
-    if (!all.length) return null;
-    const L = all.find((l) => l.n === prefs.lesson) || all[0];
-    const qs = (list) => list.flatMap((l) => l.q.map((q) => ({ ...q, lesson: l.n })));
-    const earlier = all.filter((l) => l.n < L.n && (prefs.lessonMix === "sofar" || l.book === L.book));
-    const name = `Lesson ${L.n}: ${L.title}`;
-    if (prefs.lessonMix === "book") return { name: `${L.book} (lessons ${earlier.concat(L).map((l) => l.n).join(", ")})`, sub: L.book, first: qs(earlier.concat(L)), then: [], lesson: L };
-    if (prefs.lessonMix === "sofar") return { name: `Lessons 1–${L.n}`, sub: `Everything through ${name}`, first: qs([L]), then: qs(earlier), lesson: L };
-    return { name, sub: L.scripture, first: qs([L]), then: qs(earlier), lesson: L };
-  }
   /* The jars. Weights are out of about 100; steals only when they're on, and only if there's someone to take from. */
   const JARS = [
     { key: "10", w: 17, gain: 10 }, { key: "20", w: 15, gain: 20 }, { key: "30", w: 12, gain: 30 }, { key: "50", w: 8, gain: 50 }, { key: "100", w: 3, gain: 100 },
@@ -42,26 +24,21 @@
   SW.game({
     key: "talents", name: "Talents", icon: "💰", about: "Answer at your own pace. Right answers open jars.",
     settings(chips, prefs, redraw, stepper) {
-      const all = lessons();
+      const all = SW.lessons.list();
       const sources = (all.length ? [["spark", "Spark lessons"]] : []).concat(PACKS.map((p) => [p.key, p.name]));
       const out = [
         chips("Time", [3, 5, 7, 10].map((m) => [m, `${m} min`]), prefs.minutes, (v) => { prefs.minutes = v; }),
         chips("Steals", [[true, "On"], [false, "Off"]], prefs.steals, (v) => { prefs.steals = v; }),
         chips("Questions", sources, all.length ? prefs.pack : prefs.pack === "spark" ? "mix" : prefs.pack, (v) => { prefs.pack = v; }),
       ];
-      if (prefs.pack === "spark" && all.length) {
-        const i = Math.max(0, all.findIndex((l) => l.n === prefs.lesson));
-        const L = all[i];
-        out.push(stepper("Lesson", `${L.n} · ${L.title}`, () => { prefs.lesson = all[(i + all.length - 1) % all.length].n; }, () => { prefs.lesson = all[(i + 1) % all.length].n; }),
-          chips("Mix", MIXES, prefs.lessonMix || "week", (v) => { prefs.lessonMix = v; }));
-      }
+      if (prefs.pack === "spark") out.push(...SW.lessons.settings(chips, prefs, stepper));
       return out;
     },
 
     async run(sw) {
       const { el, show, shuffle, nth, clock, fmt, face, S, put, prefs, byId, cast, teamOf, fx } = sw;
       // The questions: a Spark lesson (its own questions first, then the mix), or one of the Bible packs.
-      const spark = prefs.pack === "spark" ? lessonPool(prefs) : null;
+      const spark = prefs.pack === "spark" ? SW.lessons.pool(prefs) : null;
       const pack = spark ? { name: spark.name, about: spark.sub } : PACKS.find((p) => p.key === prefs.pack) || PACKS[0];
       const pool = spark ? spark.first.concat(spark.then) : shuffle(poolFor(pack));
       const firstN = spark ? spark.first.length : pool.length;
@@ -139,7 +116,7 @@
       const best = (key) => r.slice().sort((a, b) => g.ps[b.id][key] - g.ps[a.id][key])[0];
       const mostRight = best("correct"), streak = best("best"), giver = best("given");
       return {
-        scores: scores(), unit: "talents", anchor: spark && prefs.lessonMix !== "sofar" ? { title: `Lesson ${spark.lesson.n}: ${spark.lesson.title}`, text: spark.lesson.anchor } : null,
+        scores: scores(), unit: "talents", anchor: SW.lessons.anchor(spark, prefs),
         awards: [
           mostRight && ["Most right answers", `${mostRight.name} · ${g.ps[mostRight.id].correct}`],
           streak && g.ps[streak.id].best >= 2 && ["Longest streak", `${streak.name} · ${g.ps[streak.id].best} in a row`],

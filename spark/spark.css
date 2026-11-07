@@ -437,3 +437,36 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 .pill.stepper .steps-row { display: flex; align-items: center; gap: 8px; }
 .pill.stepper .arrow { border: 0; background: none; color: var(--text); font-size: 14px; cursor: pointer; padding: 2px 4px; }
 .pill.stepper strong { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Lightning Round */
+.lightning { display: grid; grid-auto-rows: max-content; gap: 16px; align-content: start; }
+.fact.lq { font-size: calc(30px * var(--ds)); padding: 24px 30px; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ans { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 20px; min-height: 74px; border-radius: var(--r-sm); border: var(--border);
+  box-shadow: 4px 4px 0 var(--ink); color: #fff; font: 700 24px/1.2 var(--body); overflow: hidden; animation: pop 0.3s ease-out both; }
+.ans b { font-size: 26px; flex: none; }
+.ans span { position: relative; z-index: 1; }
+.ans.a0 { background: #2f7bff; } .ans.a1 { background: #a34bff; animation-delay: 0.08s; } .ans.a2 { background: #12b866; animation-delay: 0.16s; } .ans.a3 { background: #ff7a1a; animation-delay: 0.24s; }
+.ans .bar { position: absolute; inset: auto auto 0 0; height: 6px; width: var(--w); background: rgba(255, 255, 255, 0.85); transition: width 0.6s; }
+.ans .n { margin-left: auto; position: relative; z-index: 1; font: 800 26px var(--display); font-style: normal; }
+.ans.wrong { opacity: 0.35; filter: grayscale(0.6); }
+.ans.right { outline: 5px solid #fff; outline-offset: 3px; transform: scale(1.03); animation: big 0.4s ease-out; }
+.ans.right::after { content: "✓"; position: absolute; right: 64px; font: 800 30px var(--display); }
+.verdict-row { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.verdict-row .verdict { font: 800 calc(28px * var(--ds)) var(--display); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); }
+.verdict-row .quick { font-size: 19px; font-weight: 700; }
+.verdict-row .ref { font-size: 16px; color: var(--soft); max-width: 1000px; }
+.games { grid-template-columns: repeat(4, 1fr); }
+.game { padding: 10px 12px; column-gap: 10px; }
+.game .icon { font-size: 26px; }
+/* With a Gospel Anchor on it, the results screen needs a little more room. */
+.results:has(.anchor) { gap: 8px; padding-top: 22px; padding-bottom: 16px; }
+.results:has(.anchor) .winner h1 { font-size: calc(42px * var(--ds)); }
+.results:has(.anchor) .podium .face { font-size: 42px; }
+.results:has(.anchor) .podium .name { font-size: 21px; }
+.results:has(.anchor) .podium .p1 .block { height: 104px; }
+.results:has(.anchor) .podium .p2 .block { height: 74px; }
+.results:has(.anchor) .podium .p3 .block { height: 52px; }
+.results:has(.anchor) .podium .block { font-size: 30px; padding-top: 6px; }
+.results:has(.anchor) .btn.go { padding: 12px 26px; font-size: 19px; }
+.results .anchor { max-width: 600px; }

@@ -141,5 +141,14 @@ window.SPARK_VOICE = {
  ],
  "winSolo": [
   "voice/clips/winsolo-0.mp3"
+ ],
+ "rules.lightning": [
+  "voice/clips/rules-lightning-0.mp3"
+ ],
+ "lightningFinal": [
+  "voice/clips/lightningfinal-0.mp3"
+ ],
+ "fastest": [
+  "voice/clips/fastest-0.mp3"
  ]
 };

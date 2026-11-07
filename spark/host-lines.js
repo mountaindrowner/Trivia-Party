@@ -31,6 +31,9 @@ window.SPARK_LINES = {
 
   "rules.talents": ["This is Talents. Answer at your own pace, and every right answer opens a jar. Some jars are great. Some... are not. And please, don't bury your talents. We've all read how that ends."],
   "rules.bluff": ["This is Bluff the Bible. Every fact is real, but one word is missing. Make up a fake answer so good, your friends pick it. Just for this game, okay? Let's not make it a habit."],
+  "rules.lightning": ["This is the Lightning Round. Everybody gets the same question, at the same time. Right answers score, and fast right answers score more. So... were you listening this morning?"],
+  lightningFinal: ["Last question. It's worth double. Now would be a great time to focus."],
+  fastest: [{ t: "{name} got it first. Show-off.", v: "Wow. Somebody got that one fast. Show-off." }],
   "rules.timeline": ["This is Timeline. I deal a card, and you tap where it goes. Here's a hint: creation comes first. You're welcome."],
 
   double: ["It's double time. Every jar pays double, so... no pressure.", "Last minute, everyone. Everything's doubled. Try not to panic."],
