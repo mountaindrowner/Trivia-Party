@@ -199,41 +199,11 @@ window.SW = (() => {
   fit();
 
   /* ---------- Barnabas, the host ----------
-     He stands in a corner and talks in a bubble, out loud too (the device's own voice for now; recorded lines
-     can be dropped in as window.SPARK_VOICE = { key: [audio urls] }). Docks: "lobby" (bottom of the join column,
-     always there), "corner" (bottom left, always there), "peek" (pops in to say something, then ducks out). */
-  const LINES = {
-    title: ["Yo! I'm Barnabas, your host. Hit Open a room and let's start a war. A friendly one."],
-    lobby: ["Scan the code or type it in. Teams fill up as you join!", "Phones out! Scan the code and pick your icon.", "Room's open! Get in here."],
-    join: ["{name} has entered the arena!", "{name} is in. Let's gooo!", "Welcome, {name}!", "{name} just pulled up.", "Ayy, {name}! Good to see you.", "{name}, you made it!"],
-    joinTeam: ["{name} joins Team {team}!", "Team {team} gets {name}!", "{name} is repping Team {team}."],
-    joinMany: ["{n} more just rolled in!", "The room is filling up. {n} more!"],
-    full: ["Thirty players! The room is full. Extras can still watch."],
-    lobbyBack: ["Pick the next game!", "What's next? Pick a game!"],
-    lobbyWar: ["Team {team} leads the war with {n}. Pick the next game!", "Team {team} is on top with {n} War Points. Who's catching them?"],
-    "rules.talents": ["Talents! Answer at your own pace. Right answers open jars. Stack 'em up, and whatever you do, don't bury yours."],
-    "rules.bluff": ["Bluff the Bible! Every fact is real, but one word is missing. Make up a fake so good your friends pick it. Just for this game, I promise."],
-    "rules.timeline": ["Timeline! I deal a card, you tap where it goes. Spoiler: creation comes first."],
-    go: ["Phones up!", "Here we go!", "Let's go!"],
-    double: ["Double time! Every jar pays double!", "Last minute! Everything's doubled!"],
-    tenSeconds: ["Ten seconds!", "Ten seconds! Finish strong!"],
-    lead: ["Team {team} takes the lead!", "Ooh, Team {team} is out in front!", "Team {team} is coming for it!"],
-    swap: ["{name} pulled a swap. Bold. Very bold.", "A swap! {name} said mine now."],
-    tax: ["{name} with the tax collector move!", "{name} is collecting. Zacchaeus would be proud. Before he changed, I mean."],
-    jackpot: ["{name} hit the jackpot!", "Jackpot for {name}!"],
-    write: ["Make it believable. Make it sneaky.", "Write something they'll fall for!", "Fakes are flying. Who's the best liar? In this game only!"],
-    pick: ["Which one is real? Pick on your phone!", "One of these is true. Find it!"],
-    fooledMany: ["{name}'s fake got {n} people! Sneaky.", "{n} people fell for {name}'s fake. Wow."],
-    nobodyTruth: ["Nobody?! The fakers win that round.", "Nobody found it! Y'all got played."],
-    allTruth: ["Too easy for you! Next one's harder.", "Everybody found it. Bible scholars, all of you."],
-    truth: ["And the real answer is...", "Here's the truth!"],
-    set: ["Next up: {set}.", "Let's do {set}!"],
-    allRight: ["Look at you, Bible scholars!", "Almost everybody got it!"],
-    noneRight: ["Oof. That one was sneaky.", "Nobody? That's a tough one."],
-    streak: ["{name} is on fire! {n} in a row!"],
-    winTeam: ["Team {team} takes it! Three War Points!", "That one goes to Team {team}!"],
-    winSolo: ["{name} wins it!", "And the winner is {name}!"],
-  };
+     He stands in a corner and talks in a bubble, out loud too: a recorded clip when there is one
+     (window.SPARK_VOICE, from spark/voice/), otherwise the device's own voice. His lines are in spark/host-lines.js.
+     Docks: "lobby" (bottom of the join column, always there), "corner" (bottom left, always there), "peek" (pops in
+     to say something, then ducks out). */
+  const LINES = window.SPARK_LINES || {}; // spark/host-lines.js
   const host = (() => {
     const tpl = document.getElementById("barnabas");
     const node = el("aside", { class: "host peek", "data-mood": "happy", "aria-live": "polite" });
@@ -250,13 +220,16 @@ window.SW = (() => {
     };
     if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
     const fill = (t, v) => t.replace(/\{(\w+)\}/g, (_, k) => (v && v[k] != null ? v[k] : ""));
-    /** Speak: a recorded clip for this line if there is one, else the device's voice. */
-    function speak(key, i, text) {
+    /** Speak: a recorded clip for this line if there is one (one per team where the line names a team), else the
+        device's voice. */
+    function speak(key, i, text, vars) {
       if (prefs.muted || prefs.voice === false) return Promise.resolve();
       const clips = window.SPARK_VOICE && window.SPARK_VOICE[key];
-      if (clips && clips[i]) {
+      let clip = clips && clips[i];
+      if (clip && typeof clip === "object") { const t = TEAMS.find((x) => vars && x.name === vars.team); clip = t ? clip[t.key] : null; }
+      if (clip) {
         return new Promise((resolve) => {
-          const a = new Audio(clips[i]);
+          const a = new Audio(clip);
           a.onended = a.onerror = resolve;
           a.play().catch(resolve);
           setTimeout(resolve, 9000);
@@ -297,13 +270,14 @@ window.SW = (() => {
       say(key, vars, o = {}) {
         const list = LINES[key];
         const i = list ? Math.floor(Math.random() * list.length) : 0;
-        const text = fill(list ? list[i] : key, vars);
+        const item = list ? list[i] : key;
+        const text = fill(item.t || item, vars);
         if (o.now) { busy = Promise.resolve(); queued = 0; try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
         else if (o.minor && queued) return busy; // small stuff only when he's free
         queued++;
         const run = async () => {
           show(text, o.mood);
-          await Promise.all([speak(key, i, text), new Promise((r) => setTimeout(r, Math.min(4000, 700 + text.length * 30)))]);
+          await Promise.all([speak(key, i, text, vars), new Promise((r) => setTimeout(r, Math.min(4000, 700 + text.length * 30)))]);
           done(o.hold != null ? o.hold : 1600);
           queued = Math.max(0, queued - 1);
         };
@@ -594,7 +568,7 @@ window.SW = (() => {
         prefs.teams ? el("button", { class: "icon-btn", title: "Shuffle the teams", "aria-label": "Shuffle the teams", onclick: () => { setTeams(true); refresh(); S("swap"); fx.shake(); } }, "🔀") : null,
         el("button", { class: "icon-btn lock", title: room.locked ? "Unlock the room" : "Lock the room (no new players)", "aria-label": room.locked ? "Unlock the room" : "Lock the room", onclick: () => hostSend({ t: "lock", locked: !room.locked }) }, room.locked ? "🔓" : "🔒"),
         el("button", { class: "icon-btn", title: "Sound and music", "aria-label": prefs.muted ? "Turn sound on" : "Turn sound off", onclick: () => { prefs.muted = !prefs.muted; savePrefs(); drawSettings(); try { THP.Music.refresh(); } catch (e) {} } }, prefs.muted ? "🔇" : "🔊"),
-        el("button", { class: "icon-btn" + (prefs.voice === false ? " off" : ""), title: "Barnabas's voice", "aria-label": prefs.voice === false ? "Turn Barnabas's voice on" : "Turn Barnabas's voice off", onclick: () => { prefs.voice = prefs.voice === false; savePrefs(); drawSettings(); if (prefs.voice) host.say("Voice on! Can you hear me?"); else host.quiet(); } }, "🗣"),
+        el("button", { class: "icon-btn" + (prefs.voice === false ? " off" : ""), title: "Barnabas's voice", "aria-label": prefs.voice === false ? "Turn Barnabas's voice on" : "Turn Barnabas's voice off", onclick: () => { prefs.voice = prefs.voice === false; savePrefs(); drawSettings(); if (prefs.voice) host.say("voiceOn"); else host.quiet(); } }, "🗣"),
         el("button", { class: "icon-btn", title: "End the room", "aria-label": "End the room", onclick: endRoom }, "✕")));
   }
 
