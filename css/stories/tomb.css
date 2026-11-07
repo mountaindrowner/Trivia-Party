@@ -53,9 +53,8 @@
 
 /* Speech bubbles: pale glass in a lead came, with a thin gold line inside. */
 .scene-player.theme-glass .sp-bubble { color: #2a1a10; background: linear-gradient(160deg, #fff8e2, #f3e2b8); border: 0.6cqh solid #1c1424; border-radius: 1.2cqh;
-  box-shadow: inset 0 0 0 0.35cqh #d9a441, 0 0.8cqh 2cqh rgba(0, 0, 0, 0.45); font: 700 3.5cqh/1.28 "Cinzel", Georgia, serif; letter-spacing: 0.01em; padding: 1.6cqh 2.6cqh 1.8cqh; }
+  box-shadow: inset 0 0 0 0.35cqh #d9a441, 0 0.8cqh 2cqh rgba(0, 0, 0, 0.45); font: 700 3.5cqh/1.28 "Cinzel", Georgia, serif; letter-spacing: 0.01em; padding: 1.6cqh 2.6cqh 1.8cqh; width: max-content; max-width: 42cqw; }
 .scene-player.theme-glass .sp-bubble::after { border-top-color: #1c1424; }
-.scene-player.theme-glass .sp-bubble { width: max-content; max-width: 42cqw; }
 .scene-player.theme-glass .sp-who { font: 700 2.3cqh/1 "Cinzel", Georgia, serif; letter-spacing: 0.14em; text-transform: uppercase; color: #a02838; }
 .scene-player.theme-glass .sp-bubble.loud { background: radial-gradient(ellipse at 50% 30%, #ffffff, #e6f3ff); border-color: #1c1424; font: 700 3.8cqh/1.25 "Cinzel", Georgia, serif;
   letter-spacing: 0.01em; box-shadow: inset 0 0 0 0.35cqh #ffd45a, 0 0 4cqh rgba(255, 250, 220, 0.85); }

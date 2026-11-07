@@ -961,10 +961,13 @@ window.THP = window.THP || {};
       stagebox.append(...bundles);
       area.append(stagebox);
       bundles.forEach((b) => (b.disabled = true));
-      return new Promise(async (resolve) => {
+      return new Promise((resolve) => {
         let over = false;
         const end = (ok) => { if (over) return; over = true; t.stop(); bundles.forEach((b) => { b.disabled = true; b.classList.add("open"); }); setTimeout(() => resolve(ok), 1000); };
         t.done.then(() => end(false));
+        // The shuffle runs on its own; if anything goes wrong in it, the round ends (as a miss) instead of hanging.
+        shuffleThenPick().catch(() => end(false));
+        async function shuffleThenPick() {
         bundles[spy].classList.add("open");
         await sleep(1100);
         bundles[spy].classList.remove("open");
@@ -986,6 +989,7 @@ window.THP = window.THP || {};
           b.addEventListener("click", () => { if (over) return; const ok = i === spy; S(ok ? "correct" : "wrong"); if (ok) prog(1); end(ok); });
         });
         THP.ui.focusFirst(stagebox);
+        }
       });
     },
   };

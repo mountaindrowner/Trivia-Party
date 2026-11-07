@@ -3,7 +3,7 @@
    spelled-around ones (sh1t, f u c k, fuuuck). A refusal never says which word matched. */
 
 const MAX_LEN = 12;
-const ALLOWED = /^[\p{Script=Latin}0-9 '\-]+$/u;
+const ALLOWED = /^[\p{Script=Latin}0-9 '-]+$/u;
 
 // Matched anywhere inside the squashed name ("xXshitXx" is caught).
 const STRONG = [

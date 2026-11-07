@@ -42,7 +42,7 @@ button:focus-visible { outline: 4px solid var(--white); outline-offset: 3px; }
 .avatars button { font-size: 40px; padding: 8px 0; aspect-ratio: 1; background: rgba(255, 255, 255, 0.15); border-color: rgba(26, 11, 61, 0.6); box-shadow: 0 4px 0 rgba(26, 11, 61, 0.6); }
 .avatars button[aria-pressed="true"] { background: var(--gold); border-color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
 
-.me { display: grid; justify-items: center; gap: 6px; padding: 18px; border-radius: 20px; background: rgba(26, 11, 61, 0.45); }
+.me { display: grid; justify-items: center; gap: 6px; padding: 18px; border-radius: 20px; background: rgba(26, 11, 61, 0.45); border: 3px solid var(--team, transparent); }
 .me .face { font-size: 84px; line-height: 1; }
 .me .name { font: 400 32px/1 "Lilita One", system-ui, sans-serif; }
 .tag { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--pink); }
@@ -88,7 +88,6 @@ button:focus-visible { outline: 4px solid var(--white); outline-offset: 3px; }
 .choices.order.done button { opacity: 1; }
 
 /* Team badges and the line above a prompt (Spark Wars) */
-.me { border: 3px solid var(--team, transparent); }
 .tag.team { background: var(--team, var(--gold)); color: var(--ink); }
 .header { text-align: center; font-size: 16px; font-weight: 900; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.3); border: 2px solid var(--team, rgba(255, 255, 255, 0.3)); }
 

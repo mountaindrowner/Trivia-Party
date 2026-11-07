@@ -45,7 +45,7 @@
 .huddle-timer i { display: block; height: 100%; background: #ffc53d; transform-origin: left; }
 .huddle-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
 .huddle-opt { display: flex; gap: 0.6rem; align-items: center; padding: 0.8rem 1rem; border-radius: 0.9rem; color: #fff; font-weight: 900; font-size: 1.25rem;
-  border: 0.2rem solid #1a0b3d; box-shadow: 0 0.3rem 0 #1a0b3d; transition: opacity 0.3s, transform 0.3s; }
+  border: 0.2rem solid #1a0b3d; box-shadow: 0 0.3rem 0 #1a0b3d; transition: opacity 0.3s, transform 0.3s; position: relative; }
 .huddle-opt.gem-0 { background: #2b7bff; } .huddle-opt.gem-1 { background: #a24bff; } .huddle-opt.gem-2 { background: #19a85b; } .huddle-opt.gem-3 { background: #ff7a1a; }
 .huddle-opt.right { outline: 0.3rem solid #fff; transform: scale(1.04); }
 .huddle-opt.wrong { opacity: 0.3; }
@@ -74,7 +74,6 @@
 .huddle-of { margin: 0; font-weight: 900; font-size: 1.4rem; color: #fff; }
 .huddle-double { margin: 0; padding: 0.4rem 1rem; border-radius: 0.6rem; background: #ff3d7f; color: #fff; font: 400 2rem/1 "Lilita One", "Bangers", sans-serif; animation: huddle-pulse 0.8s ease-in-out infinite alternate; }
 @keyframes huddle-pulse { to { transform: scale(1.08); } }
-.huddle-opt { position: relative; }
 .huddle-opt > span:first-of-type { flex: 1; }
 .huddle-who { display: flex; gap: 0.15rem; font-size: 1.5rem; }
 .huddle-who:empty { display: none; }

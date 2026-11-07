@@ -1,0 +1,21 @@
+{
+  "name": "trivia-holy-party",
+  "private": true,
+  "description": "Trivia Holy Party (the kids' and family game), Spark Wars (the youth group game night), and the room server and phone page they share. See README.md.",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . && stylelint \"**/*.css\"",
+    "check:content": "node tools/check-content.mjs",
+    "build": "python3 huddle/build.py",
+    "test:relay": "node tools/run-tests.mjs relay",
+    "test:e2e": "node tools/run-tests.mjs e2e",
+    "check": "npm run lint && npm run check:content && npm run build && npm run test:relay"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "globals": "17.14.0",
+    "stylelint": "16.26.1",
+    "stylelint-config-recommended": "17.0.0"
+  }
+}

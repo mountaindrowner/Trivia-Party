@@ -42,7 +42,7 @@
   const cleanCode = (s) => String(s || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
 
   /* ---------- State ---------- */
-  let ws = null, me = null, room = null, hostOn = true, lastScreen = { screen: "lobby" }, retry = 0, retryTimer = 0, hb = 0, wake = null, leaving = false;
+  let ws = null, me = null, hostOn = true, lastScreen = { screen: "lobby" }, retry = 0, retryTimer = 0, hb = 0, wake = null, leaving = false;
 
   /* ---------- Join screens ---------- */
   function joinScreen(prefillCode, error, prefillName) {

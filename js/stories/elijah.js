@@ -5,7 +5,6 @@
    between three values; only the actors use it. The big paper background gets a static grain filter, drawn once. */
 (function () {
   const { REDUCED } = THP.Scenes.kit;
-  const el = THP.ui.el;
   const HAND = `font-family="'Patrick Hand', 'Comic Sans MS', 'Chalkboard SE', cursive"`;
 
   /* ---------- Crayon kit ---------- */

@@ -44,7 +44,6 @@
         join(id) { add(id); if (g.tableOf[id] && g.phase !== "rules") put(id, goTo(g.tableOf[id], "You're at")); },
         input(id, d) { if (d.type === "vip" && d.action === "seated" && vipSeated) return vipSeated(); handler(id, d); },
       });
-      const live = () => cast().filter((p) => p.id in g.scores);
 
       /* --- tables: scramble everyone, send them off, wait until they're seated --- */
       const nTables = Math.min(prefs.lqTables || 0, Math.max(0, Math.floor(cast().length / 2)));

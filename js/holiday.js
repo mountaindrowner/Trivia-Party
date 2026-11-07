@@ -4,7 +4,7 @@
 window.THP = window.THP || {};
 
 THP.Holiday = (function () {
-  const { el, $, $$, show, say, waitButton, setMood, stamp, confetti, sleep, pick, rand, shuffle } = THP.ui;
+  const { el, $, show, say, waitButton, setMood, stamp, confetti, sleep, pick, rand, shuffle } = THP.ui;
   const S = (n) => THP.Sound.play(n);
   const G = () => THP.game;
   const REDUCED = () => matchMedia("(prefers-reduced-motion: reduce)").matches;

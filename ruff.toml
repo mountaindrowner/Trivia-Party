@@ -1,0 +1,5 @@
+# Ruff for the repo's Python scripts (the builds and the voice tools): real bugs only, not style.
+#   pip install ruff && ruff check .
+line-length = 140
+[lint]
+select = ["E9", "F", "B"]

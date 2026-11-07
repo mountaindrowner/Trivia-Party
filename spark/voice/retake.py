@@ -2,7 +2,7 @@
 script, and the clearest one replaces the clip. Same voice and processing as record.py.
 python spark/voice/retake.py <chatterbox model dir> <faster-whisper model dir> jointeam-1-volt.mp3 [more clip names]
 (A full record.py run records everything again with its usual seed, so run the retakes again after one.)"""
-import json, os, re, subprocess, sys, tempfile, difflib
+import os, subprocess, sys, tempfile
 import torch, torchaudio as ta, librosa
 from chatterbox.tts import ChatterboxTTS
 from faster_whisper import WhisperModel
