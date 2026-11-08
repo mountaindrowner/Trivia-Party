@@ -1,157 +1,175 @@
-/* 💰 Talents: THE COUNTING HOUSE.
-   Matthew 25 is about a master's money, so the game is an old bank's ledger: cream ruled paper with a red margin,
-   fat Victorian headlines, typewriter numbers, rubber stamps slammed on crooked, a ticker tape for the live feed,
-   gold bars on the podium, and coins instead of confetti.
-   Fonts: Abril Fatface (headlines), Courier Prime (the books), Special Elite (stamps). */
+/* 💰 Talents: THE VAULT.
+   Matthew 25 is about a master's money, so Talents is a cartoon jackpot vault: emerald green with gold rays turning
+   slowly behind everything, coins flipping in the air, marquee bulbs chasing round the clock, starburst callouts,
+   glass jars with lids, gold bars on the podium, and coins instead of confetti.
+   Fonts: Luckiest Guy (chunky cartoon caps), Baloo 2 (round and friendly). */
 html[data-theme="talents"] {
-  --display: "Abril Fatface", Georgia, serif; --display-w: 400; --body: "Courier Prime", "Courier New", monospace;
-  --ds: 1.04; --case: none; --track: 0;
-  --bg: #efe3c4; --glow1: transparent; --glow2: transparent;
-  --surface: #fbf5e3; --surface-hi: #fffaf0; --line: #b9a77a;
-  --text: #1c2235; --soft: #6e5f43; --accent: #1f6b45; --on-accent: #fbf5e3; --hot: #c8102e; --cool: #2a4d8f; --good: #1f6b45;
-  --gold: #c9a227; --ink: #1c2235; --r: 2px; --r-sm: 2px; --border: 2px solid var(--ink); --lift: 4px 4px 0 rgba(28, 34, 53, 0.85);
-  --stamp: "Special Elite", "Courier New", monospace;
-  --fx-colors: #d4af37, #f2d16b, #b8860b, #e8c547; --fx-sparks: 0.35; --fx-bits: coin;
-  color-scheme: light;
+  --display: "Luckiest Guy", "Arial Black", sans-serif; --display-w: 400; --body: "Baloo 2", system-ui, sans-serif;
+  --ds: 1; --case: none; --track: 0.03em;
+  --bg: #06402f; --glow1: transparent; --glow2: transparent;
+  --surface: #fff4cf; --surface-hi: #ffe27a; --line: rgba(255, 255, 255, 0.2);
+  --text: #fff8e6; --soft: #a8e6cf; --accent: #ffcc33; --on-accent: #062e22; --hot: #ff4f9a; --cool: #38d6ff; --good: #2ee58a;
+  --ink: #062e22; --dark: #083b2b; --r: 20px; --r-sm: 16px; --border: 4px solid var(--ink); --lift: 5px 6px 0 var(--ink);
+  --outline: -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink), 3px 3px 0 var(--ink), 0 7px 0 var(--ink);
+  --bulbs: radial-gradient(circle, #fffbe0 0 3px, #ffc21a 3.5px 5px, transparent 5.6px) 0 0 / 18px 18px;
+  --fx-colors: #ffd84d, #ffcc33, #f2b70f, #fff1a8; --fx-sparks: 0.5; --fx-bits: coin;
 }
 html[data-theme="talents"] body { font-weight: 700; }
 
-/* The page: ruled ledger paper, a double red margin, a little grain, darker at the edges. */
-html[data-theme="talents"] #frame {
-  background:
-    radial-gradient(ellipse at center, transparent 55%, rgba(110, 70, 20, 0.32)),
-    linear-gradient(90deg, transparent 70px, rgba(200, 16, 46, 0.4) 70px 72px, transparent 72px 77px, rgba(200, 16, 46, 0.4) 77px 79px, transparent 79px),
-    repeating-linear-gradient(180deg, transparent 0 35px, rgba(42, 77, 143, 0.16) 35px 36px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"),
-    #efe3c4;
+/* The vault: green light from the middle, gold rays turning, dark corners. */
+html[data-theme="talents"] #frame { background: radial-gradient(circle at 50% 45%, #22b783, #0b6b4d 45%, #03241a 100%); overflow: hidden; }
+html[data-theme="talents"] #frame::before {
+  content: ""; position: absolute; left: 50%; top: 45%; width: 260vmax; height: 260vmax; margin: -130vmax 0 0 -130vmax; pointer-events: none;
+  background: repeating-conic-gradient(rgba(255, 214, 77, 0.16) 0 7deg, transparent 7deg 15deg);
+  mask-image: radial-gradient(circle, #000 8%, transparent 32%); animation: tal-rays 90s linear infinite;
 }
-
-/* Headlines: big fat serif, ink with a pressed-in look. */
-html[data-theme="talents"] :is(h1, h2, .count, .play .timer) { color: var(--ink); text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6); }
-html[data-theme="talents"] .intro .head h1 { font-size: 84px; letter-spacing: -0.01em; }
-html[data-theme="talents"] .intro .head h1::after { content: ""; display: block; height: 7px; margin-top: 6px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
-html[data-theme="talents"] .intro .head p { font-style: italic; color: var(--soft); }
-html[data-theme="talents"] .eyebrow, html[data-theme="talents"] .play header .name {
-  display: inline-block; font-size: 30px; color: var(--ink); border-bottom: 3px double var(--ink); padding: 0 4px; justify-self: start;
+@keyframes tal-rays { to { transform: rotate(360deg); } }
+/* Coins flipping in the air. */
+html[data-theme="talents"] .decor i:nth-child(-n+9) {
+  width: var(--s, 70px); height: var(--s, 70px); border-radius: 50%; opacity: 0.9;
+  background: radial-gradient(circle at 35% 30%, #fff1a8, #ffcc33 40%, #c99a12 75%, #8a6a10);
+  box-shadow: inset 0 0 0 5px rgba(138, 106, 16, 0.7), inset 0 0 0 11px rgba(255, 255, 255, 0.28), 0 8px 0 rgba(3, 36, 26, 0.5);
+  animation: tal-coin var(--t, 5s) ease-in-out infinite; animation-delay: calc(var(--n) * -0.7s);
 }
+html[data-theme="talents"] .decor i:nth-child(1) { left: 3%; top: 12%; --s: 64px; --t: 5.5s; }
+html[data-theme="talents"] .decor i:nth-child(2) { left: 92%; top: 8%; --s: 48px; --t: 4.2s; }
+html[data-theme="talents"] .decor i:nth-child(3) { left: 95%; top: 52%; --s: 74px; --t: 6.1s; }
+html[data-theme="talents"] .decor i:nth-child(4) { left: 1%; top: 58%; --s: 40px; --t: 4.8s; }
+html[data-theme="talents"] .decor i:nth-child(5) { left: 46%; top: 92%; --s: 54px; --t: 5.2s; }
+html[data-theme="talents"] .decor i:nth-child(6) { left: 72%; top: 94%; --s: 36px; --t: 3.9s; }
+html[data-theme="talents"] .decor i:nth-child(7) { left: 22%; top: 93%; --s: 44px; --t: 4.5s; }
+html[data-theme="talents"] .decor i:nth-child(8) { left: 60%; top: -2%; --s: 38px; --t: 5.8s; }
+html[data-theme="talents"] .decor i:nth-child(9) { left: 30%; top: -3%; --s: 50px; --t: 4.6s; }
+@keyframes tal-coin { 0%, 100% { transform: translateY(0) scaleX(1); } 25% { transform: translateY(-14px) scaleX(0.12); } 50% { transform: translateY(-20px) scaleX(1); } 75% { transform: translateY(-8px) scaleX(0.12); } }
 
-/* Boxes are ledger cards: thin ink rules, a double line, square corners. */
-html[data-theme="talents"] :is(.steps li, .team, .awards div, .anchor, .fact) { background: var(--surface); border: 2px solid var(--ink); outline: 1px solid var(--ink); outline-offset: -6px; box-shadow: 4px 4px 0 rgba(28, 34, 53, 0.2); }
-html[data-theme="talents"] .steps li { font-size: 21px; }
-html[data-theme="talents"] .steps b { font-size: 52px; color: var(--hot); }
-html[data-theme="talents"] .steps em, html[data-theme="talents"] .intro .soon { color: var(--hot); font-style: italic; }
-html[data-theme="talents"] .team h3 { font-family: var(--display); color: var(--ink); }
-html[data-theme="talents"] .team { border-left: 10px solid var(--team); }
-html[data-theme="talents"] .team p { color: var(--text); }
+/* Marquee bulbs round the important things, chasing. */
+html[data-theme="talents"] :is(.play .timer, .winner h1, .intro .head h1) { position: relative; isolation: isolate; }
+html[data-theme="talents"] :is(.play .timer, .winner h1)::before, html[data-theme="talents"] :is(.play .timer, .winner h1)::after {
+  content: ""; position: absolute; inset: -14px; z-index: -1; border-radius: 28px; padding: 12px; background: var(--bulbs);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+html[data-theme="talents"] :is(.play .timer, .winner h1)::after { background-position: 9px 9px; filter: brightness(1.6) saturate(1.4); animation: tal-chase 0.5s steps(1) infinite; }
+@keyframes tal-chase { 50% { opacity: 0; } }
 
-/* The jars, on the rules screen: price tags, a hole punched in each, hanging crooked. */
-html[data-theme="talents"] .jar { background: #fffaf0; border: 2px dashed var(--ink); border-radius: 4px 18px 18px 4px; box-shadow: 3px 3px 0 rgba(28, 34, 53, 0.25); position: relative; }
-html[data-theme="talents"] .jar::before { content: ""; position: absolute; left: 8px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink); }
-html[data-theme="talents"] .jar:nth-child(odd) { transform: rotate(-2.5deg); } html[data-theme="talents"] .jar:nth-child(even) { transform: rotate(2deg); }
-html[data-theme="talents"] .jar strong { font-family: var(--display); font-weight: 400; font-size: 18px; }
-html[data-theme="talents"] .jar small { color: var(--soft); }
+/* Type: cartoon caps with a thick outline and a drop. Big words bounce, letter by letter. */
+html[data-theme="talents"] :is(h1, h2, .countin .count, .play header .name, .scramble-title) { color: var(--accent); text-shadow: var(--outline); }
+html[data-theme="talents"] :is(.intro .head h1, .winner h1, .between h2) .ch { display: inline-block; animation: tal-bounce 1.6s ease-in-out infinite; animation-delay: calc(var(--i) * 0.07s); }
+@keyframes tal-bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px) rotate(-3deg); } }
+html[data-theme="talents"] .intro .head h1 { font-size: 104px; }
+html[data-theme="talents"] .intro .head p { color: var(--text); font-size: 22px; font-weight: 800; }
+html[data-theme="talents"] .countin p { font-family: var(--display); font-size: 34px; color: var(--accent); text-shadow: var(--outline); }
 
-/* The clock: a brass-ringed timepiece. */
-html[data-theme="talents"] .play .timer { font-size: 64px; padding: 0 26px; border: 6px double var(--ink); border-radius: 999px; background: var(--surface-hi); box-shadow: 0 0 0 3px var(--gold), 4px 6px 0 3px rgba(28, 34, 53, 0.3); }
-html[data-theme="talents"] .play .timer.low { color: var(--hot); }
-html[data-theme="talents"] .play header .right { color: var(--soft); font-style: italic; }
+/* Panels: cream cartoon cards with a fat outline. */
+html[data-theme="talents"] :is(.steps li, .team, .awards div, .anchor, .board li, .totals span, .war .team) { color: var(--dark); }
+html[data-theme="talents"] :is(.steps li, .team, .awards div, .anchor) { background: var(--surface); border: var(--border); border-radius: var(--r); box-shadow: var(--lift); }
+html[data-theme="talents"] .steps li { font-size: 22px; font-weight: 800; }
+html[data-theme="talents"] .steps li:nth-child(1) { transform: rotate(-1.5deg); } html[data-theme="talents"] .steps li:nth-child(2) { transform: rotate(1deg) translateY(6px); } html[data-theme="talents"] .steps li:nth-child(3) { transform: rotate(-0.5deg); }
+html[data-theme="talents"] .steps b, html[data-theme="talents"] .board .rank {
+  display: grid; place-items: center; flex: none; border-radius: 50%; color: #6b4f00; text-shadow: 1px 1px 0 #fff3b0;
+  background: radial-gradient(circle at 35% 30%, #fff1a8, #ffcc33 45%, #c99a12); border: 3px solid var(--ink);
+}
+html[data-theme="talents"] .steps b { width: 58px; height: 58px; font-size: 34px; padding-top: 4px; }
+html[data-theme="talents"] .steps em { color: #d61f74; font-style: normal; }
+html[data-theme="talents"] .intro .soon { font-family: var(--display); color: var(--accent); text-shadow: 2px 2px 0 var(--ink); font-size: 22px; }
+html[data-theme="talents"] .team { border-top: 12px solid var(--team); }
+html[data-theme="talents"] .team h3 { color: var(--dark); }
+html[data-theme="talents"] .team p { color: var(--dark); }
 
-/* Double Time: a huge red stamp across the page. */
+/* The jars: glass jars with wooden lids, a little crooked. */
+html[data-theme="talents"] .jars { gap: 14px; padding-top: 16px; }
+html[data-theme="talents"] .jar {
+  position: relative; width: 150px; color: var(--dark); padding: 14px 8px 12px; border: var(--border); border-radius: 26px 26px 36px 36px / 18px 18px 48px 48px;
+  background: linear-gradient(100deg, transparent 12%, rgba(255, 255, 255, 0.55) 14% 22%, transparent 24%), linear-gradient(#c8f3ff, #8ad9f2); box-shadow: var(--lift);
+}
+html[data-theme="talents"] .jar::before { content: ""; position: absolute; top: -17px; left: 20px; right: 20px; height: 14px; background: #c97b2a; border: var(--border); border-radius: 7px; }
+html[data-theme="talents"] .jar:nth-child(odd) { transform: rotate(-3deg); } html[data-theme="talents"] .jar:nth-child(even) { transform: rotate(2.5deg) translateY(4px); }
+html[data-theme="talents"] .jar strong { font-family: var(--display); font-weight: 400; font-size: 18px; color: var(--dark); }
+html[data-theme="talents"] .jar small { color: #1b5a47; font-weight: 700; }
+
+/* The playing screen */
+html[data-theme="talents"] .play header .name { font-size: 42px; transform: rotate(-4deg); justify-self: start; }
+html[data-theme="talents"] .play .timer { font-size: 60px; color: var(--accent); background: #03241a; border: 4px solid var(--accent); border-radius: 20px; padding: 6px 30px 0; text-shadow: 0 0 18px rgba(255, 204, 51, 0.7); }
+html[data-theme="talents"] .play .timer.low { color: var(--hot); border-color: var(--hot); }
+html[data-theme="talents"] .play header .right { color: var(--soft); }
 html[data-theme="talents"] .play .double {
-  font: 400 30px var(--stamp); color: var(--hot); background: transparent; border: 5px double var(--hot); border-radius: 6px; letter-spacing: 0.08em; text-transform: uppercase;
-  transform: rotate(-1.5deg); padding: 2px; animation: none; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.55' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.6 2.1'/%3E%3C/filter%3E%3Crect width='160' height='60' filter='url(%23n)'/%3E%3C/svg%3E");
+  font: 400 30px var(--display); color: #fff; background: var(--hot); border: 0; border-radius: 0; padding: 10px 0 4px; text-shadow: 2px 2px 0 #8c0040;
+  clip-path: polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%, 3% 50%); animation: tal-wobble 0.6s ease-in-out infinite alternate;
 }
-html[data-theme="talents"] .play.doubled { box-shadow: inset 0 0 120px rgba(201, 162, 39, 0.45); }
-
-/* The teams: a hand-drawn stock chart, cross-hatched in ink and team colour. */
-html[data-theme="talents"] .bar .label { font-family: var(--display); font-weight: 400; color: var(--ink); font-size: 20px; }
-html[data-theme="talents"] .bar .label::first-letter { font-size: 1.1em; }
-html[data-theme="talents"] .bar .fill { height: 24px; border-radius: 0; background: repeating-linear-gradient(90deg, transparent 0 39px, rgba(28, 34, 53, 0.15) 39px 40px); border: 0; border-bottom: 2px solid var(--ink); }
-html[data-theme="talents"] .bar .fill::after { border-radius: 0; background: repeating-linear-gradient(-45deg, var(--team) 0 5px, color-mix(in srgb, var(--team) 55%, #fff) 5px 10px); border: 2px solid var(--ink); }
-html[data-theme="talents"] .bar .total { font-family: var(--body); font-weight: 700; }
-html[data-theme="talents"] .bar.lead .label::after { content: " ★"; color: var(--gold); }
-
-/* The board: entries in the ledger. */
-html[data-theme="talents"] .board li { background: transparent; border: 0; border-bottom: 2px dotted rgba(28, 34, 53, 0.55); border-radius: 0; box-shadow: none; padding: 0 6px; }
-html[data-theme="talents"] .board li.top { background: linear-gradient(90deg, rgba(201, 162, 39, 0.32), transparent 80%); }
-html[data-theme="talents"] .board .rank { font-family: var(--display); color: var(--hot); font-size: 22px; }
-html[data-theme="talents"] .board .rank::before { content: "№"; font-size: 0.6em; margin-right: 1px; }
-html[data-theme="talents"] .board li.top .rank { color: var(--hot); }
-html[data-theme="talents"] .board .name { font-family: var(--body); font-size: 22px; }
-html[data-theme="talents"] .board .talents { font: 700 22px var(--body); color: var(--accent); }
-html[data-theme="talents"] .board .talents::before { content: "₮ "; color: var(--gold); }
-html[data-theme="talents"] .board .up { color: var(--accent); }
-html[data-theme="talents"] .board .streak { color: var(--hot); }
-html[data-theme="talents"] .board li.climb { box-shadow: inset 0 -3px 0 var(--gold); }
-
-/* The live feed: a ticker tape coming off the machine. */
-html[data-theme="talents"] .side { background: #fffdf6; border: 0; border-radius: 0; box-shadow: 3px 4px 10px rgba(80, 60, 20, 0.3); transform: rotate(1.2deg);
-  mask: linear-gradient(#000 0 0) top / 100% calc(100% - 9px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 18px 9px repeat-x; }
-html[data-theme="talents"] .side h3 { font-size: 0; }
-html[data-theme="talents"] .side h3::before { content: "☎ THE TICKER"; font: 400 20px var(--stamp); color: var(--ink); letter-spacing: 0.1em; animation: none; }
-html[data-theme="talents"] .feed li { font-size: 16px; border-radius: 0; border-bottom: 1px dashed rgba(28, 34, 53, 0.35); padding: 6px 2px; }
-html[data-theme="talents"] .feed li.new { background: linear-gradient(transparent 45%, rgba(255, 220, 80, 0.85) 45% 88%, transparent 88%); }
+@keyframes tal-wobble { from { transform: rotate(-1deg) scale(1); } to { transform: rotate(1deg) scale(1.02); } }
+html[data-theme="talents"] .play.doubled { box-shadow: inset 0 0 140px rgba(255, 79, 154, 0.4); }
+html[data-theme="talents"] .bar .label { color: var(--team); font-size: 21px; text-shadow: 2px 2px 0 var(--ink); }
+html[data-theme="talents"] .bar .fill { height: 28px; background: #03241a; border: var(--border); border-radius: 999px; }
+html[data-theme="talents"] .bar .fill::after { border-radius: 999px; background: linear-gradient(rgba(255, 255, 255, 0.5) 0 28%, transparent 28%), var(--team); }
+html[data-theme="talents"] .bar .total { color: var(--accent); text-shadow: 2px 2px 0 var(--ink); font-size: 24px; }
+html[data-theme="talents"] .bar.lead .label::after { content: " 👑"; }
+/* The board: fat cream pills, a gold coin with the place. */
+html[data-theme="talents"] .board li { background: var(--surface); border: var(--border); border-radius: 999px; box-shadow: inset 12px 0 0 var(--team, transparent), 4px 5px 0 var(--ink); padding: 0 18px 0 16px; }
+html[data-theme="talents"] .board li.top { background: var(--surface-hi); }
+html[data-theme="talents"] .board .rank { width: 36px; height: 36px; font-size: 19px; padding-top: 3px; }
+html[data-theme="talents"] .board li.top .rank { color: #6b4f00; }
+html[data-theme="talents"] .board .name { font-weight: 800; font-size: 21px; color: var(--dark); }
+html[data-theme="talents"] .board .talents { color: #0b6b4d; font-size: 23px; }
+html[data-theme="talents"] .board .up { color: #0b6b4d; }
+html[data-theme="talents"] .board .streak { color: #d61f74; }
+html[data-theme="talents"] .board li.climb { box-shadow: inset 12px 0 0 var(--team, transparent), 4px 5px 0 var(--ink), 0 0 0 4px var(--accent); }
+/* The live feed: a dark screen in a gold frame. */
+html[data-theme="talents"] .side { background: #03241a; border: 4px solid var(--accent); border-radius: var(--r); box-shadow: var(--lift); color: #d6ffee; }
+html[data-theme="talents"] .side h3 { font-family: var(--display); font-weight: 400; color: var(--accent); font-size: 20px; }
+html[data-theme="talents"] .feed li { font-weight: 700; }
+html[data-theme="talents"] .feed li.new { background: rgba(255, 204, 51, 0.22); border: 0; color: #fff8e6; }
 html[data-theme="talents"] .stats { color: var(--soft); }
 
-/* 3-2-1 and TIME!: pressed into a gold wax seal. */
-html[data-theme="talents"] .countin p { font-family: var(--stamp); color: var(--ink); letter-spacing: 0.1em; text-transform: uppercase; }
-html[data-theme="talents"] .count {
-  display: grid; place-items: center; min-width: 330px; height: 330px; padding: 0 30px; border-radius: 50%; font-size: 150px; color: #fff8dc;
-  background: radial-gradient(circle at 35% 30%, #f6dd7c, #c9a227 45%, #8a6a10); border: 6px solid #8a6a10;
-  box-shadow: inset 0 0 0 14px rgba(255, 255, 255, 0.18), inset 0 -10px 30px rgba(80, 50, 0, 0.5), 6px 8px 0 rgba(28, 34, 53, 0.35);
-  text-shadow: 2px 3px 0 #7a5a05;
+/* 3-2-1 and TIME!: a giant gold coin, flipping. */
+html[data-theme="talents"] .countin .count {
+  display: grid; place-items: center; width: 330px; height: 330px; padding-top: 24px; border-radius: 50%; font-size: 180px; color: #8a6a10; text-shadow: 3px 3px 0 #fff3b0;
+  background: radial-gradient(circle at 35% 30%, #fff1a8, #ffcc33 42%, #c99a12 78%, #8a6a10); border: 8px solid var(--ink);
+  box-shadow: inset 0 0 0 12px rgba(138, 106, 16, 0.55), inset 0 0 0 22px rgba(255, 255, 255, 0.25), 0 12px 0 var(--ink);
 }
-html[data-theme="talents"] .count.pop { animation: tal-seal 0.45s cubic-bezier(.2, 1.6, .4, 1); }
-@keyframes tal-seal { from { transform: scale(1.8) rotate(-30deg); opacity: 0; } }
+html[data-theme="talents"] .countin .count:has(.ch:nth-child(3)) { width: 420px; height: 420px; font-size: 110px; }
+html[data-theme="talents"] .countin .count.pop { animation: tal-flip 0.55s ease-out; }
+@keyframes tal-flip { from { transform: rotateY(540deg) scale(0.4); } }
 
-/* Callouts: rubber stamps, slammed on crooked. */
+/* Callouts: a starburst spinning in. */
 html[data-theme="talents"] .callout {
-  background: rgba(251, 245, 227, 0.92); color: var(--c, var(--hot)); border: 6px double var(--c, var(--hot)); border-radius: 8px; box-shadow: none;
-  font: 400 calc(44px * var(--ds)) var(--stamp); text-transform: uppercase; letter-spacing: 0.06em; transform: rotate(-7deg);
-  filter: saturate(0.85) contrast(1.1); animation: tal-stamp 0.32s cubic-bezier(.3, 1.6, .5, 1) both;
+  background: radial-gradient(circle, #fff6b0, #ffcc33 55%, #ff9f1a); color: var(--ink); border: 0; border-radius: 0; box-shadow: none; padding: 60px 110px;
+  font-size: 42px; text-shadow: 2px 2px 0 #fff6b0; transform: rotate(-6deg);
+  clip-path: polygon(50% 0%, 57.1% 9.6%, 67.1% 3%, 70.5% 14.5%, 82.1% 11.7%, 81.4% 23.6%, 93.3% 25%, 88.5% 36%, 99.2% 41.3%, 91% 50%, 99.2% 58.7%, 88.5% 64%, 93.3% 75%, 81.4% 76.4%, 82.1% 88.3%, 70.5% 85.5%, 67.1% 97%, 57.1% 90.4%, 50% 100%, 42.9% 90.4%, 32.9% 97%, 29.5% 85.5%, 17.9% 88.3%, 18.6% 76.4%, 6.7% 75%, 11.5% 64%, 0.8% 58.7%, 9% 50%, 0.8% 41.3%, 11.5% 36%, 6.7% 25%, 18.6% 23.6%, 17.9% 11.7%, 29.5% 14.5%, 32.9% 3%, 42.9% 9.6%);
+  animation: tal-burst 0.5s cubic-bezier(.2, 1.6, .4, 1) both;
 }
-html[data-theme="talents"] .callout .text { mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2'/%3E%3C/filter%3E%3Crect width='120' height='60' filter='url(%23n)'/%3E%3C/svg%3E"); }
-html[data-theme="talents"] .callout:nth-child(even) { transform: rotate(5deg); }
-@keyframes tal-stamp { from { transform: rotate(-7deg) scale(2.2); opacity: 0; } }
+html[data-theme="talents"] .callout.small { font-size: 30px; padding: 46px 90px; }
+@keyframes tal-burst { from { transform: rotate(-200deg) scale(0.1); } }
 
-/* Between rounds and results */
-html[data-theme="talents"] .between h2 { color: var(--ink); font-size: 40px; }
-html[data-theme="talents"] .winner h1 { font-size: 56px; color: var(--ink); }
-html[data-theme="talents"] .totals span { border-radius: 0; background: var(--surface); color: var(--ink); border: 2px solid var(--ink); border-left: 8px solid var(--team); font: 700 17px var(--body); }
-html[data-theme="talents"] .podium .name { font-family: var(--display); font-weight: 400; }
-html[data-theme="talents"] .podium .talents { font: 700 19px var(--body); color: var(--accent); }
-/* The podium: stacked gold bars. */
-html[data-theme="talents"] .podium .block {
-  border-radius: 4px 4px 0 0; border: 2px solid #7a5a05; font-size: 34px;
-  background: repeating-linear-gradient(180deg, #f2d670 0 6px, #d7b33f 6px 30px, #9c7a14 30px 34px);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25), 5px 5px 0 rgba(28, 34, 53, 0.3);
-}
-html[data-theme="talents"] .awards div { transform: rotate(-1deg); }
-html[data-theme="talents"] .awards div:nth-child(even) { transform: rotate(1.2deg); }
-html[data-theme="talents"] .awards small { color: var(--hot); font-family: var(--stamp); }
-html[data-theme="talents"] .awards strong { font-family: var(--body); }
-html[data-theme="talents"] .results .anchor small { color: var(--hot); }
-html[data-theme="talents"] .war .label { color: var(--soft); }
-html[data-theme="talents"] .war .team { border-radius: 0; background: var(--surface); color: var(--ink); border: 2px solid var(--ink); border-left: 8px solid var(--team); }
+/* Results */
+html[data-theme="talents"] .between h2 { font-size: 46px; }
+html[data-theme="talents"] .winner h1 { font-size: 52px; padding: 10px 26px 2px; background: #03241a; border-radius: 22px; }
+html[data-theme="talents"] .totals span, html[data-theme="talents"] .war .team { border: 3px solid var(--ink); background: var(--team); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); font-family: var(--display); font-weight: 400; }
 html[data-theme="talents"] .war .team b { color: var(--ink); }
-html[data-theme="talents"] .war .team em { color: var(--accent); }
-html[data-theme="talents"] .btn { border-radius: 2px; background: var(--accent); color: var(--on-accent); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); font: 700 21px var(--body); text-transform: uppercase; letter-spacing: 0.06em; }
-html[data-theme="talents"] .btn.ghost { background: var(--surface); color: var(--ink); box-shadow: none; }
-html[data-theme="talents"] .rulebar { background: rgba(28, 34, 53, 0.08); border: 2px solid var(--ink); border-radius: 0; }
-html[data-theme="talents"] .rulebar i { background: rgba(201, 162, 39, 0.55); }
-html[data-theme="talents"] .rulebar span { color: var(--ink); }
+html[data-theme="talents"] .war .team em { color: var(--ink); background: #fff; border-radius: 6px; padding: 0 5px; }
+html[data-theme="talents"] .war .label { color: var(--soft); }
+html[data-theme="talents"] .podium .name { font-family: var(--display); font-weight: 400; color: var(--text); text-shadow: 2px 2px 0 var(--ink); }
+html[data-theme="talents"] .podium .talents { color: var(--accent); text-shadow: 2px 2px 0 var(--ink); }
+/* The podium: gold bars. */
+html[data-theme="talents"] .podium .block {
+  border: var(--border); border-radius: 12px 12px 0 0; box-shadow: var(--lift);
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.5) 23% 30%, transparent 33%), linear-gradient(#ffe680, #ffcc33 45%, #d99a0b);
+}
+html[data-theme="talents"] .awards div:nth-child(odd) { transform: rotate(-2deg); } html[data-theme="talents"] .awards div:nth-child(even) { transform: rotate(1.5deg); }
+html[data-theme="talents"] .awards small { color: #d61f74; }
+html[data-theme="talents"] .awards strong { color: var(--dark); }
+html[data-theme="talents"] .results .anchor small { color: #0b6b4d; }
+html[data-theme="talents"] .btn { border: var(--border); background: var(--hot); color: #fff; box-shadow: var(--lift); font: 400 24px var(--display); text-shadow: 2px 2px 0 #8c0040; padding: 16px 30px 10px; }
+html[data-theme="talents"] .btn.ghost { background: var(--surface); color: var(--dark); text-shadow: none; font-size: 19px; }
+html[data-theme="talents"] .rulebar { background: #03241a; border: 3px solid var(--accent); }
+html[data-theme="talents"] .rulebar i { background: rgba(255, 204, 51, 0.5); }
+html[data-theme="talents"] .rulebar span { color: var(--text); }
 
-/* Barnabas writes on a till receipt. */
-html[data-theme="talents"] .host .bubble { background: #fffdf6; color: var(--ink); border: 0; border-radius: 0; box-shadow: 3px 5px 12px rgba(80, 60, 20, 0.35); font: 700 19px/1.35 var(--body); }
-html[data-theme="talents"] .host .bubble::before { border-right-color: #fffdf6; }
-html[data-theme="talents"] .host:is(.lobby, .stack) .bubble::before { border-right-color: transparent; border-top-color: #fffdf6; }
-html[data-theme="talents"] .host .donkey { filter: drop-shadow(3px 4px 0 rgba(28, 34, 53, 0.35)); }
+/* Barnabas: a cream speech bubble with a fat outline. */
+html[data-theme="talents"] .host .bubble { background: var(--surface); color: var(--dark); border: var(--border); border-radius: 22px; box-shadow: var(--lift); font: 800 19px/1.3 var(--body); }
+html[data-theme="talents"] .host .bubble::before { border-right-color: var(--ink); }
 
 /* ---------- In the lobby ---------- */
-.game[data-card="talents"] { background: #efe3c4 repeating-linear-gradient(180deg, transparent 0 13px, rgba(42, 77, 143, 0.18) 13px 14px); color: #1c2235; border-color: #1c2235; transform: rotate(1deg); }
-.game[data-card="talents"] strong { font-family: "Abril Fatface", serif; font-weight: 400; font-size: 21px; color: #1c2235; }
-.game[data-card="talents"] small { font-family: "Courier Prime", monospace; font-weight: 700; color: #6e5f43; }
-.game.on[data-card="talents"] { background-color: #f6ecd0; color: #1c2235; box-shadow: 0 0 0 3px #c9a227, 5px 5px 0 #1c2235; }
-.game.on[data-card="talents"] small { color: #1f6b45; }
-/* A word in the seal (TIME!) needs smaller letters than a number. */
-html[data-theme="talents"] .count:has(.ch:nth-child(3)) { font-size: 92px; min-width: 380px; height: 380px; }
+.game[data-card="talents"] { background: radial-gradient(circle at 30% 30%, #22b783, #0b6b4d 60%, #03241a); color: #fff8e6; border-color: #062e22; transform: rotate(1deg); }
+.game[data-card="talents"] strong { font-family: "Luckiest Guy", sans-serif; font-weight: 400; font-size: 21px; letter-spacing: 0.03em; color: #ffcc33; text-shadow: 2px 2px 0 #062e22; }
+.game[data-card="talents"] small { font-family: "Baloo 2", sans-serif; font-weight: 700; color: #c9f5e3; }
+.game.on[data-card="talents"] { background: radial-gradient(circle at 30% 30%, #2bd394, #0b6b4d 60%, #03241a); color: #fff8e6; box-shadow: 0 0 0 4px #ffcc33, 5px 6px 0 #062e22; }
+.game.on[data-card="talents"] small { color: #fff8e6; }

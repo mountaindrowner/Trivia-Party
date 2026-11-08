@@ -88,6 +88,12 @@ window.SW = (() => {
   function setTheme(key) {
     theme = key || null;
     if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
+    // Props behind the game (curtains, clouds, coins...): 16 empty <i>s a look can draw with CSS, in stage pixels.
+    const box = document.querySelector(".stagebox");
+    if (box) {
+      box.querySelectorAll(":scope > .decor").forEach((d) => d.remove());
+      if (theme) box.prepend(el("div", { class: "decor", "aria-hidden": "true" }, ...Array.from({ length: 16 }, (_, i) => el("i", { style: `--n:${i}` }))));
+    }
     const css = getComputedStyle(document.documentElement);
     const colors = css.getPropertyValue("--fx-colors").trim();
     look.colors = colors ? colors.split(/\s*,\s*/) : null;
@@ -177,6 +183,7 @@ window.SW = (() => {
           const w = Math.abs(Math.cos(b.rot * 2)) * b.s * 0.6 + 1.5;
           fctx.beginPath(); fctx.ellipse(0, 0, w, b.s * 0.6, 0, 0, 7); fctx.fill(); fctx.strokeStyle = "rgba(90,60,0,0.6)"; fctx.lineWidth = 1.5; fctx.stroke();
         } else if (b.kind === "scrap") { fctx.beginPath(); fctx.moveTo(-b.s / 2, -b.s / 3); fctx.lineTo(b.s / 2, -b.s / 4); fctx.lineTo(b.s / 3, b.s / 3); fctx.lineTo(-b.s / 3, b.s / 4); fctx.closePath(); fctx.fill(); }
+        else if (b.kind === "star") { fctx.beginPath(); for (let k = 0; k < 8; k++) { const r = k % 2 ? b.s * 0.18 : b.s * 0.6, a = (k * Math.PI) / 4; fctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } fctx.closePath(); fctx.fill(); }
         else if (b.kind === "bolt") { fctx.beginPath(); fctx.moveTo(-b.s / 4, -b.s / 2); fctx.lineTo(b.s / 6, -b.s / 10); fctx.lineTo(-b.s / 10, b.s / 10); fctx.lineTo(b.s / 4, b.s / 2); fctx.lineTo(-b.s / 6, b.s / 8); fctx.lineTo(b.s / 10, -b.s / 10); fctx.closePath(); fctx.fill(); }
         else fctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2);
         fctx.restore();

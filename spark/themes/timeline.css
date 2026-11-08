@@ -1,155 +1,173 @@
-/* 🧭 Timeline: THE LINE.
-   Putting the Bible in order is riding a train line: every card is a station on the route, the new card is the
-   NEXT STOP sign, 3-2-1 comes in route bullets, and the scores are a departures board with amber letters.
-   Clean and graphic where the other games are loud: a city transit map, signage type, bright route colours.
-   Fonts: Overpass (signage; it's based on the US highway sign letters), Overpass Mono (the departures board). */
+/* 🧭 Timeline: THE EXPRESS.
+   Putting the Bible in order is building a train: every card on the line is a carriage on the track, the new card
+   puffs in as the engine, and it couples into its real place. Outside: a bright cartoon day, a big sun, clouds
+   drifting and green hills. Chunky, sunny and friendly where the other games are dark.
+   Fonts: Titan One (fat cartoon letters), Nunito (clear and round). */
 html[data-theme="timeline"] {
-  --display: "Overpass", "Helvetica Neue", Arial, sans-serif; --display-w: 900; --body: "Overpass", "Helvetica Neue", Arial, sans-serif;
-  --ds: 1; --case: none; --track: -0.015em;
-  --bg: #f1eee5; --glow1: transparent; --glow2: transparent;
-  --surface: #ffffff; --surface-hi: #ffffff; --line: #d9d4c7;
-  --text: #17181c; --soft: #6b6b70; --accent: #fccc0a; --on-accent: #17181c; --hot: #e3342f; --cool: #0072ce; --good: #00a650;
-  --route: #e3342f; --ink: #17181c; --r: 12px; --r-sm: 9px; --border: 0 solid transparent; --lift: none;
-  --sign: #1d1e22;
-  --fx-colors: #e3342f, #0072ce, #00a650, #fccc0a, #8e44ad, #ff8c00; --fx-sparks: 0; --fx-bits: dot;
+  --display: "Titan One", "Arial Rounded MT Bold", sans-serif; --display-w: 400; --body: "Nunito", system-ui, sans-serif;
+  --ds: 1; --case: none; --track: 0.01em;
+  --bg: #6fd0ff; --glow1: transparent; --glow2: transparent;
+  --surface: #ffffff; --surface-hi: #fff6d8; --line: rgba(28, 37, 65, 0.2);
+  --text: #1c2541; --soft: #3b4a78; --accent: #ffb627; --on-accent: #1c2541; --hot: #ff5a4e; --cool: #3ec1d3; --good: #36c26b;
+  --ink: #1c2541; --r: 20px; --r-sm: 14px; --border: 4px solid var(--ink); --lift: 4px 6px 0 var(--ink);
+  --outline: -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink), 3px 3px 0 var(--ink), 0 7px 0 var(--ink);
+  --wheels: radial-gradient(circle, #8b93b5 0 4px, var(--ink) 4.5px 12px, transparent 12.5px);
+  --fx-colors: #ff5a4e, #ffb627, #3ec1d3, #7b61ff, #36c26b, #ffffff; --fx-sparks: 0; --fx-bits: paper;
   color-scheme: light;
 }
-html[data-theme="timeline"] body { font-weight: 700; }
+html[data-theme="timeline"] body { font-weight: 800; }
 
-/* The map: off-white paper, a faint grid, and routes crossing behind everything. */
-html[data-theme="timeline"] #frame {
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke-width='18' stroke-linecap='round' stroke-linejoin='round' opacity='.13'%3E%3Cpath stroke='%23e3342f' d='M-20 120 H380 L520 260 H900 L1040 120 H1300'/%3E%3Cpath stroke='%230072ce' d='M160 -20 V300 L300 440 V740'/%3E%3Cpath stroke='%2300a650' d='M-20 600 H520 L640 480 H1300'/%3E%3Cpath stroke='%23fccc0a' d='M1100 -20 V200 L960 340 V740'/%3E%3Cpath stroke='%238e44ad' d='M700 -20 V160 L820 280 V420 L700 540 V740'/%3E%3C/g%3E%3Cg fill='%23fff' stroke='%2317181c' stroke-width='5' opacity='.16'%3E%3Ccircle cx='520' cy='260' r='14'/%3E%3Ccircle cx='160' cy='120' r='14'/%3E%3Ccircle cx='640' cy='480' r='14'/%3E%3Ccircle cx='960' cy='340' r='14'/%3E%3Ccircle cx='820' cy='280' r='14'/%3E%3Ccircle cx='300' cy='600' r='14'/%3E%3C/g%3E%3C/svg%3E") center / cover,
-    linear-gradient(rgba(23, 24, 28, 0.045) 1px, transparent 1px) 0 0 / 40px 40px,
-    linear-gradient(90deg, rgba(23, 24, 28, 0.045) 1px, transparent 1px) 0 0 / 40px 40px,
-    #f1eee5;
+/* Outside the window: sky, sun, clouds, hills. */
+html[data-theme="timeline"] #frame { background: linear-gradient(#3fb6ff 0%, #8fdcff 55%, #d4f4ff 80%); }
+html[data-theme="timeline"] .decor i:nth-child(1) {
+  right: 110px; top: 34px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fff3a6, #ffd84a 60%, #ffbf1f);
+  box-shadow: 0 0 0 18px rgba(255, 216, 74, 0.32), 0 0 0 40px rgba(255, 216, 74, 0.16); animation: ex-sun 4s ease-in-out infinite alternate;
 }
-
-/* Signage: white type on black plates, a route bullet in front. */
-html[data-theme="timeline"] .eyebrow, html[data-theme="timeline"] .play header .name {
-  display: inline-flex; align-items: center; gap: 10px; background: var(--sign); color: #fff; padding: 7px 16px 6px 8px; border-radius: 8px; font-size: 18px; font-weight: 800;
+@keyframes ex-sun { to { box-shadow: 0 0 0 26px rgba(255, 216, 74, 0.28), 0 0 0 56px rgba(255, 216, 74, 0.1); } }
+html[data-theme="timeline"] .decor i:nth-child(n+2):nth-child(-n+5) {
+  left: -260px; width: 170px; height: 52px; border-radius: 50px; background: #fff; opacity: 0.95; animation: ex-drift var(--t, 70s) linear infinite; animation-delay: calc(var(--n) * -17s);
 }
-html[data-theme="timeline"] .eyebrow::before { content: "T"; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--route); color: #fff; font: 900 18px/1 var(--display); padding-top: 2px; }
-html[data-theme="timeline"] section > header .count, html[data-theme="timeline"] .cardno { color: var(--soft); font: 800 16px var(--body); text-transform: uppercase; letter-spacing: 0.06em; }
-html[data-theme="timeline"] :is(h1, h2, .count) { text-shadow: none; }
-html[data-theme="timeline"] .intro .head h1 { font-size: 74px; letter-spacing: -0.03em; }
-html[data-theme="timeline"] .intro .head h1::after { content: ""; display: block; height: 12px; margin-top: 6px; border-radius: 6px; background: linear-gradient(90deg, #e3342f 0 25%, #0072ce 25% 50%, #00a650 50% 75%, #fccc0a 75%); }
-html[data-theme="timeline"] .intro .head p { color: var(--soft); font-weight: 600; }
+html[data-theme="timeline"] .decor i:nth-child(n+2):nth-child(-n+5)::before, html[data-theme="timeline"] .decor i:nth-child(n+2):nth-child(-n+5)::after {
+  content: ""; position: absolute; border-radius: 50%; background: #fff;
+}
+html[data-theme="timeline"] .decor i:nth-child(n+2):nth-child(-n+5)::before { width: 70px; height: 70px; left: 26px; top: -34px; }
+html[data-theme="timeline"] .decor i:nth-child(n+2):nth-child(-n+5)::after { width: 56px; height: 56px; left: 80px; top: -24px; }
+html[data-theme="timeline"] .decor i:nth-child(2) { top: 70px; --t: 80s; } html[data-theme="timeline"] .decor i:nth-child(3) { top: 190px; --t: 95s; transform: scale(0.7); }
+html[data-theme="timeline"] .decor i:nth-child(4) { top: 120px; --t: 70s; transform: scale(0.85); } html[data-theme="timeline"] .decor i:nth-child(5) { top: 260px; --t: 110s; transform: scale(0.6); }
+@keyframes ex-drift { to { left: 1540px; } }
+html[data-theme="timeline"] .decor i:nth-child(6) { left: -140px; bottom: -260px; width: 820px; height: 420px; border-radius: 50%; background: #8fdc78; }
+html[data-theme="timeline"] .decor i:nth-child(7) { right: -200px; bottom: -300px; width: 900px; height: 440px; border-radius: 50%; background: #6fcf65; }
+html[data-theme="timeline"] .decor i:nth-child(8) { left: 0; right: 0; bottom: 0; height: 62px; background: #4cbf5a; box-shadow: inset 0 6px 0 #3aa64a; }
 
-/* The new card: the NEXT STOP sign. */
-html[data-theme="timeline"] .dealt small { color: var(--soft); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 16px; }
+/* Type: fat white letters with a navy edge, each letter tipped a little differently. */
+html[data-theme="timeline"] :is(h1, h2, .countin .count, .dealt .verdict, .scramble-title) { color: #fff; text-shadow: var(--outline); }
+html[data-theme="timeline"] :is(.intro .head h1, .winner h1, .between h2, .countin .count, .dealt .verdict) .ch { display: inline-block; transform: rotate(-3deg); }
+html[data-theme="timeline"] :is(.intro .head h1, .winner h1, .between h2, .countin .count, .dealt .verdict) .ch:nth-child(3n+2) { transform: rotate(3deg) translateY(-3px); }
+html[data-theme="timeline"] :is(.intro .head h1, .winner h1, .between h2, .countin .count, .dealt .verdict) .ch:nth-child(3n) { transform: rotate(-1deg) translateY(2px); }
+html[data-theme="timeline"] .intro .head h1 .ch { animation: ex-hop 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * 0.1s); }
+@keyframes ex-hop { 0%, 70%, 100% { translate: 0 0; } 35% { translate: 0 -12px; } }
+html[data-theme="timeline"] .intro .head h1 { font-size: 92px; }
+html[data-theme="timeline"] .intro .head p { display: inline-block; margin-top: 10px; background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: 4px 16px; color: var(--ink); font-weight: 800; }
+/* The set name on a navy ticket. */
+html[data-theme="timeline"] .eyebrow { display: inline-block; background: var(--ink); color: #fff; padding: 7px 18px; border-radius: 999px; font-size: 17px; box-shadow: 0 5px 0 rgba(28, 37, 65, 0.25); }
+html[data-theme="timeline"] section > header .count, html[data-theme="timeline"] .cardno { color: var(--ink); font: 900 16px var(--body); background: rgba(255, 255, 255, 0.75); padding: 4px 12px; border-radius: 999px; }
+
+/* The new card: the engine, puffing in from the left. */
+html[data-theme="timeline"] .dealt small { color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: 3px 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; font-size: 15px; }
 html[data-theme="timeline"] .timeline .card.new {
-  position: relative; background: var(--sign); color: #fff; border: 0; border-radius: 12px; padding: 30px 40px 18px; font-size: 40px; font-weight: 900; box-shadow: 0 8px 0 rgba(23, 24, 28, 0.15);
-  animation: tl-slide 0.5s cubic-bezier(.2, 1.1, .3, 1);
+  position: relative; margin-top: 30px; padding: 20px 90px 24px 36px; border: var(--border); border-radius: 16px 60px 12px 12px; box-shadow: var(--lift);
+  background: linear-gradient(transparent 76%, rgba(0, 0, 0, 0.14) 76%), #ff5a4e; color: #fff; font: 400 38px/1.1 var(--display); text-shadow: 3px 3px 0 var(--ink);
+  animation: ex-chug 0.8s cubic-bezier(.2, 1.15, .4, 1) both;
 }
-html[data-theme="timeline"] .timeline .card.new::before { content: "NEXT STOP ▸"; position: absolute; left: 40px; top: 9px; font: 800 13px var(--body); letter-spacing: 0.2em; color: var(--accent); }
-@keyframes tl-slide { from { transform: translateX(-120px); opacity: 0; } }
+html[data-theme="timeline"] .timeline .card.new::before { content: ""; position: absolute; top: -30px; right: 46px; width: 30px; height: 30px; background: var(--ink); border-radius: 6px 6px 0 0; }
+html[data-theme="timeline"] .timeline .card.new::after {
+  content: ""; position: absolute; top: -66px; right: 42px; width: 34px; height: 34px; border-radius: 50%; background: #fff;
+  box-shadow: 22px -18px 0 4px #fff, 50px -30px 0 10px rgba(255, 255, 255, 0.85); animation: ex-smoke 1.4s ease-out infinite;
+}
+@keyframes ex-chug { 0% { transform: translateX(-760px); } 70% { transform: translateX(14px) rotate(1deg); } 100% { transform: none; } }
+@keyframes ex-smoke { 0% { transform: translate(0, 10px) scale(0.5); opacity: 0.2; } 50% { opacity: 1; } 100% { transform: translate(18px, -30px) scale(1.1); opacity: 0; } }
 
-/* The line: a thick route, every card a station hanging off it. */
-html[data-theme="timeline"] .timeline .line { position: relative; gap: 4px; padding: 0 20px; }
-html[data-theme="timeline"] .timeline .line::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 16px; border-radius: 8px; background: var(--route); }
+/* The line: carriages coupled together on a track. */
+html[data-theme="timeline"] .timeline .line { position: relative; isolation: isolate; gap: 14px; padding: 10px 10px 40px; }
+html[data-theme="timeline"] .timeline .line::after {
+  content: ""; position: absolute; left: -200px; right: -200px; bottom: 8px; height: 20px; z-index: -1;
+  background: linear-gradient(#6b4f3a, #6b4f3a) 0 2px / 100% 4px no-repeat, linear-gradient(#6b4f3a, #6b4f3a) 0 14px / 100% 4px no-repeat,
+    repeating-linear-gradient(90deg, #a36b3f 0 12px, transparent 12px 30px);
+}
 html[data-theme="timeline"] .timeline .line .card {
-  background: transparent; border: 0; box-shadow: none; padding: 58px 6px 10px; min-height: 0; align-content: start; width: 160px;
+  position: relative; width: 152px; min-height: 108px; padding: 12px 10px 18px; border: var(--border); border-radius: 18px 18px 10px 10px; box-shadow: 0 6px 0 rgba(28, 37, 65, 0.25);
+  background: linear-gradient(transparent 80%, rgba(0, 0, 0, 0.15) 80%), #3ec1d3; color: var(--ink); align-content: center;
 }
-html[data-theme="timeline"] .timeline .line .card::before {
-  content: ""; position: absolute; top: 12px; left: 50%; width: 36px; height: 36px; margin-left: -18px; border-radius: 50%; background: #fff; border: 7px solid var(--sign); box-sizing: border-box;
-}
-html[data-theme="timeline"] .timeline .line .card .n { left: 50%; top: 52px; margin-left: -8px; font: 800 12px var(--body); color: var(--soft); display: none; }
-html[data-theme="timeline"] .timeline .line .card .t { font-size: 19px; font-weight: 800; line-height: 1.15; }
-html[data-theme="timeline"] .timeline .line .card small { color: var(--soft); font-weight: 700; }
-html[data-theme="timeline"] .timeline .line .card.landed { background: transparent; color: var(--ink); animation: none; }
-html[data-theme="timeline"] .timeline .line .card.landed::before { background: var(--accent); border-color: var(--sign); animation: tl-ping 1.2s ease-out 2; box-shadow: 0 0 0 0 rgba(252, 204, 10, 0.7); }
-html[data-theme="timeline"] .timeline .line .card.landed .t { background: var(--accent); padding: 4px 10px 2px; border-radius: 6px; animation: tl-arrive 0.5s ease-out; }
-@keyframes tl-ping { to { box-shadow: 0 0 0 26px rgba(252, 204, 10, 0); } }
-@keyframes tl-arrive { from { transform: translateY(-40px); opacity: 0; } }
+html[data-theme="timeline"] .timeline .line.tight .card { width: 138px; }
+html[data-theme="timeline"] .timeline .line .card:nth-child(5n+2) { background-color: #ff7a45; }
+html[data-theme="timeline"] .timeline .line .card:nth-child(5n+3) { background-color: #7b61ff; }
+html[data-theme="timeline"] .timeline .line .card:nth-child(5n+4) { background-color: #36c26b; }
+html[data-theme="timeline"] .timeline .line .card:nth-child(5n+5) { background-color: #ff8fb1; }
+/* Wheels, and the coupling to the carriage in front. */
+html[data-theme="timeline"] .timeline .line .card::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -17px; height: 26px; background: var(--wheels) left / 26px 26px no-repeat, var(--wheels) right / 26px 26px no-repeat; }
+html[data-theme="timeline"] .timeline .line .card + .card::before { content: ""; position: absolute; left: -18px; bottom: 16px; width: 18px; height: 8px; background: var(--ink); border-radius: 4px; }
+html[data-theme="timeline"] .timeline .line .card .n { display: none; }
+html[data-theme="timeline"] .timeline .line .card .t { background: #fff; border: 3px solid var(--ink); border-radius: 10px; padding: 6px 6px 4px; font: 900 17px/1.15 var(--body); width: 100%; }
+html[data-theme="timeline"] .timeline .line .card small { color: var(--ink); font-weight: 900; font-size: 12px; background: rgba(255, 255, 255, 0.7); border-radius: 6px; padding: 0 5px; }
+html[data-theme="timeline"] .timeline .line .card.landed { background-color: #ffd84a; color: var(--ink); animation: ex-couple 0.6s cubic-bezier(.2, 1.4, .4, 1) both; box-shadow: 0 0 0 6px #fff, 0 0 30px 10px rgba(255, 216, 74, 0.9); }
+html[data-theme="timeline"] .timeline .line .card.landed .t { background: #fffbe0; }
+@keyframes ex-couple { from { transform: translateY(-120px) rotate(-8deg); } }
 
-/* The verdict: big signage type, a green or red route bullet. */
-html[data-theme="timeline"] .dealt .verdict { font-size: 38px; color: var(--ink); text-shadow: none; }
-html[data-theme="timeline"] .dealt .quick { color: var(--soft); font-weight: 800; }
+/* The verdict and the clock */
+html[data-theme="timeline"] .dealt .verdict { font-size: 44px; }
+html[data-theme="timeline"] .dealt .quick { color: var(--ink); background: rgba(255, 255, 255, 0.8); border-radius: 999px; padding: 2px 14px; font-weight: 900; }
+html[data-theme="timeline"] .qbar { height: 16px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; }
+html[data-theme="timeline"] .qbar i { background: linear-gradient(rgba(255, 255, 255, 0.45) 0 30%, transparent 30%), #ff5a4e; border-radius: 999px; }
 
-/* The clock: a progress strip like a train's position. */
-html[data-theme="timeline"] .qbar { height: 6px; border-radius: 3px; background: rgba(23, 24, 28, 0.08); }
-html[data-theme="timeline"] .qbar i { background: #8a8a90; border-radius: 3px; }
+/* 3-2-1 and TIME! */
+html[data-theme="timeline"] .countin p { color: var(--ink); font-family: var(--display); font-size: 34px; text-shadow: none; }
+html[data-theme="timeline"] .countin .count { font-size: 240px; }
+html[data-theme="timeline"] .countin .count:has(.ch:nth-child(3)) { font-size: 170px; }
+html[data-theme="timeline"] .countin .count.pop { animation: ex-boing 0.5s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes ex-boing { from { transform: scale(0.2) translateY(200px); } }
 
-/* 3-2-1 and TIME!: route bullets, one per letter. */
-html[data-theme="timeline"] .countin p { color: var(--soft); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; }
-html[data-theme="timeline"] .count { font-size: 170px; color: #fff; }
-html[data-theme="timeline"] .count .ch { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; margin: 0 0.04em; padding-top: 0.12em; border-radius: 50%; background: #e3342f; box-shadow: 0 10px 0 rgba(23, 24, 28, 0.14); }
-html[data-theme="timeline"] .count .ch:nth-child(5n+2) { background: #0072ce; }
-html[data-theme="timeline"] .count .ch:nth-child(5n+3) { background: #00a650; }
-html[data-theme="timeline"] .count .ch:nth-child(5n+4) { background: #fccc0a; color: var(--ink); }
-html[data-theme="timeline"] .count .ch:nth-child(5n+5) { background: #8e44ad; }
-html[data-theme="timeline"] .count:has(.ch:nth-child(3)) { font-size: 110px; }
+/* Scores: the station board. */
+html[data-theme="timeline"] .between h2 { font-size: 44px; }
+html[data-theme="timeline"] .scoreboard { background: var(--ink); border: 5px solid #fff; border-radius: 22px; padding: 14px; box-shadow: 0 8px 0 rgba(28, 37, 65, 0.3); }
+html[data-theme="timeline"] .board li { background: #fff; color: var(--ink); border: 0; border-radius: 999px; box-shadow: inset 12px 0 0 var(--team, var(--accent)); }
+html[data-theme="timeline"] .board li.top { background: #fff6d8; }
+html[data-theme="timeline"] .board .rank { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--hot); color: #fff; font-size: 16px; margin-left: 6px; }
+html[data-theme="timeline"] .board li.top .rank { color: #fff; }
+html[data-theme="timeline"] .board .name { font-weight: 900; }
+html[data-theme="timeline"] .board .talents { color: #e24b3f; font-size: 21px; }
+html[data-theme="timeline"] .board .up { color: #21924f; }
+html[data-theme="timeline"] .board li.climb { box-shadow: inset 12px 0 0 var(--team, var(--accent)), 0 0 0 4px var(--accent); }
+html[data-theme="timeline"] .bar .label { color: var(--team); }
+html[data-theme="timeline"] .bar .fill { height: 22px; background: rgba(255, 255, 255, 0.15); border-radius: 999px; }
+html[data-theme="timeline"] .bar .fill::after { border-radius: 999px; background: linear-gradient(rgba(255, 255, 255, 0.45) 0 30%, transparent 30%), var(--team); }
+html[data-theme="timeline"] .bar .total { color: #fff; }
 
-/* The scores: a departures board, amber letters on black. */
-html[data-theme="timeline"] .scoreboard { background: var(--sign); border-radius: 14px; padding: 14px 16px; }
-html[data-theme="timeline"] .between h2 { color: var(--ink); font-size: 34px; text-align: left; }
-html[data-theme="timeline"] .between h2::before { content: "DEPARTURES · "; color: var(--soft); font-weight: 800; font-size: 0.6em; letter-spacing: 0.12em; }
-html[data-theme="timeline"] .board li { background: #2a2b31; border: 0; border-radius: 4px; color: #ffc93c; font-family: "Overpass Mono", monospace; text-transform: uppercase;
-  background-image: linear-gradient(transparent calc(50% - 1px), rgba(0, 0, 0, 0.65) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)); box-shadow: inset 6px 0 0 var(--team, transparent); }
-html[data-theme="timeline"] .board li.top { background-color: #33343b; }
-html[data-theme="timeline"] .board .rank { font: 700 20px "Overpass Mono", monospace; color: #fff; }
-html[data-theme="timeline"] .board .name { font: 700 20px "Overpass Mono", monospace; color: #ffc93c; }
-html[data-theme="timeline"] .board .talents { font: 700 20px "Overpass Mono", monospace; color: #ffc93c; }
-html[data-theme="timeline"] .board .up { color: #7dff9c; font-family: "Overpass Mono", monospace; }
-html[data-theme="timeline"] .board li.climb { box-shadow: inset 6px 0 0 var(--team, transparent), 0 0 0 2px #7dff9c; }
-/* The teams: their own coloured routes. */
-html[data-theme="timeline"] .bar .label { color: #fff; font-weight: 900; }
-html[data-theme="timeline"] .bar .fill { height: 16px; border-radius: 8px; background: rgba(255, 255, 255, 0.12); border: 0; }
-html[data-theme="timeline"] .bar .fill::after { border-radius: 8px; }
-html[data-theme="timeline"] .bar .total { color: #ffc93c; font-family: "Overpass Mono", monospace; }
-
-/* Rules: three stops along a route. */
-html[data-theme="timeline"] .steps { position: relative; }
-html[data-theme="timeline"] .steps li { background: #fff; border: 0; border-top: 10px solid var(--route); border-radius: 0 0 12px 12px; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.08); font-size: 21px; font-weight: 700; }
-html[data-theme="timeline"] .steps li:nth-child(2) { border-top-color: #0072ce; } html[data-theme="timeline"] .steps li:nth-child(3) { border-top-color: #00a650; }
-html[data-theme="timeline"] .steps b { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--sign); color: #fff; font-size: 28px; padding-top: 3px; }
-html[data-theme="timeline"] .steps em, html[data-theme="timeline"] .intro .soon { color: var(--route); }
-html[data-theme="timeline"] .team { background: #fff; border: 0; border-left: 10px solid var(--team); border-radius: 0 12px 12px 0; }
+/* Rules */
+html[data-theme="timeline"] :is(.steps li, .team, .awards div, .anchor, .jar) { background: #fff; color: var(--ink); border: var(--border); border-radius: var(--r); box-shadow: var(--lift); }
+html[data-theme="timeline"] .steps li { font-size: 21px; font-weight: 800; }
+html[data-theme="timeline"] .steps li:nth-child(2) { transform: translateY(8px); }
+html[data-theme="timeline"] .steps b { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--hot); color: #fff; border: 3px solid var(--ink); font-size: 28px; text-shadow: none; }
+html[data-theme="timeline"] .steps em { color: #e24b3f; font-style: normal; }
+html[data-theme="timeline"] .jar { border-top: 12px solid var(--accent); }
+html[data-theme="timeline"] .jar strong { color: #e24b3f; font-family: var(--display); font-weight: 400; }
+html[data-theme="timeline"] .jar small { color: var(--soft); }
+html[data-theme="timeline"] .team { border-top: 12px solid var(--team); }
 html[data-theme="timeline"] .team h3 { color: var(--ink); }
-html[data-theme="timeline"] .team p { color: var(--text); }
-html[data-theme="timeline"] .rulebar { background: rgba(23, 24, 28, 0.08); }
-html[data-theme="timeline"] .rulebar i { background: rgba(23, 24, 28, 0.18); }
-html[data-theme="timeline"] .rulebar span { color: var(--soft); font-weight: 800; }
+html[data-theme="timeline"] .team p { color: var(--ink); }
+html[data-theme="timeline"] .intro .soon { color: var(--ink); background: #fff6d8; border-radius: 999px; padding: 4px 16px; justify-self: start; }
+html[data-theme="timeline"] .rulebar { background: #fff; border: 3px solid var(--ink); }
+html[data-theme="timeline"] .rulebar i { background: rgba(255, 182, 39, 0.6); }
+html[data-theme="timeline"] .rulebar span { color: var(--ink); }
 
-/* Results */
-html[data-theme="timeline"] .winner h1 { font-size: 52px; color: #fff; background: var(--sign); padding: 10px 26px 6px; border-radius: 14px; border-bottom: 10px solid var(--team, var(--route)); text-shadow: none; }
-html[data-theme="timeline"] .totals span { border: 0; border-radius: 999px; background: var(--team); color: var(--ink); box-shadow: none; font-weight: 900; }
-html[data-theme="timeline"] .podium .talents { color: var(--soft); font-weight: 800; }
-html[data-theme="timeline"] .podium .block { border: 0; border-radius: 12px 12px 0 0; background: var(--team, var(--route)); box-shadow: inset 0 14px 0 rgba(255, 255, 255, 0.25); }
-html[data-theme="timeline"] .podium .name { font-weight: 900; }
-html[data-theme="timeline"] .awards div { background: #fff; border: 0; border-left: 8px solid var(--cool); border-radius: 0 10px 10px 0; box-shadow: 0 4px 0 rgba(23, 24, 28, 0.08); }
-html[data-theme="timeline"] .awards div:nth-child(2) { border-left-color: var(--good); } html[data-theme="timeline"] .awards div:nth-child(3) { border-left-color: var(--route); } html[data-theme="timeline"] .awards div:nth-child(4) { border-left-color: var(--accent); }
-html[data-theme="timeline"] .awards small { color: var(--soft); }
-/* The Gospel Anchor: a blue information sign. */
-html[data-theme="timeline"] .results .anchor { background: #0072ce; color: #fff; border: 0; border-radius: 12px; box-shadow: none; }
-html[data-theme="timeline"] .results .anchor small { color: #fff; opacity: 0.85; }
-html[data-theme="timeline"] .war .team { border: 0; border-radius: 999px; background: var(--team); color: var(--ink); box-shadow: none; }
+/* Results: the podium is three carriages. */
+html[data-theme="timeline"] .winner h1 { font-size: 54px; }
+html[data-theme="timeline"] .totals span, html[data-theme="timeline"] .war .team { border: 3px solid var(--ink); background: var(--team); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); font-weight: 900; }
 html[data-theme="timeline"] .war .team b { color: var(--ink); }
-html[data-theme="timeline"] .war .team em { background: #fff; color: var(--ink); border-radius: 6px; padding: 0 5px; }
-html[data-theme="timeline"] .btn { border: 0; border-radius: 10px; background: var(--sign); color: #fff; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.2); font-weight: 900; }
-html[data-theme="timeline"] .btn.go { background: var(--accent); color: var(--ink); }
-html[data-theme="timeline"] .btn.ghost { background: #fff; color: var(--ink); }
+html[data-theme="timeline"] .war .team em { color: var(--ink); background: #fff; border-radius: 6px; padding: 0 5px; }
+html[data-theme="timeline"] .war .label { color: var(--ink); }
+html[data-theme="timeline"] .podium .name { font-family: var(--display); font-weight: 400; color: #fff; text-shadow: 2px 2px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink); }
+html[data-theme="timeline"] .podium .talents { color: var(--ink); background: rgba(255, 255, 255, 0.8); border-radius: 999px; padding: 0 10px; }
+html[data-theme="timeline"] .podium .block { position: relative; overflow: visible; border: var(--border); border-radius: 18px 18px 10px 10px; box-shadow: none; background: linear-gradient(transparent 80%, rgba(0, 0, 0, 0.15) 80%), var(--team, var(--hot)); }
+html[data-theme="timeline"] .podium .block::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: -18px; height: 28px; background: var(--wheels) left / 28px 28px no-repeat, var(--wheels) right / 28px 28px no-repeat; }
+html[data-theme="timeline"] .awards small { color: #e24b3f; }
+html[data-theme="timeline"] .results .anchor small { color: #e24b3f; }
+html[data-theme="timeline"] .btn { border: var(--border); background: var(--hot); color: #fff; box-shadow: var(--lift); font: 400 22px var(--display); text-shadow: 2px 2px 0 var(--ink); }
+html[data-theme="timeline"] .btn.ghost { background: #fff; color: var(--ink); text-shadow: none; }
 
-/* Callouts: a service announcement sliding in. */
+/* Callouts: a big yellow station sign, swinging in. */
 html[data-theme="timeline"] .callout {
-  background: var(--accent); color: var(--ink); border: 0; border-radius: 12px; box-shadow: 0 10px 0 rgba(23, 24, 28, 0.2); transform: none; font-weight: 900;
-  border-left: 18px solid var(--c, var(--sign)); animation: tl-announce 0.45s cubic-bezier(.2, 1.2, .3, 1) both;
+  background: var(--accent); color: var(--ink); border: 5px solid var(--ink); border-radius: 20px; box-shadow: 6px 8px 0 var(--ink); transform: rotate(-2deg);
+  animation: ex-swing 0.6s cubic-bezier(.2, 1.6, .4, 1) both;
 }
-html[data-theme="timeline"] .callout.out { animation: tl-leave 0.35s ease-in forwards; }
-@keyframes tl-announce { from { transform: translateX(-900px); } }
-@keyframes tl-leave { to { transform: translateX(1300px); } }
+@keyframes ex-swing { from { transform: translateX(900px) rotate(12deg); } }
 
-/* Barnabas on the platform speakers. */
-html[data-theme="timeline"] .host .bubble { background: var(--sign); color: #fff; border: 0; border-radius: 12px; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.18); font: 700 19px/1.3 var(--body); }
-html[data-theme="timeline"] .host .bubble p::before { content: "🔊 "; }
-html[data-theme="timeline"] .host .bubble::before { border-right-color: var(--sign); }
-html[data-theme="timeline"] .host:is(.lobby, .stack) .bubble::before { border-right-color: transparent; border-top-color: var(--sign); }
-html[data-theme="timeline"] .host .donkey { filter: drop-shadow(0 6px 0 rgba(23, 24, 28, 0.15)); }
+/* Barnabas: a white bubble with a navy edge. */
+html[data-theme="timeline"] .host .bubble { background: #fff; color: var(--ink); border: var(--border); border-radius: 22px; box-shadow: var(--lift); font: 800 19px/1.3 var(--body); }
+html[data-theme="timeline"] .host .bubble::before { border-right-color: var(--ink); }
 
 /* ---------- In the lobby ---------- */
-.game[data-card="timeline"] { background: #f1eee5; color: #17181c; border: 0; border-top: 9px solid #e3342f; border-radius: 4px 4px 12px 12px; box-shadow: inset 0 -5px 0 rgba(23, 24, 28, 0.08); }
-.game[data-card="timeline"] strong { font-family: "Overpass", sans-serif; font-weight: 900; font-size: 19px; color: #17181c; letter-spacing: -0.02em; }
-.game[data-card="timeline"] small { font-family: "Overpass", sans-serif; font-weight: 700; color: #6b6b70; }
-.game.on[data-card="timeline"] { background: #fff; color: #17181c; box-shadow: 0 0 0 3px #17181c, 0 8px 0 rgba(0, 0, 0, 0.3); }
-.game.on[data-card="timeline"] small { color: #0072ce; }
+.game[data-card="timeline"] { background: linear-gradient(transparent 70%, #6fcf65 70%), linear-gradient(#3fb6ff, #a8e6ff); color: #1c2541; border-color: #1c2541; transform: rotate(-1deg); }
+.game[data-card="timeline"] strong { font-family: "Titan One", sans-serif; font-weight: 400; font-size: 19px; color: #fff; text-shadow: 2px 2px 0 #1c2541, -1px -1px 0 #1c2541; }
+.game[data-card="timeline"] small { font-family: "Nunito", sans-serif; font-weight: 900; color: #1c2541; }
+.game.on[data-card="timeline"] { color: #1c2541; box-shadow: 0 0 0 4px #fff, 5px 6px 0 #1c2541; }
+.game.on[data-card="timeline"] small { color: #1c2541; }

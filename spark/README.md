@@ -24,18 +24,21 @@ and family game.
 - **Each game has its own look** (like a Jackbox pack: same bones, a different world per game). While a game runs,
   `<html data-theme="...">` switches the TV (`themes/<game>.css`) and every phone (`../huddle/phone/themes.css`); the
   lobby stays Sticker, and its game cards show each game's look. Big headings are split into letters so a look can
-  tilt or jumble them, and each look picks its own confetti (`--fx-colors`, `--fx-bits`: bolts, coins, paper scraps,
-  dots).
+  tilt, bounce or float them; each look draws its own props (curtains, clouds, coins) on 16 empty `.decor i`
+  elements behind the stage, and picks its own confetti (`--fx-colors`, `--fx-bits`: bolts, coins, stars, paper).
   - **⚡ Lightning Round: Storm Arcade.** A neon arcade cabinet in a thunderstorm: Monoton and Bungee, everything
     leaning forward, scanlines, red/blue colour split, a synthwave floor, the sky flashing now and then.
-  - **💰 Talents: The Counting House.** An old bank ledger: ruled cream paper, Abril Fatface and Courier Prime, rubber
-    stamps slammed on crooked, a ticker tape for the live feed, a gold wax seal for 3-2-1, gold bars on the podium,
-    coins for confetti.
-  - **🎭 Bluff the Bible: The Case File.** A detective's corkboard: the fact on a pinned index card, answers on sticky
-    notes at angles, ransom-note headlines (every letter from a different magazine), label-maker tape, red string.
-  - **🧭 Timeline: The Line.** A transit map: every card is a station on the route, the new card is the NEXT STOP
-    sign, 3-2-1 in route bullets, the scores on an amber departures board. Overpass (highway-sign letters).
-  - A new game picks a world that fits what the game is about, then writes `themes/<key>.css` (and a phone part).
+  - **💰 Talents: The Vault.** A cartoon jackpot vault: emerald green, gold rays turning behind everything, coins
+    flipping in the air, marquee bulbs chasing round the clock, starburst callouts, glass jars with lids, a giant
+    flipping coin for 3-2-1, gold bars on the podium, coins for confetti. Luckiest Guy and Baloo 2.
+  - **🎭 Bluff the Bible: The Illusion.** A magic show: velvet curtains, spotlights sweeping the stage, the fact on
+    a gilded placard, answers dealt out as a fan of playing cards, each fake vanishing in a puff of smoke, the truth
+    on a gold banner. Big words float. Ultra and Fredoka.
+  - **🧭 Timeline: The Express.** A bright cartoon day: sun, drifting clouds, green hills. Every card on the line is
+    a carriage coupled on a track, the new card puffs in as the engine, and the podium is three carriages. Titan
+    One and Nunito.
+  - A new game picks a world that fits what the game is about (bright, cartoony, with props framing the content,
+    not flat paper), then writes `themes/<key>.css` and its part of `huddle/phone/themes.css`.
 - **The lobby:** each setting is one pill (Teams 3, Time 5 min, Steals On, Questions Bible Mix); tap to change it.
   Shuffle, lock, sound and end are small round buttons.
   - The music is Trivia Holy Party's band (`../js/music.js`).
