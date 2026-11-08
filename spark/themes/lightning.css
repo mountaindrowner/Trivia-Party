@@ -1,0 +1,170 @@
+/* ⚡ Lightning Round: STORM ARCADE.
+   A neon arcade cabinet in a thunderstorm. Fast game, so everything leans forward: skewed slabs, Bungee caps, a CRT
+   glow with scanlines, red/blue edges like a cheap TV, and the sky behind it lights up now and then.
+   Fonts: Monoton (neon tubes, the big titles and numbers), Bungee (signs), Chakra Petch (everything else). */
+html[data-theme="lightning"] {
+  --display: "Bungee", "Arial Black", system-ui, sans-serif; --display-w: 400; --body: "Chakra Petch", system-ui, sans-serif;
+  --ds: 0.9; --case: uppercase; --track: 0.01em;
+  --bg: #05061a; --glow1: #1a2380; --glow2: #5b0f6e;
+  --surface: rgba(8, 12, 44, 0.88); --surface-hi: #101850; --line: rgba(0, 229, 255, 0.35);
+  --text: #eef3ff; --soft: #8ea2dc; --accent: #ffe600; --on-accent: #05061a; --hot: #ff2bd6; --cool: #00e5ff; --good: #39ff88;
+  --ink: #000; --r: 0; --r-sm: 0; --border: 2px solid var(--cool); --lift: none;
+  --neon: 0 0 6px currentcolor, 0 0 18px currentcolor;
+  --split: -3px 0 0 #ff2bd6, 3px 0 0 #00e5ff;
+  --fx-colors: #ffe600, #00e5ff, #ff2bd6, #ffffff; --fx-sparks: 1.5; --fx-bits: bolt;
+}
+html[data-theme="lightning"] body { font-weight: 700; }
+
+/* The sky: storm clouds lit from below, a synthwave floor running off to the horizon, and lightning now and then. */
+html[data-theme="lightning"] #frame {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 8%, rgba(120, 140, 255, 0.35), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 85% 12%, rgba(255, 43, 214, 0.22), transparent 70%),
+    linear-gradient(180deg, #0b0f3a 0%, #05061a 55%, #12002a 100%);
+}
+html[data-theme="lightning"] #frame::before {
+  content: ""; position: absolute; left: -50%; right: -50%; bottom: -10%; height: 55%; pointer-events: none;
+  background:
+    linear-gradient(transparent 0 calc(100% - 2px), rgba(0, 229, 255, 0.45) 0) 0 0 / 100% 48px,
+    linear-gradient(90deg, transparent 0 calc(100% - 2px), rgba(255, 43, 214, 0.45) 0) 0 0 / 64px 100%;
+  transform: perspective(300px) rotateX(62deg); transform-origin: top; opacity: 0.55;
+  mask-image: linear-gradient(transparent, #000 35%);
+  animation: ltn-floor 1.6s linear infinite;
+}
+@keyframes ltn-floor { to { background-position: 0 48px, 0 0; } }
+/* Scanlines and the lightning flash, on top of everything (they don't catch clicks). */
+html[data-theme="lightning"] #frame::after {
+  content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px), radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55));
+  animation: ltn-sky 9s infinite;
+}
+@keyframes ltn-sky {
+  0%, 61%, 63.5%, 66%, 100% { background-color: transparent; }
+  62%, 65% { background-color: rgba(190, 210, 255, 0.16); }
+}
+
+/* Type: chunky sign letters, a cheap-TV colour split, and a forward lean. */
+html[data-theme="lightning"] :is(h1, h2, .count, .play .timer, .verdict-row .verdict, .scramble-title) { text-shadow: var(--split); }
+html[data-theme="lightning"] .intro .head h1, html[data-theme="lightning"] .count {
+  font-family: "Monoton", "Bungee", sans-serif; color: var(--accent); text-shadow: 0 0 8px var(--accent), 0 0 30px rgba(255, 230, 0, 0.6), var(--split);
+}
+html[data-theme="lightning"] .intro .head h1 { font-size: 78px; letter-spacing: 0.02em; }
+html[data-theme="lightning"] .count { font-size: 230px; }
+/* Neon tubes buzz: a letter here and there flickers out. */
+html[data-theme="lightning"] :is(.intro .head h1, .count, .winner h1) .ch { display: inline-block; }
+html[data-theme="lightning"] :is(.intro .head h1, .winner h1) .ch:nth-child(4n+3) { animation: ltn-buzz 3.1s calc(var(--i) * -0.37s) infinite steps(1); }
+@keyframes ltn-buzz { 0%, 91%, 96% { opacity: 1; } 92%, 95% { opacity: 0.25; } }
+html[data-theme="lightning"] .eyebrow, html[data-theme="lightning"] .play header .name {
+  display: inline-block; background: var(--accent); color: var(--on-accent); padding: 5px 18px 3px; transform: skewX(-14deg); font-size: 16px;
+  box-shadow: 4px 4px 0 var(--hot); text-shadow: none;
+}
+html[data-theme="lightning"] section > header .count, html[data-theme="lightning"] .cardno { color: var(--cool); font: 700 16px var(--body); text-transform: uppercase; letter-spacing: 0.12em; }
+
+/* Slabs: dark glass, a neon edge, a magenta shadow, leaning forward. */
+html[data-theme="lightning"] :is(.fact, .steps li, .jar, .team, .awards div, .side, .anchor, .tchip, .table-board li, .seat) {
+  background: var(--surface); border: 2px solid var(--cool); box-shadow: 0 0 14px rgba(0, 229, 255, 0.35), 6px 6px 0 rgba(255, 43, 214, 0.75);
+}
+html[data-theme="lightning"] .fact.lq {
+  transform: skewX(-6deg); font: 700 34px/1.2 var(--body); text-transform: none; letter-spacing: 0; padding: 26px 40px;
+  border-width: 3px; background: linear-gradient(180deg, rgba(16, 24, 80, 0.95), rgba(5, 6, 26, 0.95));
+}
+
+/* The four answers: neon outline slabs in the four colours, the shape in a solid block. */
+html[data-theme="lightning"] .answers { gap: 16px 22px; padding: 0 12px; }
+html[data-theme="lightning"] .ans {
+  --c: #2f7bff; transform: skewX(-10deg); background: rgba(5, 6, 26, 0.92); border: 3px solid var(--c); border-radius: 0;
+  box-shadow: 0 0 16px var(--c), inset 0 0 18px color-mix(in srgb, var(--c) 35%, transparent); color: #fff; font: 700 26px/1.15 var(--body); padding: 0 20px 0 0; min-height: 78px;
+}
+html[data-theme="lightning"] .ans.a1 { --c: #b04bff; } html[data-theme="lightning"] .ans.a2 { --c: #16d877; } html[data-theme="lightning"] .ans.a3 { --c: #ff8a1a; }
+html[data-theme="lightning"] .ans.a0 { --c: #2f8bff; }
+html[data-theme="lightning"] .ans b { align-self: stretch; display: grid; place-items: center; width: 70px; background: var(--c); color: #05061a; font-size: 30px; }
+html[data-theme="lightning"] .ans .bar { background: var(--c); height: 100%; opacity: 0.28; }
+html[data-theme="lightning"] .ans .n { font-family: "Bungee", sans-serif; font-weight: 400; color: var(--c); text-shadow: var(--neon); }
+html[data-theme="lightning"] .ans.right { background: var(--c); color: #05061a; outline: none; transform: skewX(-10deg) scale(1.04); box-shadow: 0 0 40px var(--c), 0 0 0 4px #fff; animation: ltn-glitch 0.5s steps(2) 2; }
+html[data-theme="lightning"] .ans.right b { background: #05061a; color: var(--c); }
+html[data-theme="lightning"] .ans.right .n { color: #05061a; text-shadow: none; }
+html[data-theme="lightning"] .ans.right::after { color: #05061a; font-family: "Bungee", sans-serif; }
+html[data-theme="lightning"] .ans.wrong { opacity: 0.3; filter: saturate(0.3); }
+@keyframes ltn-glitch {
+  0% { clip-path: inset(0 0 60% 0); translate: -8px 0; } 25% { clip-path: inset(40% 0 0 0); translate: 8px 0; }
+  50% { clip-path: inset(10% 0 30% 0); translate: -4px 0; } 100% { clip-path: none; translate: 0 0; }
+}
+
+/* The clock: a hazard-striped power bar draining away. */
+html[data-theme="lightning"] .qbar { height: 16px; border-radius: 0; background: rgba(255, 255, 255, 0.06); border: 2px solid var(--accent); transform: skewX(-20deg); box-shadow: 0 0 12px rgba(255, 230, 0, 0.5); }
+html[data-theme="lightning"] .qbar i { background: repeating-linear-gradient(-45deg, var(--accent) 0 12px, #05061a 12px 24px); }
+
+/* After an answer */
+html[data-theme="lightning"] .verdict-row .verdict { font-family: "Bungee", sans-serif; font-weight: 400; color: var(--accent); font-size: 34px; transform: skewX(-8deg); }
+html[data-theme="lightning"] .verdict-row .quick { color: var(--cool); font-size: 20px; }
+html[data-theme="lightning"] .verdict-row .ref { color: var(--soft); }
+
+/* Scoreboards: an arcade high-score table. */
+html[data-theme="lightning"] .between h2 { font-size: 38px; color: var(--accent); }
+html[data-theme="lightning"] .board li { background: rgba(8, 12, 44, 0.85); border: 0; border-left: 6px solid var(--team, var(--cool)); border-radius: 0; transform: skewX(-8deg); box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.25); }
+html[data-theme="lightning"] .board li.top { background: linear-gradient(90deg, rgba(255, 43, 214, 0.35), rgba(8, 12, 44, 0.85) 60%); }
+html[data-theme="lightning"] .board .rank { font-family: "Bungee", sans-serif; color: var(--accent); }
+html[data-theme="lightning"] .board .name { font-family: var(--body); text-transform: uppercase; letter-spacing: 0.04em; }
+html[data-theme="lightning"] .board .talents { font-family: "Bungee", sans-serif; color: var(--cool); text-shadow: 0 0 10px rgba(0, 229, 255, 0.7); }
+html[data-theme="lightning"] .board li.climb { box-shadow: 0 0 0 2px var(--good), 0 0 18px var(--good); }
+html[data-theme="lightning"] .bar .fill { background: rgba(255, 255, 255, 0.06); border-radius: 0; transform: skewX(-20deg); border: 1px solid rgba(0, 229, 255, 0.4); }
+html[data-theme="lightning"] .bar .fill::after { border-radius: 0; box-shadow: 0 0 14px var(--team); }
+
+/* Rules */
+html[data-theme="lightning"] .intro .head .icon { filter: drop-shadow(0 0 18px var(--accent)); }
+html[data-theme="lightning"] .intro .head p { color: var(--cool); font-size: 20px; letter-spacing: 0.04em; }
+html[data-theme="lightning"] .steps li { transform: skewX(-8deg); font-size: 22px; }
+html[data-theme="lightning"] .steps b { font-family: "Monoton", sans-serif; font-size: 46px; color: var(--hot); text-shadow: 0 0 10px var(--hot); }
+html[data-theme="lightning"] .steps em, html[data-theme="lightning"] .intro .soon { color: var(--accent); }
+html[data-theme="lightning"] .rulebar { border-radius: 0; transform: skewX(-20deg); border: 2px solid var(--cool); background: rgba(0, 0, 0, 0.4); }
+html[data-theme="lightning"] .rulebar i { background: rgba(0, 229, 255, 0.35); }
+html[data-theme="lightning"] .rulebar span { color: var(--cool); }
+
+/* Lightning Round at tables */
+html[data-theme="lightning"] .scramble-title { color: var(--accent); font-size: 50px; }
+html[data-theme="lightning"] .table-col h3 { border-radius: 0; transform: skewX(-10deg); border: 0; box-shadow: 0 0 18px var(--team); }
+html[data-theme="lightning"] .table-col h3 b { border-radius: 0; }
+html[data-theme="lightning"] .seat { border-radius: 0; transform: skewX(-8deg); font-family: var(--body); }
+html[data-theme="lightning"] .table-col.ready .seat { border-color: var(--team); box-shadow: 0 0 10px var(--team); }
+html[data-theme="lightning"] .tchip { border-radius: 0; transform: skewX(-10deg); border-color: var(--team); }
+html[data-theme="lightning"] .tchip b { border-radius: 0; font-family: "Bungee", sans-serif; font-weight: 400; }
+html[data-theme="lightning"] .table-board li { transform: skewX(-6deg); border-color: var(--team); }
+html[data-theme="lightning"] .table-board .tbar { border-radius: 0; border: 2px solid var(--team); }
+html[data-theme="lightning"] .table-board .tname b { border-radius: 0; }
+
+/* Results */
+html[data-theme="lightning"] .winner h1 { font-size: 44px; color: var(--team, var(--accent)); text-shadow: 0 0 14px var(--team, var(--accent)), var(--split); transform: skewX(-8deg); }
+html[data-theme="lightning"] .totals span { border-radius: 0; transform: skewX(-12deg); background: transparent; border: 2px solid var(--team); color: var(--team); box-shadow: 0 0 10px var(--team); font-family: "Bungee", sans-serif; font-weight: 400; }
+html[data-theme="lightning"] .podium .block { border-radius: 0; border: 3px solid var(--team, var(--accent)); background: linear-gradient(180deg, color-mix(in srgb, var(--team, var(--accent)) 55%, transparent), transparent);
+  box-shadow: 0 0 24px var(--team, var(--accent)), inset 0 0 30px color-mix(in srgb, var(--team, var(--accent)) 40%, transparent); }
+html[data-theme="lightning"] .podium .talents { color: var(--accent); font-family: "Bungee", sans-serif; font-weight: 400; }
+html[data-theme="lightning"] .podium .name { text-transform: uppercase; }
+html[data-theme="lightning"] .awards div { transform: skewX(-8deg); }
+html[data-theme="lightning"] .awards small { color: var(--hot); }
+html[data-theme="lightning"] .results .anchor { border-color: var(--accent); box-shadow: 0 0 16px rgba(255, 230, 0, 0.4); }
+html[data-theme="lightning"] .results .anchor small { color: var(--accent); }
+html[data-theme="lightning"] .war .team { border-radius: 0; transform: skewX(-10deg); }
+html[data-theme="lightning"] .btn { border-radius: 0; transform: skewX(-12deg); border: 0; background: var(--accent); color: var(--on-accent); box-shadow: 5px 5px 0 var(--hot), 0 0 20px rgba(255, 230, 0, 0.5); font-family: "Bungee", sans-serif; font-weight: 400; }
+html[data-theme="lightning"] .btn.ghost { background: transparent; color: var(--cool); border: 2px solid var(--cool); box-shadow: 0 0 12px rgba(0, 229, 255, 0.4); }
+
+/* Callouts: a neon sign that buzzes on. */
+html[data-theme="lightning"] .callout {
+  background: rgba(5, 6, 26, 0.92); border: 4px solid var(--c, var(--accent)); border-radius: 0; color: var(--c, var(--accent)); transform: skewX(-10deg);
+  text-shadow: var(--neon); box-shadow: 0 0 40px var(--c, var(--accent)), inset 0 0 30px color-mix(in srgb, var(--c, var(--accent)) 30%, transparent);
+  font-family: "Bungee", sans-serif; font-weight: 400; animation: ltn-on 0.5s steps(1) both;
+}
+html[data-theme="lightning"] .callout.out { animation: callout 0.3s ease-in forwards; }
+@keyframes ltn-on { 0% { opacity: 0; } 20% { opacity: 1; } 30% { opacity: 0.2; } 45% { opacity: 1; } 55% { opacity: 0.4; } 70%, 100% { opacity: 1; } }
+
+/* Barnabas talks through a terminal. */
+html[data-theme="lightning"] .host .bubble { background: #000; color: var(--cool); border: 2px solid var(--cool); border-radius: 0; box-shadow: 0 0 18px rgba(0, 229, 255, 0.45); font: 700 19px/1.3 var(--body); text-transform: uppercase; letter-spacing: 0.03em; }
+html[data-theme="lightning"] .host .bubble::before { border-right-color: var(--cool); }
+html[data-theme="lightning"] .host:is(.lobby, .stack) .bubble::before { border-right-color: transparent; border-top-color: var(--cool); }
+html[data-theme="lightning"] .host .bubble p::after { content: "▌"; animation: flicker 1s steps(1) infinite; }
+
+/* ---------- In the lobby: the game's card, in its own look ---------- */
+.game[data-card="lightning"] { background: linear-gradient(160deg, #101850, #05061a); color: #eef3ff; border-color: #00e5ff; transform: skewX(-6deg); }
+.game[data-card="lightning"] strong { font-family: "Bungee", sans-serif; font-weight: 400; color: #ffe600; text-shadow: -2px 0 0 #ff2bd6, 2px 0 0 #00e5ff; text-transform: uppercase; font-size: 15px; }
+.game[data-card="lightning"] small { font-family: "Chakra Petch", sans-serif; font-weight: 700; color: #8ea2dc; }
+.game.on[data-card="lightning"] { background: linear-gradient(160deg, #1a2380, #05061a); color: #eef3ff; box-shadow: 0 0 22px #00e5ff, 6px 6px 0 #ff2bd6; }
+.game.on[data-card="lightning"] small { color: #00e5ff; }

@@ -178,6 +178,9 @@
   function draw(s) {
     lastScreen = s;
     cancelAnimationFrame(timerRaf);
+    // Spark Wars: each game has its own look (huddle/phone/themes.css); the lobby has none.
+    if (s.theme && /^[a-z-]{1,20}$/.test(s.theme)) document.documentElement.dataset.theme = s.theme;
+    else delete document.documentElement.dataset.theme;
     const kind = s.screen || "lobby";
     if (kind === "lobby") return lobbyScreen();
     if (kind === "wait") return show(meCard(), s.banner ? el("div", { class: "banner", style: s.banner.color ? `--team:${s.banner.color}` : null }, el("small", {}, s.banner.small || ""), el("strong", {}, s.banner.text)) : null,

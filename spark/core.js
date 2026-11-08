@@ -51,7 +51,49 @@ window.SW = (() => {
     for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
     return n;
   };
-  const show = (node) => { stage.replaceChildren(node); node.classList.add("enter"); return node; };
+  const show = (node) => { stage.replaceChildren(node); node.classList.add("enter"); if (theme) node.querySelectorAll(SPLIT).forEach(letters); return node; };
+
+  /* ---------- Each game's own look ----------
+     While a game runs, <html data-theme="lightning|talents|bluff|timeline"> switches the whole stage (and every phone)
+     to that game's look: spark/themes/<game>.css. The lobby and title stay Spark Wars' own Sticker look.
+     Big headings are split into letters (<span class="ch" style="--i:n">) so a look can tilt, jumble or stack them. */
+  let theme = null;
+  const SPLIT = ".intro .head h1, .winner h1, .count, .between h2, .scramble-title, .stamp, .dealt .verdict, .verdict-row .verdict";
+  const graphemes = (t) => (window.Intl && Intl.Segmenter ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(t)].map((x) => x.segment) : Array.from(t));
+  /** Wrap each letter of an element's text in a span (words stay together, so lines still break between words). */
+  function letters(node) {
+    if (!node || node.dataset.split === node.textContent) return node;
+    const label = node.textContent;
+    const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT), texts = [];
+    while (walk.nextNode()) texts.push(walk.currentNode);
+    let i = 0;
+    for (const t of texts) {
+      const frag = document.createDocumentFragment();
+      for (const word of t.textContent.split(/(\s+)/)) {
+        if (!word) continue;
+        if (/^\s+$/.test(word)) { frag.append(word); continue; }
+        const w = document.createElement("span");
+        w.className = "word";
+        for (const ch of graphemes(word)) { const c = document.createElement("span"); c.className = "ch"; c.style.setProperty("--i", i++); c.textContent = ch; w.append(c); }
+        frag.append(w);
+      }
+      t.replaceWith(frag);
+    }
+    node.setAttribute("aria-label", label);
+    node.dataset.split = node.textContent;
+    return node;
+  }
+  /** The confetti, sparks and particle shape for the current look (read from its CSS: --fx-colors, --fx-sparks, --fx-bits). */
+  const look = { colors: null, sparks: 1, bits: "paper" };
+  function setTheme(key) {
+    theme = key || null;
+    if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
+    const css = getComputedStyle(document.documentElement);
+    const colors = css.getPropertyValue("--fx-colors").trim();
+    look.colors = colors ? colors.split(/\s*,\s*/) : null;
+    look.sparks = css.getPropertyValue("--fx-sparks").trim() === "" ? 1 : Number(css.getPropertyValue("--fx-sparks"));
+    look.bits = css.getPropertyValue("--fx-bits").trim() || "paper";
+  }
   const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
   const nth = (n) => n + (["th", "st", "nd", "rd"][((n % 100) - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
@@ -112,8 +154,8 @@ window.SW = (() => {
       // Background: sparks drift up and flicker; more and faster with more energy.
       bctx.clearRect(0, 0, 1280, 720);
       if (tint) { bctx.fillStyle = tint; bctx.fillRect(0, 0, 1280, 720); }
-      const want = Math.round(25 + energy * 90);
-      while (sparks.length < want) sparks.push({ x: rnd(0, 1280), y: rnd(720, 760), vy: rnd(0.3, 1.2), vx: rnd(-0.3, 0.3), r: rnd(0.8, 2.6), c: pickOne(COLORS.slice(0, 4)), ph: rnd(0, 6) });
+      const want = Math.round((25 + energy * 90) * look.sparks), palette = look.colors || COLORS;
+      while (sparks.length < want) sparks.push({ x: rnd(0, 1280), y: rnd(720, 760), vy: rnd(0.3, 1.2), vx: rnd(-0.3, 0.3), r: rnd(0.8, 2.6), c: pickOne(palette.slice(0, 4)), ph: rnd(0, 6) });
       if (sparks.length > want) sparks.length = want;
       for (const p of sparks) {
         p.y -= p.vy * (0.6 + energy * 2.2); p.x += p.vx + Math.sin((p.y + p.ph * 50) / 60) * 0.3; p.ph += 0.1;
@@ -130,7 +172,13 @@ window.SW = (() => {
         b.vy += b.g; b.x += b.vx; b.y += b.vy; b.vx *= 0.99; b.rot += b.vr; b.life--;
         if (b.life <= 0 || b.y > 760) { bits.splice(i, 1); continue; }
         fctx.save(); fctx.globalAlpha = Math.min(1, b.life / 30); fctx.translate(b.x, b.y); fctx.rotate(b.rot); fctx.fillStyle = b.c;
-        if (b.kind === "dot") { fctx.beginPath(); fctx.arc(0, 0, b.s / 2, 0, 7); fctx.fill(); } else fctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2);
+        if (b.kind === "dot") { fctx.beginPath(); fctx.arc(0, 0, b.s / 2, 0, 7); fctx.fill(); }
+        else if (b.kind === "coin") { // a coin flipping: an ellipse that narrows and widens, with a rim
+          const w = Math.abs(Math.cos(b.rot * 2)) * b.s * 0.6 + 1.5;
+          fctx.beginPath(); fctx.ellipse(0, 0, w, b.s * 0.6, 0, 0, 7); fctx.fill(); fctx.strokeStyle = "rgba(90,60,0,0.6)"; fctx.lineWidth = 1.5; fctx.stroke();
+        } else if (b.kind === "scrap") { fctx.beginPath(); fctx.moveTo(-b.s / 2, -b.s / 3); fctx.lineTo(b.s / 2, -b.s / 4); fctx.lineTo(b.s / 3, b.s / 3); fctx.lineTo(-b.s / 3, b.s / 4); fctx.closePath(); fctx.fill(); }
+        else if (b.kind === "bolt") { fctx.beginPath(); fctx.moveTo(-b.s / 4, -b.s / 2); fctx.lineTo(b.s / 6, -b.s / 10); fctx.lineTo(-b.s / 10, b.s / 10); fctx.lineTo(b.s / 4, b.s / 2); fctx.lineTo(-b.s / 6, b.s / 8); fctx.lineTo(b.s / 10, -b.s / 10); fctx.closePath(); fctx.fill(); }
+        else fctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2);
         fctx.restore();
       }
       requestAnimationFrame(frameLoop);
@@ -144,7 +192,8 @@ window.SW = (() => {
       if (!item) { showing = false; return; }
       showing = true;
       const [text, o] = item;
-      const c = el("div", { class: "callout" + (o.small ? " small" : ""), style: o.color ? `--c:${o.color}` : null }, o.icon ? el("span", { class: "icon" }, o.icon) : null, el("span", {}, text));
+      const c = el("div", { class: "callout" + (o.small ? " small" : ""), style: o.color ? `--c:${o.color}` : null }, o.icon ? el("span", { class: "icon" }, o.icon) : null, el("span", { class: "text" }, text));
+      if (theme) letters(c.querySelector(".text"));
       calls.append(c);
       setTimeout(() => c.classList.add("out"), o.small ? 1300 : 1700);
       setTimeout(() => { c.remove(); nextCall(); }, o.small ? 1650 : 2050);
@@ -155,11 +204,11 @@ window.SW = (() => {
       /** Confetti from the top, or a burst from a point. */
       confetti(n = 160, colors) {
         if (reduced) return;
-        for (let i = 0; i < n; i++) bits.push({ x: rnd(0, 1280), y: rnd(-80, -10), vx: rnd(-1.5, 1.5), vy: rnd(1, 4), g: 0.06, s: rnd(8, 14), rot: rnd(0, 6), vr: rnd(-0.2, 0.2), c: pickOne(colors || COLORS), life: 260, kind: "paper" });
+        for (let i = 0; i < n; i++) bits.push({ x: rnd(0, 1280), y: rnd(-80, -10), vx: rnd(-1.5, 1.5), vy: rnd(1, 4), g: 0.06, s: rnd(8, 14) * (look.bits === "coin" ? 1.5 : 1), rot: rnd(0, 6), vr: rnd(-0.2, 0.2), c: pickOne(look.colors && !colors ? look.colors : colors || COLORS), life: 260, kind: look.bits });
       },
       burst(x, y, n = 40, colors) {
         if (reduced) return;
-        for (let i = 0; i < n; i++) { const a = rnd(0, 6.3), v = rnd(3, 10); bits.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, g: 0.18, s: rnd(5, 10), rot: 0, vr: 0, c: pickOne(colors || COLORS), life: rnd(40, 70), kind: "dot" }); }
+        for (let i = 0; i < n; i++) { const a = rnd(0, 6.3), v = rnd(3, 10); bits.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, g: 0.18, s: rnd(5, 10) * (look.bits === "paper" ? 1 : 1.6), rot: rnd(0, 6), vr: rnd(-0.3, 0.3), c: pickOne(colors || look.colors || COLORS), life: rnd(40, 70), kind: look.bits === "paper" ? "dot" : look.bits }); }
       },
       /** A burst from the middle of an element on the stage. */
       burstAt(node, n, colors) {
@@ -396,7 +445,8 @@ window.SW = (() => {
   function put(to, screen) {
     const ids = to === "players" ? cast().map((p) => p.id) : to === "all" ? players.map((p) => p.id) : [].concat(to);
     for (const id of ids) {
-      const s = screen.badge === undefined && badge(id) ? Object.assign({ badge: badge(id) }, screen) : screen;
+      let s = screen.badge === undefined && badge(id) ? Object.assign({ badge: badge(id) }, screen) : screen;
+      if (theme && s.theme === undefined && s.screen !== "lobby") s = Object.assign({ theme }, s);
       shown[id] = s;
       const p = byId(id);
       if (p && p.connected) sendTo([id], s);
@@ -412,6 +462,7 @@ window.SW = (() => {
 
   function titleScreen(note) {
     phase = "title";
+    setTheme(null);
     host.dock("corner");
     setTimeout(() => phase === "title" && host.say("title"), 600);
     show(el("section", { class: "title" },
@@ -563,6 +614,7 @@ window.SW = (() => {
 
   function lobby() {
     step();
+    setTheme(null);
     phase = "lobby";
     cur = null;
     for (const k in shown) delete shown[k];
@@ -654,7 +706,7 @@ window.SW = (() => {
     const g = GAMES.find((x) => x.key === prefs.game) || GAMES[0];
     const box = lobbyNode.querySelector(".settings");
     box.replaceChildren(
-      el("div", { class: "games" }, ...GAMES.map((x) => el("button", { class: "game" + (x.key === g.key ? " on" : ""), "aria-pressed": x.key === g.key ? "true" : "false", onclick: () => { prefs.game = x.key; savePrefs(); drawSettings(); S("tick"); } },
+      el("div", { class: "games" }, ...GAMES.map((x) => el("button", { class: "game" + (x.key === g.key ? " on" : ""), "data-card": x.theme || x.key, "aria-pressed": x.key === g.key ? "true" : "false", onclick: () => { prefs.game = x.key; savePrefs(); drawSettings(); S("tick"); } },
         el("span", { class: "icon" }, x.icon), el("strong", {}, x.name), el("small", {}, x.about)))),
       el("div", { class: "opts" },
         chips("Teams", [[0, "Off"], [2, "2"], [3, "3"], [4, "4"]], prefs.teams, (v) => { prefs.teams = v; if (phase === "lobby") setTeams(); }),
@@ -694,6 +746,7 @@ window.SW = (() => {
     for (const k in shown) delete shown[k];
     put(players.filter((p) => p.audience).map((p) => p.id), { screen: "wait", title: "You're in the audience", text: "The game is full (30 players). Watch the big screen!" });
     cur = { def };
+    setTheme(def.theme || def.key);
     host.quiet(); // no leftover hellos from the lobby
     host.dock("corner");
     phase = "game"; // until the rules: a game may do things first (the Lightning Round scrambles the tables)
@@ -739,7 +792,7 @@ window.SW = (() => {
     const big = el("div", { class: "count" }, "3");
     show(el("section", { class: "countin" }, el("p", {}, "Phones up!"), big));
     for (const n of ["3", "2", "1"]) {
-      big.textContent = n; big.classList.remove("pop"); void big.offsetWidth; big.classList.add("pop"); S("tick"); fx.shake(); fx.flash("#ffd23f");
+      big.textContent = n; delete big.dataset.split; if (theme) letters(big); big.classList.remove("pop"); void big.offsetWidth; big.classList.add("pop"); S("tick"); fx.shake(); fx.flash(look.colors ? look.colors[0] : "#ffd23f");
       if (!(await wait(900, token))) return false;
     }
     S("go");

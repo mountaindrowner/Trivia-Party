@@ -29,7 +29,7 @@ body { font: 600 20px/1.3 var(--body); }
 @keyframes enter { from { opacity: 0; transform: translateY(12px); } }
 h1, h2, h3, .btn, .count, .timer, .code span, .eyebrow, .callout, .stamp, .pill strong, .game strong, .rank, .talents, .total, .bar .label, .war .label, .war .team b,
 .fact, .reveal .card, .timeline .card.new, .dealt .verdict, .opt b, .steps b, .jar.wide strong, .play header .name, .who .count {
-  font-family: var(--display); font-weight: 800; text-transform: var(--case); letter-spacing: var(--track);
+  font-family: var(--display); font-weight: var(--display-w, 800); text-transform: var(--case); letter-spacing: var(--track);
 }
 h1, h2, h3 { margin: 0; }
 p { margin: 0; }
@@ -187,7 +187,7 @@ section > header .count + .btn { margin-left: 16px; }
 .play .timer.low { color: var(--hot); animation: pulse 0.5s infinite alternate; }
 @keyframes pulse { to { transform: scale(1.08); } }
 .play header .right { justify-self: end; display: flex; gap: 12px; align-items: center; color: var(--soft); font-size: 17px; }
-.play .double { text-align: center; font: 800 22px var(--display); text-transform: var(--case); color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 7px; animation: pulse 0.6s infinite alternate; }
+.play .double { text-align: center; font: var(--display-w, 800) 22px var(--display); text-transform: var(--case); color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 7px; animation: pulse 0.6s infinite alternate; }
 .play .double[hidden] { display: none; }
 .play.doubled { box-shadow: inset 0 0 90px color-mix(in srgb, var(--accent) 30%, transparent); }
 .bars { display: grid; gap: 8px; }
@@ -270,7 +270,7 @@ section > header .count + .btn { margin-left: 16px; }
 .timeline .card { display: grid; align-content: center; justify-items: center; gap: 6px; width: 160px; min-height: 116px; padding: 14px 10px; border-radius: var(--r-sm);
   background: var(--surface-hi); border: var(--border); text-align: center; position: relative; }
 .timeline .line.tight .card { width: 146px; }
-.timeline .card .n { position: absolute; top: 7px; left: 11px; font: 800 13px var(--display); color: var(--soft); }
+.timeline .card .n { position: absolute; top: 7px; left: 11px; font: var(--display-w, 800) 13px var(--display); color: var(--soft); }
 .timeline .card .t { font-size: 19px; font-weight: 700; line-height: 1.15; }
 .timeline .card small { font-size: 13px; color: var(--accent); font-weight: 700; }
 .timeline .card.new { width: auto; min-height: 0; font-size: calc(32px * var(--ds)); padding: 18px 34px; background: var(--accent); color: var(--on-accent); box-shadow: var(--lift); animation: big 0.4s ease-out; }
@@ -285,7 +285,7 @@ section > header .count + .btn { margin-left: 16px; }
 .winner { text-align: center; display: grid; gap: 10px; justify-items: center; }
 .winner h1 { font-size: calc(50px * var(--ds)); color: var(--team, var(--accent)); animation: big 0.6s ease-out; }
 .totals { display: flex; gap: 10px; }
-.totals span { font: 800 17px var(--display); text-transform: var(--case); padding: 6px 16px; border-radius: 999px; background: color-mix(in srgb, var(--team) 18%, transparent); color: var(--team); }
+.totals span { font: var(--display-w, 800) 17px var(--display); text-transform: var(--case); padding: 6px 16px; border-radius: 999px; background: color-mix(in srgb, var(--team) 18%, transparent); color: var(--team); }
 .podium { display: grid; grid-template-columns: repeat(3, 230px); align-items: end; gap: 16px; }
 .podium .step { display: grid; justify-items: center; gap: 4px; }
 .podium .face { font-size: 52px; }
@@ -322,31 +322,31 @@ section > header .count + .btn { margin-left: 16px; }
 @keyframes shake-big { 10% { transform: translate(-14px, 6px) rotate(-0.6deg); } 30% { transform: translate(12px, -8px) rotate(0.6deg); } 50% { transform: translate(-9px, 4px); } 70% { transform: translate(6px, -3px); } 90% { transform: translate(-2px, 1px); } }
 
 /* ---------- Sticker touches (not in the Arena look) ---------- */
-html:not([data-look="arena"]) :is(.opt, .steps li, .game, .pill, .timeline .card, .fact, .side, .jar, .team, .awards div, .writers .w, .reveal .card, .icon-btn) { box-shadow: 4px 4px 0 var(--ink); }
-html:not([data-look="arena"]) :is(.tile, .board li) { box-shadow: inset 6px 0 0 var(--team, transparent), 4px 4px 0 var(--ink); }
-html:not([data-look="arena"]) .tile.empty { box-shadow: none; border: 3px dashed rgba(255, 255, 255, 0.18); }
-html:not([data-look="arena"]) .board li.climb { box-shadow: inset 6px 0 0 var(--team, transparent), 4px 4px 0 var(--good); }
-html:not([data-look="arena"]) #frame { background: radial-gradient(rgba(255, 255, 255, 0.07) 1.5px, transparent 1.6px) 0 0 / 26px 26px, radial-gradient(ellipse 70% 60% at 15% 0%, var(--glow1), transparent 70%), radial-gradient(ellipse 60% 60% at 100% 100%, var(--glow2), transparent 70%), var(--bg); }
-html:not([data-look="arena"]) :is(.count, .play .timer, .intro .head h1, .who h2, .between h2, .dealt .verdict) { text-shadow: 4px 4px 0 var(--ink); }
-html:not([data-look="arena"]) .count { -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; text-shadow: 8px 8px 0 var(--ink); }
-html:not([data-look="arena"]) .bar .fill { border: var(--border); height: 26px; }
-html:not([data-look="arena"]) .play header .name { justify-self: start; }
-html:not([data-look="arena"]) .join .qr { box-shadow: var(--lift); }
-html:not([data-look="arena"]) .tile.vip { outline: 3px solid var(--accent); outline-offset: -3px; }
-html:not([data-look="arena"]) .war .team, html:not([data-look="arena"]) .totals span { border: 3px solid var(--ink); background: var(--team); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
-html:not([data-look="arena"]) .war .team b { color: var(--ink); }
-html:not([data-look="arena"]) .war .team em { color: var(--ink); background: #fff; border-radius: 6px; padding: 0 5px; }
-html:not([data-look="arena"]) .stamp { background: #fff; box-shadow: 6px 6px 0 var(--ink); }
-html:not([data-look="arena"]) .stamp.lie { background: var(--hot); color: #fff; border-color: var(--ink); }
-html:not([data-look="arena"]) .stamp.true { background: var(--good); color: var(--ink); border-color: var(--ink); }
-html:not([data-look="arena"]) .double { border: var(--border); box-shadow: var(--lift); }
-html:not([data-look="arena"]) .feed li.new { border: 2px solid var(--ink); background: var(--accent); color: var(--ink); }
-html:not([data-look="arena"]) .blank.filled { border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
-html:not([data-look="arena"]) .rulebar { border: var(--border); }
-html:not([data-look="arena"]) .eyebrow, html:not([data-look="arena"]) .play header .name { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 4px 14px; border-radius: 10px; border: 3px solid #0d0820; transform: rotate(-2deg); }
-html:not([data-look="arena"]) .callout { border-color: #0d0820; background: var(--c, var(--accent)); color: #16112b; box-shadow: 8px 8px 0 #0d0820; }
-html:not([data-look="arena"]) .logo h1 { -webkit-text-stroke: 0; text-shadow: 4px 4px 0 #0d0820; }
-html:not([data-look="arena"]) .winner h1 { text-shadow: 4px 4px 0 #0d0820; }
+html:not([data-look="arena"]):not([data-theme]) :is(.opt, .steps li, .game, .pill, .timeline .card, .fact, .side, .jar, .team, .awards div, .writers .w, .reveal .card, .icon-btn) { box-shadow: 4px 4px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) :is(.tile, .board li) { box-shadow: inset 6px 0 0 var(--team, transparent), 4px 4px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .tile.empty { box-shadow: none; border: 3px dashed rgba(255, 255, 255, 0.18); }
+html:not([data-look="arena"]):not([data-theme]) .board li.climb { box-shadow: inset 6px 0 0 var(--team, transparent), 4px 4px 0 var(--good); }
+html:not([data-look="arena"]):not([data-theme]) #frame { background: radial-gradient(rgba(255, 255, 255, 0.07) 1.5px, transparent 1.6px) 0 0 / 26px 26px, radial-gradient(ellipse 70% 60% at 15% 0%, var(--glow1), transparent 70%), radial-gradient(ellipse 60% 60% at 100% 100%, var(--glow2), transparent 70%), var(--bg); }
+html:not([data-look="arena"]):not([data-theme]) :is(.count, .play .timer, .intro .head h1, .who h2, .between h2, .dealt .verdict) { text-shadow: 4px 4px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .count { -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; text-shadow: 8px 8px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .bar .fill { border: var(--border); height: 26px; }
+html:not([data-look="arena"]):not([data-theme]) .play header .name { justify-self: start; }
+html:not([data-look="arena"]):not([data-theme]) .join .qr { box-shadow: var(--lift); }
+html:not([data-look="arena"]):not([data-theme]) .tile.vip { outline: 3px solid var(--accent); outline-offset: -3px; }
+html:not([data-look="arena"]):not([data-theme]) .war .team, html:not([data-look="arena"]):not([data-theme]) .totals span { border: 3px solid var(--ink); background: var(--team); color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .war .team b { color: var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .war .team em { color: var(--ink); background: #fff; border-radius: 6px; padding: 0 5px; }
+html:not([data-look="arena"]):not([data-theme]) .stamp { background: #fff; box-shadow: 6px 6px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .stamp.lie { background: var(--hot); color: #fff; border-color: var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .stamp.true { background: var(--good); color: var(--ink); border-color: var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .double { border: var(--border); box-shadow: var(--lift); }
+html:not([data-look="arena"]):not([data-theme]) .feed li.new { border: 2px solid var(--ink); background: var(--accent); color: var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .blank.filled { border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+html:not([data-look="arena"]):not([data-theme]) .rulebar { border: var(--border); }
+html:not([data-look="arena"]):not([data-theme]) .eyebrow, html:not([data-look="arena"]):not([data-theme]) .play header .name { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 4px 14px; border-radius: 10px; border: 3px solid #0d0820; transform: rotate(-2deg); }
+html:not([data-look="arena"]):not([data-theme]) .callout { border-color: #0d0820; background: var(--c, var(--accent)); color: #16112b; box-shadow: 8px 8px 0 #0d0820; }
+html:not([data-look="arena"]):not([data-theme]) .logo h1 { -webkit-text-stroke: 0; text-shadow: 4px 4px 0 #0d0820; }
+html:not([data-look="arena"]):not([data-theme]) .winner h1 { text-shadow: 4px 4px 0 #0d0820; }
 
 /* ---------- Look "arena": Anton + Space Grotesk, black, sharp, sporty ---------- */
 html[data-look="arena"] {
@@ -446,12 +446,12 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 .ans span { position: relative; z-index: 1; }
 .ans.a0 { background: #2f7bff; } .ans.a1 { background: #a34bff; animation-delay: 0.08s; } .ans.a2 { background: #12b866; animation-delay: 0.16s; } .ans.a3 { background: #ff7a1a; animation-delay: 0.24s; }
 .ans .bar { position: absolute; inset: auto auto 0 0; height: 6px; width: var(--w); background: rgba(255, 255, 255, 0.85); transition: width 0.6s; }
-.ans .n { margin-left: auto; position: relative; z-index: 1; font: 800 26px var(--display); font-style: normal; }
+.ans .n { margin-left: auto; position: relative; z-index: 1; font: var(--display-w, 800) 26px var(--display); font-style: normal; }
 .ans.wrong { opacity: 0.35; filter: grayscale(0.6); }
 .ans.right { outline: 5px solid #fff; outline-offset: 3px; transform: scale(1.03); animation: big 0.4s ease-out; }
-.ans.right::after { content: "✓"; position: absolute; right: 64px; font: 800 30px var(--display); }
+.ans.right::after { content: "✓"; position: absolute; right: 64px; font: var(--display-w, 800) 30px var(--display); }
 .verdict-row { display: grid; justify-items: center; gap: 4px; text-align: center; }
-.verdict-row .verdict { font: 800 calc(28px * var(--ds)) var(--display); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); }
+.verdict-row .verdict { font: var(--display-w, 800) calc(28px * var(--ds)) var(--display); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); }
 .verdict-row .quick { font-size: 19px; font-weight: 700; }
 .verdict-row .ref { font-size: 16px; color: var(--soft); max-width: 1000px; }
 /* With a Gospel Anchor on it, the results screen needs a little more room. */
@@ -485,7 +485,7 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 /* ...during questions: a chip per table (how many have locked in, then the points it got) */
 .table-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .tchip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px; background: var(--surface); border: var(--border); box-shadow: 3px 3px 0 var(--ink); font-weight: 800; }
-.tchip b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--team); color: var(--ink); font: 800 16px var(--display); }
+.tchip b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--team); color: var(--ink); font: var(--display-w, 800) 16px var(--display); }
 .tchip i { font-style: normal; font-size: 17px; }
 .tchip.all { background: var(--team); color: var(--ink); }
 .tchip.all b { background: var(--ink); color: var(--team); }
@@ -493,13 +493,13 @@ html[data-look="arena"] .callout { transform: skewX(-8deg); border-radius: 4px; 
 /* ...the tables' scoreboard */
 .table-board { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .table-board li { display: grid; grid-template-columns: 40px 190px 1fr 120px; align-items: center; gap: 14px; padding: 10px 16px; border-radius: var(--r-sm); background: var(--surface); border: var(--border); box-shadow: 4px 4px 0 var(--ink); }
-.table-board .rank { font: 800 22px var(--display); color: var(--soft); }
-.table-board .tname { display: flex; align-items: center; gap: 10px; font: 800 calc(20px * var(--ds)) var(--display); color: var(--team); }
+.table-board .rank { font: var(--display-w, 800) 22px var(--display); color: var(--soft); }
+.table-board .tname { display: flex; align-items: center; gap: 10px; font: var(--display-w, 800) calc(20px * var(--ds)) var(--display); color: var(--team); }
 .table-board .tname b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--team); color: var(--ink); font-size: 17px; }
 .table-board .tbar { height: 24px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); border: 3px solid var(--ink); position: relative; overflow: hidden; }
 .table-board .tbar i { position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--team); transition: width 0.8s; }
-.table-board .talents { text-align: right; font: 800 calc(22px * var(--ds)) var(--display); color: var(--accent); }
+.table-board .talents { text-align: right; font: var(--display-w, 800) calc(22px * var(--ds)) var(--display); color: var(--accent); }
 
 /* ...and the tables' podium */
-.results.tables .podium .tableno { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--team); color: var(--ink); border: var(--border); box-shadow: 4px 4px 0 var(--ink); font: 800 32px var(--display); }
+.results.tables .podium .tableno { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--team); color: var(--ink); border: var(--border); box-shadow: 4px 4px 0 var(--ink); font: var(--display-w, 800) 32px var(--display); }
 .results.tables .podium .members { font-size: 13px; color: var(--soft); text-align: center; max-width: 220px; line-height: 1.3; }

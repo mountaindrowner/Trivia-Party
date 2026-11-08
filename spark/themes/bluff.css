@@ -1,0 +1,175 @@
+/* 🎭 Bluff the Bible: THE CASE FILE.
+   A game about fakes and finding the truth, so it's a detective's corkboard: the fact on a pinned index card, the
+   answers on sticky notes stuck up at angles, headlines cut out of magazines like a ransom note, label-maker tape
+   for the small print, and a red string across the board. Nothing here sits quite straight.
+   Fonts: Permanent Marker (marker on the notes), Kalam (handwriting), and a jumble for the ransom letters
+   (Bowlby One, Abril Fatface, Courier Prime, Special Elite). */
+html[data-theme="bluff"] {
+  --display: "Permanent Marker", "Comic Sans MS", cursive; --display-w: 400; --body: "Kalam", "Comic Sans MS", cursive;
+  --ds: 1; --case: none; --track: 0.01em;
+  --bg: #8c5d36; --glow1: transparent; --glow2: transparent;
+  --surface: #fffdf4; --surface-hi: #fff7b8; --line: rgba(0, 0, 0, 0.2);
+  --text: #1b1b1f; --soft: #5b5145; --accent: #d7263d; --on-accent: #fff; --hot: #d7263d; --cool: #1e5aa8; --good: #1d7a3e;
+  --ink: #1b1b1f; --r: 3px; --r-sm: 2px; --border: 0 solid transparent; --lift: 0 6px 14px rgba(0, 0, 0, 0.35);
+  --paper: 0 2px 2px rgba(0, 0, 0, 0.18), 0 10px 18px -6px rgba(0, 0, 0, 0.45);
+  --fx-colors: #fff7b8, #ffd1dc, #c9f2d6, #cfe3ff, #fffdf4; --fx-sparks: 0; --fx-bits: scrap;
+  color-scheme: light;
+}
+html[data-theme="bluff"] body { font-weight: 700; }
+
+/* The corkboard: speckled cork, a desk lamp's pool of light, dark edges, and a red string pinned across. */
+html[data-theme="bluff"] #frame {
+  background:
+    radial-gradient(ellipse 65% 55% at 50% 30%, rgba(255, 236, 190, 0.38), transparent 70%),
+    radial-gradient(ellipse at center, transparent 50%, rgba(30, 12, 0, 0.6)),
+    radial-gradient(rgba(60, 30, 5, 0.55) 1.2px, transparent 1.6px) 0 0 / 13px 11px,
+    radial-gradient(rgba(255, 220, 170, 0.35) 1px, transparent 1.4px) 5px 7px / 17px 19px,
+    radial-gradient(rgba(70, 35, 10, 0.4) 2.2px, transparent 2.8px) 9px 3px / 29px 23px,
+    #a8743f;
+}
+html[data-theme="bluff"] #frame::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(8deg, transparent calc(50% - 1.5px), #b3001b calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    linear-gradient(-21deg, transparent calc(62% - 1.5px), #b3001b calc(62% - 1.5px) calc(62% + 1.5px), transparent calc(62% + 1.5px));
+  opacity: 0.55; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.4));
+}
+
+/* Ransom-note letters: each one cut from a different magazine. */
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .ch {
+  display: inline-block; padding: 0.06em 0.1em 0.02em; margin: 0 0.015em; line-height: 1; box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.4);
+  font-family: "Bowlby One", sans-serif; font-weight: 400; background: #111; color: #fff; transform: rotate(-4deg);
+}
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .ch:nth-child(5n+2) { font-family: "Abril Fatface", serif; background: #f3ecd8; color: #111; transform: rotate(3deg) translateY(3px); }
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .ch:nth-child(5n+3) { font-family: "Courier Prime", monospace; font-weight: 700; background: #ffe14d; color: #111; transform: rotate(-2deg); }
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .ch:nth-child(5n+4) { font-family: "Permanent Marker", cursive; background: #fff; color: #d7263d; transform: rotate(6deg) translateY(-2px); }
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .ch:nth-child(5n+5) { font-family: "Special Elite", monospace; background: #ffb3c7; color: #111; transform: rotate(-7deg); }
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .count, .between h2, .stamp, .callout .text, .dealt .verdict) .word:nth-child(even) .ch:nth-child(odd) { transform: rotate(4deg) translateY(2px); }
+html[data-theme="bluff"] .word { display: inline-block; white-space: nowrap; }
+html[data-theme="bluff"] :is(.intro .head h1, .winner h1, .between h2) { text-shadow: none; color: #111; line-height: 1.25; }
+html[data-theme="bluff"] .intro .head h1 { font-size: 58px; }
+html[data-theme="bluff"] .winner h1 { font-size: 40px; }
+html[data-theme="bluff"] .between h2 { font-size: 34px; }
+html[data-theme="bluff"] .count { font-size: 190px; color: #111; text-shadow: none; }
+html[data-theme="bluff"] .count .ch { padding: 0.04em 0.16em; }
+
+/* Small print on label-maker tape. */
+html[data-theme="bluff"] :is(.do, .fine, .intro .head p, .reveal .who, .reveal .by, .reveal.truth .ref, section > header .count, .cardno, .countin p, .intro .soon) {
+  justify-self: center; width: fit-content; max-width: 1100px; margin-inline: auto; padding: 5px 14px 3px; background: #15151a; color: #f2f2f2; border-radius: 3px;
+  font: 400 19px/1.25 "Special Elite", monospace; text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45); transform: rotate(-1deg);
+}
+html[data-theme="bluff"] .reveal .by { background: #d7263d; transform: rotate(1.5deg); font-size: 22px; }
+html[data-theme="bluff"] .reveal .who span { font-size: 24px; }
+html[data-theme="bluff"] .intro .head p { margin: 8px 0 0; font-size: 16px; }
+html[data-theme="bluff"] .fine { font-size: 14px; }
+
+/* The folder tab with the question number. */
+html[data-theme="bluff"] .eyebrow { display: inline-block; background: #e9c67f; color: #3a2a10; padding: 7px 18px 4px; border-radius: 10px 10px 0 0; font-size: 19px; transform: rotate(-2deg); box-shadow: var(--paper); }
+
+/* The fact: a ruled index card, pinned with a red pushpin, a little crooked. */
+html[data-theme="bluff"] .fact {
+  position: relative; margin-top: 8px; color: #1b1b1f; font: 700 34px/1.3 var(--body); border-radius: 2px; transform: rotate(-1.2deg); box-shadow: var(--paper);
+  background: linear-gradient(transparent 46px, rgba(215, 38, 61, 0.55) 46px 48px, transparent 48px), repeating-linear-gradient(transparent 0 35px, rgba(30, 90, 168, 0.2) 35px 36px) 0 12px, #fffdf4;
+}
+html[data-theme="bluff"] .fact.small { font-size: 22px; padding: 18px 28px 14px; background: linear-gradient(transparent 26px, rgba(215, 38, 61, 0.5) 26px 28px, transparent 28px), #fffdf4; }
+html[data-theme="bluff"] .fact::before {
+  content: ""; position: absolute; top: -12px; left: 50%; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8a8a, #d7263d 45%, #7a0010); box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="bluff"] .blank { border-bottom: 5px solid #d7263d; color: #d7263d; border-radius: 40% 10% 30% 10% / 10%; }
+html[data-theme="bluff"] .blank.filled { background: linear-gradient(100deg, transparent 2%, rgba(255, 225, 77, 0.9) 4% 96%, transparent 98%); color: #1b1b1f; border: 0; box-shadow: none; padding: 0 0.3em; }
+
+/* The writers: Polaroid name tags. */
+html[data-theme="bluff"] .writers .w { background: #fffdf4; color: #1b1b1f; border-radius: 1px; padding: 6px 12px 10px; opacity: 0.7; box-shadow: var(--paper); font: 700 18px var(--body); }
+html[data-theme="bluff"] .writers .w:nth-child(odd) { transform: rotate(-2.5deg); } html[data-theme="bluff"] .writers .w:nth-child(3n) { transform: rotate(2deg); }
+html[data-theme="bluff"] .writers .w.done { opacity: 1; background: #fffdf4; outline: 3px solid #1d7a3e; outline-offset: -3px; }
+html[data-theme="bluff"] .writers .w.done::after { color: #1d7a3e; font-family: "Permanent Marker", cursive; font-size: 22px; }
+
+/* The answers: sticky notes in four colours, stuck up at angles, a strip of tape on each. */
+html[data-theme="bluff"] .options { gap: 22px 18px; padding: 8px 10px; }
+html[data-theme="bluff"] .opt {
+  position: relative; background: #fff59d; color: #1b1b1f; border: 0; border-radius: 1px 1px 18px 1px / 1px 1px 10px 1px; box-shadow: var(--paper);
+  font: 700 23px/1.15 var(--body); min-height: 74px; transform: rotate(-2deg);
+}
+html[data-theme="bluff"] .opt::before { content: ""; position: absolute; top: -9px; left: 50%; width: 70px; height: 20px; margin-left: -35px; background: rgba(240, 230, 200, 0.65); transform: rotate(3deg); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); }
+html[data-theme="bluff"] .opt:nth-child(4n+2) { background: #ffc9d6; transform: rotate(1.8deg); }
+html[data-theme="bluff"] .opt:nth-child(4n+3) { background: #c8f1d3; transform: rotate(-0.8deg) translateY(4px); }
+html[data-theme="bluff"] .opt:nth-child(4n+4) { background: #cde2ff; transform: rotate(2.6deg); }
+html[data-theme="bluff"] .opt:nth-child(5n) { transform: rotate(-3.2deg) translateY(-3px); }
+html[data-theme="bluff"] .opt b { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border: 3px solid #d7263d; border-radius: 50% 45% 50% 40%; color: #d7263d; font-size: 20px; }
+html[data-theme="bluff"] .opt.confirm { background: #fff; outline: 3px dashed #d7263d; }
+
+/* The reveal: the fake on a card, then a ransom-note FAKE! slapped across it. */
+html[data-theme="bluff"] .reveal .card { background: #fffdf4; color: #1b1b1f; border: 0; font: 400 50px/1.15 var(--display); transform: rotate(-2deg); box-shadow: var(--paper); padding: 30px 50px; }
+html[data-theme="bluff"] .stamp { border: 0; background: none; box-shadow: none; padding: 0; font-size: 70px; transform: rotate(-5deg); margin-top: -40px; }
+html[data-theme="bluff"] .stamp.lie .ch { background: #d7263d; color: #fff; }
+html[data-theme="bluff"] .stamp.lie .ch:nth-child(even) { background: #111; color: #fff; }
+html[data-theme="bluff"] .stamp.true { font-size: 64px; margin-top: 0; }
+html[data-theme="bluff"] .stamp.true .ch { background: #1d7a3e; color: #fff; }
+html[data-theme="bluff"] .stamp.true .ch:nth-child(3n) { background: #fffdf4; color: #1d7a3e; }
+
+/* The scores: a list of suspects pinned up on cards. */
+html[data-theme="bluff"] .board li { background: #fffdf4; border: 0; border-radius: 1px; box-shadow: var(--paper); border-left: 6px solid var(--team, #e9c67f); }
+html[data-theme="bluff"] .board li:nth-child(odd) { transform: rotate(-0.8deg); } html[data-theme="bluff"] .board li:nth-child(3n) { transform: rotate(1deg); }
+html[data-theme="bluff"] .board li.top { background: #fff59d; }
+html[data-theme="bluff"] .board .rank { font-family: var(--display); color: #d7263d; }
+html[data-theme="bluff"] .board .name { font: 700 22px var(--body); }
+html[data-theme="bluff"] .board .talents { font-family: var(--display); color: #1b1b1f; }
+html[data-theme="bluff"] .board .up { color: #1d7a3e; font-family: var(--display); font-weight: 400; }
+html[data-theme="bluff"] .bar .label { color: #fffdf4; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.6); }
+html[data-theme="bluff"] .bar .fill { background: rgba(255, 253, 244, 0.35); border-radius: 2px; }
+html[data-theme="bluff"] .bar .fill::after { border-radius: 2px; }
+html[data-theme="bluff"] .bar .total { color: #fffdf4; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.6); }
+
+/* Rules: index cards pinned to the board. */
+html[data-theme="bluff"] .steps li { background: #fffdf4; border: 0; border-radius: 1px; box-shadow: var(--paper); font: 700 22px var(--body); transform: rotate(-1.5deg); }
+html[data-theme="bluff"] .steps li:nth-child(2) { transform: rotate(1.2deg) translateY(6px); }
+html[data-theme="bluff"] .steps li:nth-child(3) { transform: rotate(-0.6deg); }
+html[data-theme="bluff"] .steps b { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border: 3px solid #d7263d; border-radius: 50% 45% 50% 40%; color: #d7263d; font-size: 30px; }
+html[data-theme="bluff"] .steps em { color: #d7263d; }
+html[data-theme="bluff"] .team { background: #fffdf4; border: 0; border-top: 8px solid var(--team); box-shadow: var(--paper); transform: rotate(0.6deg); }
+html[data-theme="bluff"] .team p { color: #1b1b1f; font-family: var(--body); }
+html[data-theme="bluff"] .team h3 { font-family: var(--display); color: #1b1b1f; }
+html[data-theme="bluff"] .rulebar { background: #15151a; border-radius: 3px; }
+html[data-theme="bluff"] .rulebar i { background: rgba(215, 38, 61, 0.6); }
+html[data-theme="bluff"] .rulebar span { color: #f2f2f2; font-family: "Special Elite", monospace; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* The timer: a red string pulled tight. */
+html[data-theme="bluff"] .qbar { height: 5px; background: rgba(0, 0, 0, 0.25); border-radius: 0; overflow: visible; }
+html[data-theme="bluff"] .qbar i { background: #b3001b; box-shadow: 0 2px 2px rgba(0, 0, 0, 0.4); }
+
+/* Results */
+html[data-theme="bluff"] .totals span { border-radius: 1px; background: #fffdf4; color: #1b1b1f; border: 0; border-top: 6px solid var(--team); box-shadow: var(--paper); font: 400 18px var(--display); }
+html[data-theme="bluff"] .totals span:nth-child(odd) { transform: rotate(-2deg); }
+html[data-theme="bluff"] .podium .name, html[data-theme="bluff"] .podium .talents { background: #fffdf4; padding: 0 10px; box-shadow: var(--paper); }
+html[data-theme="bluff"] .podium .name { font-family: var(--display); font-weight: 400; transform: rotate(-2deg); }
+html[data-theme="bluff"] .podium .talents { font: 700 16px var(--body); color: #1b1b1f; }
+/* The podium: stacks of case files. */
+html[data-theme="bluff"] .podium .block { border-radius: 10px 10px 0 0; border: 0; background: repeating-linear-gradient(180deg, #e9c67f 0 18px, #c9a35a 18px 20px); box-shadow: var(--paper); }
+html[data-theme="bluff"] .awards div { background: #fffdf4; border: 0; border-radius: 1px; padding: 10px 18px 16px; box-shadow: var(--paper); transform: rotate(-2deg); }
+html[data-theme="bluff"] .awards div:nth-child(even) { transform: rotate(2.5deg); }
+html[data-theme="bluff"] .awards small { color: #d7263d; font-family: "Special Elite", monospace; }
+html[data-theme="bluff"] .awards strong { font-family: var(--body); }
+html[data-theme="bluff"] .results .anchor { background: #fffdf4; border: 0; box-shadow: var(--paper); transform: rotate(-0.8deg); }
+html[data-theme="bluff"] .results .anchor small { color: #d7263d; }
+html[data-theme="bluff"] .war { background: #15151a; color: #f2f2f2; padding: 6px 12px; border-radius: 3px; }
+html[data-theme="bluff"] .war .team { background: #fffdf4; color: #1b1b1f; border-radius: 1px; }
+html[data-theme="bluff"] .war .team b { color: #1b1b1f; }
+html[data-theme="bluff"] .btn { border: 0; border-radius: 2px; background: #d7263d; color: #fff; font: 400 22px var(--display); box-shadow: var(--paper); transform: rotate(-1.5deg); }
+html[data-theme="bluff"] .btn.ghost { background: #fffdf4; color: #1b1b1f; transform: rotate(1.5deg); }
+
+/* Callouts: a headline cut out of the paper. */
+html[data-theme="bluff"] .callout { background: #f3ecd8; color: #111; border: 0; border-radius: 0; box-shadow: var(--paper); transform: rotate(-3deg); font-size: 40px;
+  clip-path: polygon(0 4%, 6% 0, 18% 3%, 33% 0, 49% 4%, 63% 0, 80% 3%, 94% 0, 100% 5%, 98% 40%, 100% 72%, 97% 100%, 82% 96%, 66% 100%, 50% 96%, 33% 100%, 16% 96%, 3% 100%, 0 70%, 2% 40%); padding: 26px 44px; }
+
+/* Barnabas writes on a sticky note. */
+html[data-theme="bluff"] .host .bubble { background: #fff59d; color: #1b1b1f; border: 0; border-radius: 1px 1px 16px 1px; box-shadow: var(--paper); font: 700 20px/1.25 var(--body); transform: rotate(-1.5deg); }
+html[data-theme="bluff"] .host .bubble::before { display: none; }
+
+/* ---------- In the lobby ---------- */
+.game[data-card="bluff"] { background: #fff59d; color: #1b1b1f; border: 0; border-radius: 1px 1px 18px 1px; box-shadow: 0 8px 14px -4px rgba(0, 0, 0, 0.6); transform: rotate(-1.5deg); }
+.game[data-card="bluff"] strong { font-family: "Permanent Marker", cursive; font-weight: 400; font-size: 18px; color: #d7263d; }
+.game[data-card="bluff"] small { font-family: "Kalam", cursive; font-weight: 700; font-size: 14px; color: #3a3226; }
+.game.on[data-card="bluff"] { background: #fff59d; color: #1b1b1f; box-shadow: 0 0 0 3px #d7263d, 0 10px 16px -4px rgba(0, 0, 0, 0.6); transform: rotate(-3deg) scale(1.03); }
+.game.on[data-card="bluff"] small { color: #3a3226; }

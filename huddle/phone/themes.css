@@ -1,0 +1,151 @@
+/* phone themes: Spark Wars games each have their own look on the phone too, matching the TV (spark/themes/).
+   The TV puts `theme` on every screen it sends while a game runs; phone.js sets <html data-theme="..."> from it.
+   The lobby has no theme, so it's Spark Wars' own Sticker look. */
+
+/* ---------- ⚡ Lightning Round: STORM ARCADE ---------- */
+html[data-game][data-theme="lightning"] { --ink: #000; --gold: #ffe600; --pink: #ff2bd6; --green: #39ff88; --soft: #8ea2dc; color-scheme: dark; }
+html[data-game][data-theme="lightning"] body {
+  font-family: "Chakra Petch", system-ui, sans-serif; font-weight: 700;
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(120, 140, 255, 0.35), transparent 70%),
+    linear-gradient(transparent 0 calc(100% - 1px), rgba(255, 43, 214, 0.25) 0) 0 0 / 100% 36px, linear-gradient(180deg, #0b0f3a, #05061a 60%, #12002a) fixed;
+}
+html[data-game][data-theme="lightning"] body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px); }
+html[data-game][data-theme="lightning"] :is(h1, h2, .big, button) { font-family: "Bungee", system-ui, sans-serif; font-weight: 400; letter-spacing: 0.01em; text-transform: uppercase; }
+html[data-game][data-theme="lightning"] h2 { color: #ffe600; text-shadow: -2px 0 0 #ff2bd6, 2px 0 0 #00e5ff; }
+html[data-game][data-theme="lightning"] :is(.prompt, .me .name, input) { font-family: "Chakra Petch", system-ui, sans-serif; letter-spacing: 0; }
+html[data-game][data-theme="lightning"] .prompt { font-size: 24px; font-weight: 700; padding: 16px; border: 2px solid #00e5ff; background: rgba(8, 12, 44, 0.85); box-shadow: 0 0 14px rgba(0, 229, 255, 0.35), 5px 5px 0 #ff2bd6; transform: skewX(-4deg); }
+html[data-game][data-theme="lightning"] .header { background: #ffe600; color: #05061a; border: 0; border-radius: 0; transform: skewX(-12deg); box-shadow: 4px 4px 0 #ff2bd6; font-family: "Bungee", sans-serif; font-weight: 400; font-size: 13px; text-transform: uppercase; }
+html[data-game][data-theme="lightning"] .choices { gap: 14px; padding: 0 6px; }
+html[data-game][data-theme="lightning"] .choices button {
+  --c: #2f8bff; background: rgba(5, 6, 26, 0.92); color: #fff; border: 3px solid var(--c); border-radius: 0; transform: skewX(-8deg); padding: 0 14px 0 0;
+  box-shadow: 0 0 14px var(--c); font: 700 21px/1.2 "Chakra Petch", sans-serif; text-transform: none; min-height: 72px; overflow: hidden;
+}
+html[data-game][data-theme="lightning"] .choices button:nth-child(4n+1) { --c: #2f8bff; background: rgba(5, 6, 26, 0.92); }
+html[data-game][data-theme="lightning"] .choices button:nth-child(4n+2) { --c: #b04bff; background: rgba(5, 6, 26, 0.92); }
+html[data-game][data-theme="lightning"] .choices button:nth-child(4n+3) { --c: #16d877; background: rgba(5, 6, 26, 0.92); }
+html[data-game][data-theme="lightning"] .choices button:nth-child(4n+4) { --c: #ff8a1a; background: rgba(5, 6, 26, 0.92); }
+html[data-game][data-theme="lightning"] .choices button .k { align-self: stretch; display: grid; place-items: center; width: 58px; flex: none; background: var(--c); color: #05061a; }
+html[data-game][data-theme="lightning"] .choices button[aria-pressed="true"] { outline: none; background: var(--c); color: #05061a; box-shadow: 0 0 30px var(--c), 0 0 0 3px #fff; }
+html[data-game][data-theme="lightning"] .choices button[aria-pressed="true"] .k { background: #05061a; color: var(--c); }
+html[data-game][data-theme="lightning"] .timer { height: 14px; border: 2px solid #ffe600; border-radius: 0; transform: skewX(-20deg); background: rgba(255, 255, 255, 0.05); }
+html[data-game][data-theme="lightning"] .timer i { background: repeating-linear-gradient(-45deg, #ffe600 0 10px, #05061a 10px 20px); }
+html[data-game][data-theme="lightning"] button { border-radius: 0; transform: skewX(-8deg); background: #ffe600; color: #05061a; border: 0; box-shadow: 5px 5px 0 #ff2bd6; }
+html[data-game][data-theme="lightning"] button.ghost { background: transparent; color: #00e5ff; border: 2px solid #00e5ff; box-shadow: 0 0 12px rgba(0, 229, 255, 0.4); }
+html[data-game][data-theme="lightning"] .result { border-radius: 0; transform: skewX(-4deg); background: rgba(5, 6, 26, 0.9); border: 3px solid #39ff88; box-shadow: 0 0 30px #39ff88; }
+html[data-game][data-theme="lightning"] .result.good { background: rgba(5, 6, 26, 0.9); }
+html[data-game][data-theme="lightning"] .result.bad { background: rgba(5, 6, 26, 0.9); border-color: #ff2bd6; box-shadow: 0 0 30px #ff2bd6; }
+html[data-game][data-theme="lightning"] .result.good .big:first-child { color: #39ff88; text-shadow: 0 0 14px #39ff88; }
+html[data-game][data-theme="lightning"] .result.bad .big:first-child { color: #ff2bd6; text-shadow: 0 0 14px #ff2bd6; }
+html[data-game][data-theme="lightning"] .me { background: rgba(8, 12, 44, 0.85); border: 2px solid #00e5ff; border-radius: 0; box-shadow: 0 0 14px rgba(0, 229, 255, 0.35), 5px 5px 0 #ff2bd6; transform: skewX(-4deg); }
+html[data-game][data-theme="lightning"] .tag { border-radius: 0; transform: skewX(-12deg); }
+html[data-game][data-theme="lightning"] .banner { border-radius: 0; transform: skewX(-8deg); box-shadow: 0 0 30px var(--team), 6px 6px 0 #ff2bd6; border: 0; }
+html[data-game][data-theme="lightning"] .banner strong { font-family: "Monoton", "Bungee", sans-serif; font-weight: 400; }
+
+/* ---------- 💰 Talents: THE COUNTING HOUSE ---------- */
+html[data-game][data-theme="talents"] { --ink: #1c2235; --gold: #c9a227; --pink: #c8102e; --green: #1f6b45; --white: #1c2235; --soft: #6e5f43; color-scheme: light; }
+html[data-game][data-theme="talents"] body {
+  color: #1c2235; font-family: "Courier Prime", "Courier New", monospace; font-weight: 700;
+  background: linear-gradient(90deg, transparent 22px, rgba(200, 16, 46, 0.4) 22px 24px, transparent 24px), repeating-linear-gradient(180deg, transparent 0 31px, rgba(42, 77, 143, 0.16) 31px 32px), #efe3c4 fixed;
+}
+html[data-game][data-theme="talents"] :is(h1, h2, .big) { font-family: "Abril Fatface", Georgia, serif; font-weight: 400; color: #1c2235; text-shadow: none; letter-spacing: 0; }
+html[data-game][data-theme="talents"] :is(.prompt, .me .name, input, button) { font-family: "Courier Prime", "Courier New", monospace; letter-spacing: 0; }
+html[data-game][data-theme="talents"] .prompt { font-size: 22px; font-weight: 700; background: #fbf5e3; border: 2px solid #1c2235; outline: 1px solid #1c2235; outline-offset: -6px; padding: 16px 14px; }
+html[data-game][data-theme="talents"] .header { background: transparent; color: #1c2235; border: 0; border-bottom: 3px double #1c2235; border-radius: 0; box-shadow: none; font-size: 17px; }
+html[data-game][data-theme="talents"] .header[style*="--team"] { background: transparent; box-shadow: inset 6px 0 0 var(--team); }
+html[data-game][data-theme="talents"] .choices button { background: #fbf5e3; color: #1c2235; border: 2px solid #1c2235; border-radius: 2px; box-shadow: 3px 3px 0 rgba(28, 34, 53, 0.85); font: 700 19px/1.25 "Courier Prime", monospace; text-transform: none; letter-spacing: 0; }
+html[data-game][data-theme="talents"] .choices button:nth-child(n) { background: #fbf5e3; color: #1c2235; }
+html[data-game][data-theme="talents"] .choices button .k { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; color: #fff; font-size: 17px; background: #2a4d8f; }
+html[data-game][data-theme="talents"] .choices button:nth-child(4n+2) .k { background: #7a3e9d; } html[data-theme="talents"] .choices button:nth-child(4n+3) .k { background: #1f6b45; } html[data-theme="talents"] .choices button:nth-child(4n+4) .k { background: #b5561b; }
+html[data-game][data-theme="talents"] .choices button[aria-pressed="true"] { outline: 3px solid #c8102e; outline-offset: 2px; background: #fffaf0; }
+/* The three jars: gold coins to pick. */
+html[data-game][data-theme="talents"] .choices.jars button:nth-child(n) { border-radius: 999px; background: radial-gradient(circle at 35% 30%, #f6dd7c, #c9a227 50%, #8a6a10); color: #3a2a00; border: 3px solid #7a5a05; box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.2), 3px 4px 0 rgba(28, 34, 53, 0.4); font: 400 26px "Abril Fatface", serif; }
+html[data-game][data-theme="talents"] .timer { height: 10px; border: 2px solid #1c2235; border-radius: 0; background: #fbf5e3; }
+html[data-game][data-theme="talents"] .timer i { background: #c9a227; }
+html[data-game][data-theme="talents"] button { background: #1f6b45; color: #fbf5e3; border: 2px solid #1c2235; border-radius: 2px; box-shadow: 4px 4px 0 #1c2235; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; font-size: 20px; }
+html[data-game][data-theme="talents"] button.ghost { background: #fbf5e3; color: #1c2235; border: 2px solid #1c2235; box-shadow: none; }
+/* Results: a rubber stamp on the receipt. */
+html[data-game][data-theme="talents"] .result { background: #fffdf6; color: #1c2235; border: 0; border-radius: 0; box-shadow: 3px 5px 14px rgba(80, 60, 20, 0.3); }
+html[data-game][data-theme="talents"] .result.good, html[data-theme="talents"] .result.bad { background: #fffdf6; }
+html[data-game][data-theme="talents"] .result .big:first-child { font-family: "Special Elite", monospace; text-transform: uppercase; border: 5px double currentcolor; padding: 2px 14px; transform: rotate(-5deg); color: #1f6b45; }
+html[data-game][data-theme="talents"] .result.bad .big:first-child { color: #c8102e; }
+html[data-game][data-theme="talents"] .me { background: #fbf5e3; border: 2px solid #1c2235; border-radius: 2px; box-shadow: 4px 4px 0 rgba(28, 34, 53, 0.3); }
+html[data-game][data-theme="talents"] .me .name { color: #1c2235; }
+html[data-game][data-theme="talents"] .tag { border-radius: 0; }
+html[data-game][data-theme="talents"] .soft { color: #6e5f43; }
+html[data-game][data-theme="talents"] .tag.gold { background: #c9a227; color: #1c2235; }
+
+/* ---------- 🎭 Bluff the Bible: THE CASE FILE ---------- */
+html[data-game][data-theme="bluff"] { --ink: #1b1b1f; --gold: #fff59d; --pink: #d7263d; --green: #1d7a3e; --soft: #f5ead6; color-scheme: light; }
+html[data-game][data-theme="bluff"] body {
+  font-family: "Kalam", "Comic Sans MS", cursive; font-weight: 700;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 236, 190, 0.35), transparent 60%), radial-gradient(rgba(60, 30, 5, 0.5) 1.2px, transparent 1.6px) 0 0 / 13px 11px,
+    radial-gradient(rgba(255, 220, 170, 0.3) 1px, transparent 1.4px) 5px 7px / 17px 19px, #a8743f fixed;
+}
+html[data-game][data-theme="bluff"] :is(h1, h2, .big) { font-family: "Permanent Marker", cursive; font-weight: 400; letter-spacing: 0; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.4); }
+html[data-game][data-theme="bluff"] :is(.prompt, .me .name, input, button, .newcard) { font-family: "Kalam", cursive; letter-spacing: 0; }
+html[data-game][data-theme="bluff"] .prompt { position: relative; color: #1b1b1f; font-size: 22px; font-weight: 700; padding: 22px 16px 14px; transform: rotate(-1deg); box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(transparent 14px, rgba(215, 38, 61, 0.5) 14px 16px, transparent 16px), repeating-linear-gradient(transparent 0 27px, rgba(30, 90, 168, 0.2) 27px 28px) 0 16px, #fffdf4; }
+html[data-game][data-theme="bluff"] .prompt::before { content: ""; position: absolute; top: -9px; left: 50%; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a8a, #d7263d 45%, #7a0010); box-shadow: 2px 3px 3px rgba(0, 0, 0, 0.4); }
+html[data-game][data-theme="bluff"] .header { background: #e9c67f; color: #3a2a10; border: 0; border-radius: 10px 10px 0 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); font-family: "Permanent Marker", cursive; font-weight: 400; transform: rotate(-1.5deg); justify-self: start; }
+html[data-game][data-theme="bluff"] .header[style*="--team"] { background: #e9c67f; }
+html[data-game][data-theme="bluff"] .choices { gap: 16px; }
+html[data-game][data-theme="bluff"] .choices button { color: #1b1b1f; border: 0; border-radius: 1px 1px 16px 1px; box-shadow: 0 8px 14px -5px rgba(0, 0, 0, 0.55); font: 700 21px/1.2 "Kalam", cursive; transform: rotate(-1.2deg); }
+html[data-game][data-theme="bluff"] .choices button:nth-child(4n+1) { background: #fff59d; }
+html[data-game][data-theme="bluff"] .choices button:nth-child(4n+2) { background: #ffc9d6; transform: rotate(1.2deg); }
+html[data-game][data-theme="bluff"] .choices button:nth-child(4n+3) { background: #c8f1d3; transform: rotate(-0.6deg); }
+html[data-game][data-theme="bluff"] .choices button:nth-child(4n+4) { background: #cde2ff; transform: rotate(1.6deg); }
+html[data-game][data-theme="bluff"] .choices button .k { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 3px solid #d7263d; border-radius: 50% 45% 50% 40%; color: #d7263d; font: 400 18px "Permanent Marker", cursive; }
+html[data-game][data-theme="bluff"] .choices button[aria-pressed="true"] { outline: 4px solid #d7263d; outline-offset: 2px; }
+html[data-game][data-theme="bluff"] .timer { height: 5px; border: 0; border-radius: 0; background: rgba(0, 0, 0, 0.25); }
+html[data-game][data-theme="bluff"] .timer i { background: #b3001b; }
+html[data-game][data-theme="bluff"] input.write { font: 700 24px "Kalam", cursive; background: #fffdf4; border: 0; border-bottom: 4px solid #d7263d; border-radius: 0; box-shadow: 0 8px 14px -5px rgba(0, 0, 0, 0.5); color: #1b1b1f; }
+html[data-game][data-theme="bluff"] button { background: #d7263d; color: #fff; border: 0; border-radius: 2px; box-shadow: 0 8px 14px -5px rgba(0, 0, 0, 0.55); font: 400 24px "Permanent Marker", cursive; transform: rotate(-1deg); }
+html[data-game][data-theme="bluff"] button.ghost { background: #15151a; color: #f2f2f2; font: 400 18px "Special Elite", monospace; text-transform: uppercase; letter-spacing: 0.1em; transform: rotate(1deg); }
+html[data-game][data-theme="bluff"] .soft { color: #fffdf4; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+html[data-game][data-theme="bluff"] .center.soft { font-family: "Special Elite", monospace; text-transform: uppercase; letter-spacing: 0.08em; font-size: 15px; background: #15151a; color: #f2f2f2; text-shadow: none; padding: 4px 10px; justify-self: center; transform: rotate(-1deg); }
+html[data-game][data-theme="bluff"] .result { color: #1b1b1f; border: 0; border-radius: 1px 1px 18px 1px; box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.55); transform: rotate(-1.5deg); }
+html[data-game][data-theme="bluff"] .result.good { background: #c8f1d3; }
+html[data-game][data-theme="bluff"] .result.bad { background: #ffc9d6; }
+html[data-game][data-theme="bluff"] .result .big { text-shadow: none; }
+html[data-game][data-theme="bluff"] .me { background: #fffdf4; color: #1b1b1f; border: 0; border-radius: 1px; box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.55); transform: rotate(1deg); padding-bottom: 26px; }
+html[data-game][data-theme="bluff"] .me[style*="--team"] { box-shadow: inset 0 8px 0 var(--team), 0 10px 18px -6px rgba(0, 0, 0, 0.55); }
+html[data-game][data-theme="bluff"] h2 { color: #fffdf4; }
+html[data-game][data-theme="bluff"] .writebox .count { color: #8a7a60; }
+html[data-game][data-theme="bluff"] .err { color: #fff; background: #d7263d; border-radius: 2px; }
+html[data-game][data-theme="bluff"] .err:empty { background: none; }
+
+/* ---------- 🧭 Timeline: THE LINE ---------- */
+html[data-game][data-theme="timeline"] { --ink: #17181c; --gold: #fccc0a; --pink: #e3342f; --green: #00a650; --white: #17181c; --soft: #6b6b70; color-scheme: light; }
+html[data-game][data-theme="timeline"] body {
+  color: #17181c; font-family: "Overpass", "Helvetica Neue", Arial, sans-serif; font-weight: 700;
+  background: linear-gradient(rgba(23, 24, 28, 0.05) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgba(23, 24, 28, 0.05) 1px, transparent 1px) 0 0 / 32px 32px, #f1eee5 fixed;
+}
+html[data-game][data-theme="timeline"] :is(h1, h2, .big, .prompt, .me .name, input, button, .newcard) { font-family: "Overpass", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.015em; text-shadow: none; }
+html[data-game][data-theme="timeline"] :is(h1, h2, .big) { font-weight: 900; color: #17181c; }
+html[data-game][data-theme="timeline"] .header { background: #1d1e22; color: #fff; border: 0; border-radius: 8px; box-shadow: none; font-weight: 800; }
+html[data-game][data-theme="timeline"] .header[style*="--team"] { background: #1d1e22; box-shadow: inset 8px 0 0 var(--team); }
+html[data-game][data-theme="timeline"] .soft { color: #6b6b70; }
+/* The new card: the NEXT STOP sign. */
+html[data-game][data-theme="timeline"] .newcard { position: relative; background: #1d1e22; color: #fff; border: 0; border-radius: 12px; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.15); transform: none; padding: 28px 24px 14px; font-size: 26px; font-weight: 900; }
+html[data-game][data-theme="timeline"] .newcard::before { content: "NEXT STOP ▸"; position: absolute; left: 24px; top: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.2em; color: #fccc0a; }
+/* The line runs down the screen: stations on a red route, the gaps are where you can drop the card. */
+html[data-game][data-theme="timeline"] .line { position: relative; gap: 4px; padding-left: 44px; }
+html[data-game][data-theme="timeline"] .line::before { content: ""; position: absolute; left: 14px; top: 6px; bottom: 6px; width: 12px; border-radius: 6px; background: #e3342f; }
+html[data-game][data-theme="timeline"] .line .card { position: relative; background: transparent; border: 0; box-shadow: none; text-align: left; padding: 10px 4px; font-size: 19px; font-weight: 800; color: #17181c; }
+html[data-game][data-theme="timeline"] .line .card::before { content: ""; position: absolute; left: -40px; top: 50%; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; background: #fff; border: 6px solid #17181c; box-sizing: border-box; }
+html[data-game][data-theme="timeline"] .line .gap { background: #fff; color: #17181c; border: 3px dashed #17181c; border-radius: 10px; font: 800 15px "Overpass", sans-serif; transform: none; box-shadow: none; }
+html[data-game][data-theme="timeline"] .line .gap.picked { background: #fccc0a; border-style: solid; color: #17181c; }
+html[data-game][data-theme="timeline"] .timer { height: 6px; border: 0; border-radius: 3px; background: rgba(23, 24, 28, 0.1); }
+html[data-game][data-theme="timeline"] .timer i { background: #6b6b70; }
+html[data-game][data-theme="timeline"] button { background: #1d1e22; color: #fff; border: 0; border-radius: 10px; box-shadow: 0 5px 0 rgba(23, 24, 28, 0.2); font-weight: 900; }
+html[data-game][data-theme="timeline"] button.ghost { background: #fff; color: #17181c; }
+html[data-game][data-theme="timeline"] .result { background: #fff; color: #17181c; border: 0; border-radius: 14px; border-top: 12px solid #00a650; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.1); }
+html[data-game][data-theme="timeline"] .result.good { background: #fff; }
+html[data-game][data-theme="timeline"] .result.bad { background: #fff; border-top-color: #e3342f; }
+html[data-game][data-theme="timeline"] .me { background: #fff; color: #17181c; border: 0; border-radius: 14px; box-shadow: 0 6px 0 rgba(23, 24, 28, 0.08); }
+html[data-game][data-theme="timeline"] .me[style*="--team"] { box-shadow: inset 0 10px 0 var(--team), 0 6px 0 rgba(23, 24, 28, 0.08); }
+html[data-game][data-theme="timeline"] .choices button { background: #fff; color: #17181c; border: 0; border-left: 10px solid #e3342f; border-radius: 4px 12px 12px 4px; }
+html[data-game][data-theme="timeline"] .choices button:nth-child(4n+2) { background: #fff; border-left-color: #0072ce; }
+html[data-game][data-theme="timeline"] .choices button:nth-child(4n+3) { background: #fff; border-left-color: #00a650; }
+html[data-game][data-theme="timeline"] .choices button:nth-child(4n+4) { background: #fff; border-left-color: #fccc0a; }
+html[data-game][data-theme="timeline"] .choices button:nth-child(4n+1) { background: #fff; }

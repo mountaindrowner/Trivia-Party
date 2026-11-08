@@ -21,6 +21,21 @@ and family game.
   phones match (`../huddle/phone/phone.css`, the `data-game="spark"` part). Everything on the TV is drawn from the
   tokens at the top of `spark.css`; an alternate look, **Arena** (Anton + Space Grotesk, black and orange, sharp
   and sporty), is kept for trying: open `/tv?look=arena` (and `/tv?look=sticker` to switch back).
+- **Each game has its own look** (like a Jackbox pack: same bones, a different world per game). While a game runs,
+  `<html data-theme="...">` switches the TV (`themes/<game>.css`) and every phone (`../huddle/phone/themes.css`); the
+  lobby stays Sticker, and its game cards show each game's look. Big headings are split into letters so a look can
+  tilt or jumble them, and each look picks its own confetti (`--fx-colors`, `--fx-bits`: bolts, coins, paper scraps,
+  dots).
+  - **⚡ Lightning Round: Storm Arcade.** A neon arcade cabinet in a thunderstorm: Monoton and Bungee, everything
+    leaning forward, scanlines, red/blue colour split, a synthwave floor, the sky flashing now and then.
+  - **💰 Talents: The Counting House.** An old bank ledger: ruled cream paper, Abril Fatface and Courier Prime, rubber
+    stamps slammed on crooked, a ticker tape for the live feed, a gold wax seal for 3-2-1, gold bars on the podium,
+    coins for confetti.
+  - **🎭 Bluff the Bible: The Case File.** A detective's corkboard: the fact on a pinned index card, answers on sticky
+    notes at angles, ransom-note headlines (every letter from a different magazine), label-maker tape, red string.
+  - **🧭 Timeline: The Line.** A transit map: every card is a station on the route, the new card is the NEXT STOP
+    sign, 3-2-1 in route bullets, the scores on an amber departures board. Overpass (highway-sign letters).
+  - A new game picks a world that fits what the game is about, then writes `themes/<key>.css` (and a phone part).
 - **The lobby:** each setting is one pill (Teams 3, Time 5 min, Steals On, Questions Bible Mix); tap to change it.
   Shuffle, lock, sound and end are small round buttons.
   - The music is Trivia Holy Party's band (`../js/music.js`).
