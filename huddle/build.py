@@ -1,7 +1,8 @@
 """Builds the pages each party-game site hands out, into huddle/server/static/<site>/ (not committed):
   holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
   spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
-  spark/clips/, spark/clips.js   Barnabas's recorded lines, bundled into the Spark Wars Worker (/voice/clips/)
+  spark/clips/, spark/icons/, spark/files.js   Barnabas's recorded lines (/voice/clips/), the app icons and the
+                    web app manifest, bundled into the Spark Wars Worker
 The phone page is the same code for both, with its own look (<html data-game="...">).
 Run before `npx wrangler deploy` (Holy Huddle) or `npx wrangler deploy --env spark` (Spark Wars), or `wrangler dev`."""
 import os, re, subprocess, sys
@@ -54,7 +55,26 @@ shutil.rmtree(os.path.join(static, "spark-assets"), ignore_errors=True)
 names = sorted(f for f in os.listdir(clips_src) if f.endswith(".mp3")) if os.path.isdir(clips_src) else []
 if names:
     shutil.copytree(clips_src, clips_dst, ignore=shutil.ignore_patterns("*.wav"))
-lines = [f'import c{i} from "./clips/{n}";' for i, n in enumerate(names)]
-lines.append("export default {" + ", ".join(f'"/voice/clips/{n}": c{i}' for i, n in enumerate(names)) + "};")
-write(os.path.join(static, "spark", "clips.js"), "\n".join(lines) + "\n")
+# The app icons and the web app manifest: on an iPhone, "Add to Home Screen" opens the TV page full screen, with
+# no browser bars (an iPhone won't make a web page full screen any other way, and those bars show when it's
+# mirrored to a TV).
+import json
+icons_src = os.path.join(root, "spark", "icons")
+icons_dst = os.path.join(static, "spark", "icons")
+shutil.rmtree(icons_dst, ignore_errors=True)
+shutil.copytree(icons_src, icons_dst)
+icons = sorted(f for f in os.listdir(icons_src) if f.endswith(".png"))
+manifest = json.dumps({
+    "name": "Spark Wars", "short_name": "Spark Wars", "start_url": "/tv", "scope": "/", "display": "fullscreen",
+    "orientation": "landscape", "background_color": "#23104f", "theme_color": "#23104f",
+    "icons": [{"src": f"/icons/{f}", "sizes": f.split("-")[1].split(".")[0] + "x" + f.split("-")[1].split(".")[0], "type": "image/png"} for f in icons],
+})
+lines = [f'import c{i} from "./clips/{n}";' for i, n in enumerate(names)] + [f'import i{i} from "./icons/{n}";' for i, n in enumerate(icons)]
+entries = [f'"/voice/clips/{n}": c{i}' for i, n in enumerate(names)] + [f'"/icons/{n}": i{i}' for i, n in enumerate(icons)]
+entries.append('"/tv.webmanifest": ' + json.dumps(manifest))
+lines.append("export default {" + ", ".join(entries) + "};")
+for old in ("clips.js",):
+    try: os.remove(os.path.join(static, "spark", old))
+    except FileNotFoundError: pass
+write(os.path.join(static, "spark", "files.js"), "\n".join(lines) + "\n")
 print(len(names), "voice clips,", sum(os.path.getsize(os.path.join(clips_src, n)) for n in names) // 1024, "KB")

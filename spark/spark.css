@@ -70,6 +70,8 @@ button { font-family: inherit; }
 .title .lineup { display: flex; gap: 10px; }
 .title .lineup span { font-size: 19px; padding: 9px 18px; border-radius: 999px; background: var(--surface); border: var(--border); }
 .title .fine { color: var(--soft); font-size: 17px; }
+.title .homescreen { max-width: 640px; font-size: 17px; line-height: 1.4; color: var(--text); background: var(--surface); border: var(--border); border-radius: var(--r-sm); padding: 12px 18px; font-weight: 600; }
+.title .homescreen b { color: var(--accent); }
 
 /* Lobby */
 .lobby { display: grid; grid-template-columns: 300px 1fr; gap: 36px; }

@@ -3,9 +3,11 @@
 import { site, Room, Gate } from "./relay.js";
 import phone from "../static/spark/phone.html";
 import tv from "../static/spark/tv.html";
-// Barnabas's recorded lines, bundled in (built by huddle/build.py): { "/voice/clips/name.mp3": ArrayBuffer }.
-import clips from "../static/spark/clips.js";
+// Files bundled in by huddle/build.py: Barnabas's recorded lines (/voice/clips/*.mp3), the app icons and the web app
+// manifest (so an iPhone can open the TV page full screen from its home screen).
+import bundled from "../static/spark/files.js";
 
-const files = Object.fromEntries(Object.entries(clips).map(([path, body]) => [path, { body, type: "audio/mpeg" }]));
+const TYPES = { mp3: "audio/mpeg", png: "image/png", webmanifest: "application/manifest+json" };
+const files = Object.fromEntries(Object.entries(bundled).map(([path, body]) => [path, { body, type: TYPES[path.split(".").pop()] }]));
 export default site({ phone, tv, games: ["spark-wars"], files });
 export { Room, Gate };

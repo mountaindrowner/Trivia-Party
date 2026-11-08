@@ -48,10 +48,10 @@ type = "Text"
 globs = ["**/*.html"]
 fallthrough = true
 
-# Barnabas's recorded lines are bundled into the Worker as data (static/spark/clips.js lists them).
+# Barnabas's recorded lines and the app icons are bundled into the Worker as data (static/spark/files.js lists them).
 [[env.spark.rules]]
 type = "Data"
-globs = ["**/*.mp3"]
+globs = ["**/*.mp3", "**/*.png"]
 fallthrough = true
 
 [[env.spark.durable_objects.bindings]]

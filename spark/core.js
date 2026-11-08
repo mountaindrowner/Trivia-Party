@@ -140,6 +140,18 @@ window.SW = (() => {
   window.THP = window.THP || {};
   THP.Sound = THP.Sound || { context: () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} return actx; }, isMuted: () => prefs.muted };
   const music = (id) => { try { THP.Music && THP.Music.play(id); } catch (e) {} };
+  /* iPhones and iPads only start sound from a tap. Every tap makes sure it's on: the sound system resumes (it stops
+     when the phone sleeps or the tab is hidden), the device's voice is woken once, and the game plays even with
+     the ringer switch on silent (Safari 16.4+). */
+  let voiceWoken = false;
+  const wakeSound = () => {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    try { const c = THP.Sound.context(); if (c && c.state !== "running") c.resume(); } catch (e) {}
+    if (room) keepAwake();
+    if (!voiceWoken && "speechSynthesis" in window) { voiceWoken = true; try { speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {} }
+  };
+  addEventListener("pointerdown", wakeSound, true);
+  addEventListener("keydown", wakeSound, true);
 
   /* ---------- Things to watch: sparks, bursts, callouts, shakes, sliding boards, counting numbers ---------- */
   const fx = (() => {
@@ -284,16 +296,22 @@ window.SW = (() => {
       if (clip && typeof clip === "object") { const t = TEAMS.find((x) => vars && x.name === vars.team); clip = t ? clip[t.key] : null; }
       return clip || null;
     }
-    /** Load a clip far enough to know how long it is (or give up after a moment). */
-    function loadClip(url) {
-      return new Promise((resolve) => {
-        const a = new Audio(url);
-        a.preload = "auto";
-        const t = setTimeout(() => resolve(null), 2500);
-        a.addEventListener("loadedmetadata", () => { clearTimeout(t); resolve(a); }, { once: true });
-        a.addEventListener("error", () => { clearTimeout(t); resolve(null); }, { once: true });
-        a.load();
-      });
+    /* His clips play through the page's one sound system (the music's AudioContext), not <audio> players: an
+       iPhone only lets an <audio> start right after a tap, so a line that comes later was silently refused, while
+       a context unlocked once (the "Open a room" click, or any tap since) plays whatever comes next. */
+    const clipBytes = new Map(); // url -> the MP3, fetched once
+    const soundCtx = () => { try { return (THP.Sound.context && THP.Sound.context()) || null; } catch (e) { return null; } };
+    function bytes(url) {
+      if (!clipBytes.has(url)) clipBytes.set(url, fetch(url).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null).then((b) => { if (!b) clipBytes.delete(url); return b; }));
+      return clipBytes.get(url);
+    }
+    /** Fetch and decode a clip (or give up after a moment): { buffer, duration }. */
+    async function loadClip(url) {
+      const ctx = soundCtx();
+      if (!ctx) return null;
+      const buf = await Promise.race([bytes(url), new Promise((r) => setTimeout(() => r(null), 2500))]);
+      if (!buf) return null;
+      try { const buffer = await ctx.decodeAudioData(buf.slice(0)); return { buffer, duration: buffer.duration }; } catch (e) { return null; }
     }
 
     /* Lip sync: while a clip plays, its loudness opens his mouth, bobs and tilts his head, and flicks his ears and
@@ -302,32 +320,17 @@ window.SW = (() => {
     const mouthOpen = node.querySelector(".mouth-open"), mouthShut = node.querySelector(".mouth-closed");
     const brows = [...node.querySelectorAll(".brow")], ears = [...node.querySelectorAll(".ear")];
     let playing = null, lipRaf = 0;
-    function lipSync(audio) {
-      const ctx = THP.Sound.context && THP.Sound.context();
-      let analyser = null, data = null;
-      try {
-        if (ctx) {
-          if (ctx.state === "suspended") ctx.resume();
-          const src = ctx.createMediaElementSource(audio);
-          analyser = ctx.createAnalyser();
-          analyser.fftSize = 512;
-          src.connect(analyser);
-          analyser.connect(ctx.destination);
-          data = new Uint8Array(analyser.fftSize);
-        }
-      } catch (e) { analyser = null; }
+    function lipSync(clip) {
+      const analyser = clip.analyser, data = new Uint8Array(analyser.fftSize);
       node.classList.add("lipsync");
       let level = 0, t0 = performance.now();
       cancelAnimationFrame(lipRaf);
       const frame = (now) => {
-        if (playing !== audio) return rest();
-        let target = 0;
-        if (analyser) {
-          analyser.getByteTimeDomainData(data);
-          let sum = 0;
-          for (let k = 0; k < data.length; k++) { const v = (data[k] - 128) / 128; sum += v * v; }
-          target = Math.min(1, Math.max(0, (Math.sqrt(sum / data.length) - 0.015) * 7));
-        } else target = audio.paused ? 0 : 0.5 + 0.5 * Math.sin((now - t0) / 70);
+        if (playing !== clip) return rest();
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let k = 0; k < data.length; k++) { const v = (data[k] - 128) / 128; sum += v * v; }
+        const target = Math.min(1, Math.max(0, (Math.sqrt(sum / data.length) - 0.015) * 7));
         level += (target - level) * (target > level ? 0.6 : 0.3);
         if (mouthOpen) { mouthOpen.style.opacity = level > 0.08 ? 1 : 0; mouthOpen.style.transform = `scale(${1 + level * 0.25}, ${0.35 + level * 1.5})`; }
         if (mouthShut) mouthShut.style.opacity = level > 0.08 ? 0 : 1;
@@ -347,17 +350,33 @@ window.SW = (() => {
       brows.forEach((b) => { b.style.transform = ""; });
       ears.forEach((e) => { e.style.rotate = ""; });
     }
-    function playClip(audio) {
+    function playClip(loaded) {
       return new Promise((resolve) => {
-        playing = audio;
-        const end = () => { if (playing === audio) { playing = null; rest(); } resolve(); };
-        audio.onended = audio.onerror = end;
-        setTimeout(end, (audio.duration || 8) * 1000 + 1500);
-        lipSync(audio);
-        audio.play().catch(end);
+        const ctx = soundCtx();
+        if (!ctx) return resolve();
+        if (ctx.state !== "running") ctx.resume().catch(() => {});
+        const src = ctx.createBufferSource(), analyser = ctx.createAnalyser();
+        src.buffer = loaded.buffer;
+        analyser.fftSize = 512;
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        const clip = { src, analyser };
+        playing = clip;
+        let over = false;
+        const end = () => {
+          if (over) return;
+          over = true;
+          if (playing === clip) { playing = null; rest(); }
+          try { src.disconnect(); analyser.disconnect(); } catch (e) {}
+          resolve();
+        };
+        src.onended = end;
+        setTimeout(end, loaded.duration * 1000 + 1500);
+        lipSync(clip);
+        try { src.start(); } catch (e) { end(); }
       });
     }
-    function stopClip() { if (playing) { try { playing.pause(); } catch (e) {} playing = null; rest(); } }
+    function stopClip() { if (playing) { try { playing.src.stop(); } catch (e) {} playing = null; rest(); } }
     /** The device's own voice, when there's no recording. */
     function speakTTS(text) {
       if (!("speechSynthesis" in window)) return Promise.resolve();
@@ -467,6 +486,25 @@ window.SW = (() => {
     return shown[id] || { screen: "wait", title: "Jump in!", text: "You'll be in from the next question.", badge: badge(id) };
   }
 
+  /* Full screen. A laptop or an Android phone goes full screen on a click. An iPhone can't make a web page full screen
+     at all (only videos), so there the button shows how to add Spark Wars to the home screen instead: opened from
+     there it has no browser bars, which is what a TV shows when the phone is mirrored to it. */
+  const docEl = document.documentElement;
+  const canFull = !!(docEl.requestFullscreen || docEl.webkitRequestFullscreen);
+  const asApp = () => navigator.standalone === true || matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches;
+  function toggleFull() {
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (docEl.requestFullscreen || docEl.webkitRequestFullscreen).call(docEl);
+    } catch (e) {}
+  }
+  /* A phone running the TV page (mirrored to a TV) must not go to sleep mid-game: that stops the mirroring. */
+  let wakeLock = null;
+  async function keepAwake() {
+    try { if (!wakeLock && navigator.wakeLock && document.visibilityState === "visible") { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (room) keepAwake(); });
+
   function titleScreen(note) {
     phase = "title";
     setTheme(null);
@@ -478,13 +516,16 @@ window.SW = (() => {
       note ? el("p", { class: "warn" }, note) : null,
       el("div", { class: "row" },
         el("button", { class: "btn go", onclick: openRoom }, "▶ Open a room"),
-        el("button", { class: "btn ghost", onclick: () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} } }, "⛶ Full screen")),
+        asApp() ? null : el("button", { class: "btn ghost", onclick: () => { if (canFull) toggleFull(); else { const t = stage.querySelector(".title .homescreen"); if (t) t.hidden = !t.hidden; } } }, "⛶ Full screen")),
+      asApp() || canFull ? null : el("p", { class: "homescreen" }, "On an iPhone: tap Share ", el("b", {}, "⬆"), " then ", el("b", {}, "Add to Home Screen"),
+        ", and open Spark Wars from your home screen. It opens full screen. Turn the phone sideways before you mirror it to the TV."),
       el("div", { class: "lineup" }, ...GAMES.map((g) => el("span", {}, `${g.icon} ${g.name}`))),
       el("p", { class: "fine" }, `Players join on their phones at ${JOIN_TEXT}`)));
   }
 
   async function openRoom() {
     S("join");
+    keepAwake();
     try { THP.Music && THP.Music.unlock(); } catch (e) {}
     show(el("section", { class: "title" }, el("h1", {}, "Spark Wars"), el("p", { class: "tag" }, "Opening a room...")));
     let r = saved();

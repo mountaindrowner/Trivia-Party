@@ -100,7 +100,7 @@ async function page(html, url) {
     "default-src 'none'", `script-src ${await hashesFor(html)}`,
     "style-src 'unsafe-inline' https://fonts.googleapis.com", "font-src https://fonts.gstatic.com",
     "img-src 'self' data: blob:", "media-src 'self' blob:", `connect-src 'self' ${live}`,
-    "base-uri 'none'", "form-action 'self'", "frame-ancestors 'self'", "object-src 'none'",
+    "manifest-src 'self'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'self'", "object-src 'none'",
   ].join("; ");
   return new Response(html, { headers: {
     "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "x-content-type-options": "nosniff",

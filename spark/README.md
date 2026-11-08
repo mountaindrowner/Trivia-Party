@@ -7,6 +7,11 @@ and family game.
 - **Play:** open `https://sparkwars.thecrossroads.workers.dev/tv` on the TV or projector (a laptop is easiest: the
   leader runs it with the mouse). Click **Open a room**. Everyone else goes to `sparkwars.thecrossroads.workers.dev`
   on their phone, or scans the QR code, and types the 4-letter code.
+- **Running the TV page on an iPhone (mirrored to a TV):** an iPhone can't make a web page full screen, so the
+  browser bars show on the TV. Instead, on the title screen: Share ⬆ → **Add to Home Screen**, then open Spark Wars
+  from the home screen. It opens as an app, full screen and sideways (the page has a web app manifest at
+  `/tv.webmanifest` and icons in `icons/`). Turn the phone sideways before mirroring. The page keeps the phone's
+  screen awake while a room is open.
 - **Same bones as Holy Huddle:** the room server and the phone page are in `../huddle/` (one code for both games).
 - **Files:**
   - `core.js`: the room, lobby, teams and War Points, rules screens, countdowns, scoreboards, results, and the
@@ -54,7 +59,9 @@ id="barnabas">` in `index.html`, styles at the end of `spark.css`). He stands in
   lots arrive at once), each game's rules, Double Time, lead changes, jackpots, steals and swaps, Bluff reveals,
   Timeline streaks, the winner, and the War Points leader back in the lobby. Small lines are skipped when he's
   already talking.
-- **His voice:** recorded lines (Chatterbox, an open-source voice model, in a voice picked by ear: see `voice/README.md`),
+- **His voice:** recorded lines, played through the same Web Audio context as the music (an iPhone won't start an
+  `<audio>` player except right after a tap, so lines that came later were silent; every tap also wakes the sound,
+  and the game plays with the ringer switch on silent). The recordings (Chatterbox, an open-source voice model, in a voice picked by ear: see `voice/README.md`),
   bundled into the Spark Wars server at `/voice/clips/` (huddle/build.py) and listed in `voice/voice.js`. Lines with a player's name or a number in them say a
   general version out loud ("Team Volt, meet your newest player") while the bubble shows the name. If a clip is
   missing, he falls back to the device's own voice. 🗣 in the lobby turns his voice off.
