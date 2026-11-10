@@ -195,3 +195,34 @@ html[data-game="bonfire"] .bar { background: var(--gold); }
 html[data-game="bonfire"] input.slider { background: linear-gradient(90deg, #5b7cff, #ff6b3d); }
 html[data-game="bonfire"] .banner { border: 0; box-shadow: 0 8px 30px rgba(255, 120, 40, 0.5); }
 html[data-game="bonfire"] .banner strong { font-family: "Shrikhand", serif; font-weight: 400; }
+
+/* Bonfire's finish on the phone: each screen rises in piece by piece, buttons press in, results pop, embers drift. */
+html[data-game="bonfire"]:root body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.6;
+  background: radial-gradient(2px 2px at 12% 100%, #ffb23e, transparent), radial-gradient(1.5px 1.5px at 38% 100%, #ff8a3d, transparent),
+    radial-gradient(2px 2px at 63% 100%, #ffd27a, transparent), radial-gradient(1.5px 1.5px at 86% 100%, #ffb23e, transparent);
+  background-size: 100% 60%; background-repeat: repeat-y; animation: bfEmbers 9s linear infinite;
+}
+@keyframes bfEmbers { from { background-position: 0 0, 0 0, 0 0, 0 0; } to { background-position: 0 -100vh, 0 -120vh, 0 -90vh, 0 -110vh; } }
+html[data-game="bonfire"]:root main { position: relative; z-index: 1; }
+html[data-game="bonfire"]:root main > * { animation: bfIn 0.5s cubic-bezier(.2, .9, .3, 1) both; }
+html[data-game="bonfire"]:root main > :nth-child(2) { animation-delay: 0.06s; }
+html[data-game="bonfire"]:root main > :nth-child(3) { animation-delay: 0.12s; }
+html[data-game="bonfire"]:root main > :nth-child(4) { animation-delay: 0.18s; }
+html[data-game="bonfire"]:root main > :nth-child(n+5) { animation-delay: 0.24s; }
+@keyframes bfIn { from { opacity: 0; transform: translateY(16px); filter: blur(4px); } }
+html[data-game="bonfire"]:root .choices button { animation: bfIn 0.45s cubic-bezier(.2, .9, .3, 1) both; transition: transform 0.12s, box-shadow 0.12s, filter 0.2s, opacity 0.3s; }
+html[data-game="bonfire"]:root .choices button:nth-child(2) { animation-delay: 0.07s; }
+html[data-game="bonfire"]:root .choices button:nth-child(3) { animation-delay: 0.14s; }
+html[data-game="bonfire"]:root .choices button:nth-child(4) { animation-delay: 0.21s; }
+html[data-game="bonfire"]:root button:active { transform: translateY(4px) scale(0.98); filter: brightness(1.1); }
+html[data-game="bonfire"]:root .choices.done button:not([aria-pressed="true"]) { opacity: 0.3; filter: saturate(0.4); }
+html[data-game="bonfire"]:root .result { animation: bfPop 0.55s cubic-bezier(.2, 1.5, .4, 1) both; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 12px 40px rgba(0, 0, 0, 0.35); }
+html[data-game="bonfire"]:root .result.good { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 50px rgba(47, 191, 143, 0.35); }
+html[data-game="bonfire"]:root .result.good .big:first-child { animation: bfGlow 1.6s ease-in-out infinite alternate; }
+@keyframes bfPop { from { opacity: 0; transform: scale(0.8); } }
+@keyframes bfGlow { to { text-shadow: 0 0 24px rgba(126, 224, 184, 0.9); } }
+html[data-game="bonfire"]:root :is(.prompt, .me, .header) { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+html[data-game="bonfire"]:root .prompt { background: rgba(12, 16, 48, 0.45); border-radius: 20px; border: 1px solid rgba(255, 178, 62, 0.25); padding: 16px 14px; }
+html[data-game="bonfire"]:root .slider-value { color: var(--gold); text-shadow: 0 0 30px rgba(255, 140, 50, 0.6); }
+@media (prefers-reduced-motion: reduce) { html[data-game="bonfire"]:root body::before { animation: none; } }

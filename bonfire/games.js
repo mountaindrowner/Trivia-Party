@@ -20,13 +20,13 @@
   BF.game({
     key: "who", name: "Who Said That?", icon: "🗣️", color: "#ff8a3d",
     tagline: "Somebody here typed this. Who?",
-    how: "An answer goes up on the screen. Guess who wrote it. If it's yours, keep a straight face!",
-    intro: ["First up: Who Said That. Someone in this room typed what you're about to see. Your job is to figure out who.", "Who Said That! I'll show you something one of you typed. You guess who."],
+    how: "Guess who wrote the answer on the screen. If it's yours, keep a straight face!",
+    intro: ["Who Said That. One of you wrote this. Guess who.", "First up. Who Said That. Guess who wrote it."],
     async run(a) {
       const SECS = 20;
       const authors = a.shuffle(a.ready(0, 1));
       const rounds = authors.slice(0, 5).map((p) => { const t = a.pickOne(a.answersOf(p.id, true)); return { id: p.id, qi: t.qi, text: t.v }; });
-      if (!rounds.length) { await a.say("Nobody typed anything this time, so we'll skip this one."); return; }
+      if (!rounds.length) { await a.say("Nobody typed anything. Let's skip this one."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < rounds.length; i++) {
@@ -41,7 +41,7 @@
           a.el("blockquote", { class: "bubble" }, r.text),
           timer, lockins));
         a.S("reveal");
-        a.say(`${a.Q[r.qi].q} Somebody said: ${r.text}.`, { now: true });
+        a.say(`Somebody said: ${r.text}. Who was it?`, { now: true });
         const picks = {}, opts = {}, rnd = {}, started = Date.now();
         for (const id of ids) {
           // The writer and three others (never the guesser), in a random order.
@@ -49,9 +49,9 @@
           opts[id] = a.shuffle([r.id, ...decoys]);
           rnd[id] = a.round();
           a.put(id, { screen: "choices", round: rnd[id], prompt: `Who said "${r.text}"?`, options: opts[id].map((x) => `${a.face(a.byId(x))} ${a.byId(x).name}`),
-            keys: ["", "", "", ""], seconds: SECS, header: a.Q[r.qi].q, hint: "Tap who you think wrote it.", locked: "Locked in! Watch the big screen." });
+            keys: ["", "", "", ""], seconds: SECS, header: a.Q[r.qi].q, hint: "Who wrote it?", locked: "Locked in!" });
         }
-        a.put(r.id, { screen: "wait", title: "That's yours! 🤫", text: "Keep a straight face. Every person you fool is points for you (25 each)." });
+        a.put(r.id, { screen: "wait", title: "That's yours! 🤫", text: "Keep a straight face. You score for everyone you fool." });
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(picks).length} / ${ids.length} guessed`; };
         draw();
@@ -77,12 +77,12 @@
         for (const id of right) { const pts = 100 + Math.round(50 * Math.max(0, 1 - picks[id].ms / (SECS * 1000))); gained[id] = pts; a.add(id, pts); a.stats.guessed[id] = (a.stats.guessed[id] || 0) + 1; }
         a.add(r.id, Math.min(300, 25 * fooled.length));
         a.stats.fooled[r.id] = (a.stats.fooled[r.id] || 0) + fooled.length;
-        const reveal = a.el("div", { class: "reveal" }, a.el("span", { class: "face" }, a.face(author)), a.el("h2", {}, `It was ${author.name}!`),
+        const reveal = a.el("div", { class: "reveal" }, a.el("span", { class: "face" }, a.face(author)), a.el("h2", { "aria-label": `It was ${author.name}!` }, a.lettered(`It was ${author.name}!`)),
           a.el("p", {}, right.length ? `${right.length} of ${ids.length} knew it.` : "Nobody guessed it!"), fooled.length ? a.el("p", { class: "fooled" }, `${author.name} fooled ${fooled.length} · +${Math.min(300, 25 * fooled.length)}`) : null);
         document.querySelector("#stage .g-who").append(reveal);
         a.S("big");
         a.fx.burstAt(reveal, 50);
-        a.say(right.length > ids.length / 2 ? [`It was ${author.name}! Most of you knew that.`, `${author.name}! Of course it was.`] : [`It was ${author.name}! ${author.name}, stand up and take a bow.`, `It was ${author.name}! Didn't see that coming, did you?`], { now: true });
+        a.say(right.length > ids.length / 2 ? [`It was ${author.name}. Most of you knew that.`, `${author.name}. Of course.`] : [`It was ${author.name}! Stand up, ${author.name}.`, `It was ${author.name}! Didn't see that coming.`], { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const ok = right.includes(id);
@@ -98,15 +98,15 @@
   BF.game({
     key: "room", name: "Read the Room", icon: "🔮", color: "#5b7cff",
     tagline: "How well do you know this crowd?",
-    how: "Guess what percent of the room picked an answer. Slide, lock it in. Closest wins.",
-    intro: ["Read the Room. How well do you know this crowd? I'll ask what percent of you picked something. Closest guess wins.", "Next: Read the Room. Guess the percent. Closest wins."],
+    how: "Guess the percent. Closest wins.",
+    intro: ["Read the Room. Guess the percent. Closest wins.", "Next up. Read the Room. How well do you know this crowd?"],
     async run(a) {
       const SECS = 20;
       // This-or-that and yes/no questions that enough of the room answered (the core ones first).
       const counts = {};
       for (const p of a.cast()) for (const x of a.answersOf(p.id)) if (x.q.t !== "pick") counts[x.qi] = (counts[x.qi] || 0) + 1;
       const qs = Object.keys(counts).map(Number).filter((qi) => counts[qi] >= 3).sort((x, y) => (a.Q[y].core ? 1 : 0) - (a.Q[x].core ? 1 : 0) || counts[y] - counts[x]).slice(0, 3);
-      if (!qs.length) { await a.say("Not enough answers to read the room yet. We'll skip this one."); return; }
+      if (!qs.length) { await a.say("Not enough answers yet. Let's skip this one."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < qs.length; i++) {
@@ -122,9 +122,9 @@
           a.el("h2", {}, "What percent of us said ", a.el("em", {}, opt), "?"),
           meter, a.el("div", { class: "ends" }, a.el("span", {}, `0% ${opt}`), a.el("span", {}, `100% ${opt}`)), timer, lockins));
         a.S("reveal");
-        a.say(`${q.q} What percent of us said ${opt}?`, { now: true });
+        a.say(`What percent of us said ${opt}?`, { now: true });
         const guesses = {}, rnd = {};
-        for (const id of ids) { rnd[id] = a.round(); a.put(id, { screen: "slider", round: rnd[id], prompt: `What percent of us said "${opt}"?`, header: q.q, seconds: SECS, start: 50, hint: "Slide to your guess, then lock it in." }); }
+        for (const id of ids) { rnd[id] = a.round(); a.put(id, { screen: "slider", round: rnd[id], prompt: `What % of us said "${opt}"?`, header: q.q, seconds: SECS, start: 50, hint: "Slide, then lock it in." }); }
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(guesses).length} / ${ids.length} guessed`; };
         draw();
@@ -145,7 +145,11 @@
         // The reveal: the meter fills to the real number.
         a.state("reveal");
         const fill = meter.querySelector(".fill"), mark = meter.querySelector(".mark");
-        requestAnimationFrame(() => { fill.style.width = `${actual}%`; mark.style.left = `${actual}%`; mark.textContent = `${actual}%`; });
+        requestAnimationFrame(() => { fill.style.width = `${actual}%`; mark.style.left = `${actual}%`; });
+        // The number counts up with the fill.
+        const t0 = performance.now();
+        const roll = (t) => { const k = Math.min(1, (t - t0) / 1600), e = 1 - Math.pow(1 - k, 3); mark.textContent = `${Math.round(actual * e)}%`; if (k < 1) requestAnimationFrame(roll); };
+        requestAnimationFrame(roll);
         const gained = {};
         for (const [id, v] of Object.entries(guesses)) { const diff = Math.abs(v - actual), pts = Math.max(0, 100 - 4 * diff) + (diff === 0 ? 50 : 0); gained[id] = pts; a.add(id, pts); a.stats.read[id] = (a.stats.read[id] || 0) + pts; }
         const closest = Object.keys(guesses).sort((x, y) => Math.abs(guesses[x] - actual) - Math.abs(guesses[y] - actual)).slice(0, 3);
@@ -158,7 +162,7 @@
           small ? a.el("p", { class: "rare" }, `Only ${small.w.length} said ${s.opts[small.k]}: ${a.names(small.w)}. Wave! 👋`) : null));
         a.S("big");
         later(a, 900, () => a.fx.burstAt(mark, 40, ["#5b7cff", "#fff3e0", "#ffb23e"]));
-        a.say(`${actual} percent! ${closest[0] ? `${a.byId(closest[0]).name} was closest.` : ""}${small ? ` And only ${small.w.length} of you said ${s.opts[small.k]}: ${a.names(small.w)}. Give us a wave.` : ""}`, { now: true });
+        a.say(`${actual} percent. ${closest[0] ? `${a.byId(closest[0]).name} was closest.` : ""}${small ? ` Only ${small.w.length} said ${s.opts[small.k]}. ${a.names(small.w)}, give us a wave!` : ""}`, { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const v = guesses[id];
@@ -175,8 +179,8 @@
   BF.game({
     key: "kindred", name: "Kindred Spirits", icon: "🤝", color: "#2fbf8f",
     tagline: "Somewhere in this room are your people.",
-    how: "You're matched with the person most like you. Go find them, ask their secret number, and tap it in.",
-    intro: ["Kindred Spirits. I've matched each of you with the person whose answers are most like yours. Go find them, get their secret number, and tap it in. Go!", "Time to move. Kindred Spirits: find the person most like you, and tap in their secret number."],
+    how: "Find the person most like you. Get their secret number. Tap it in.",
+    intro: ["Kindred Spirits. Find the person most like you. Get their secret number. Go!", "Time to move. Kindred Spirits. Go find your match."],
     async run(a) {
       const SECS = 150;
       const ids = a.shuffle(a.cast().map((p) => p.id));
@@ -191,7 +195,7 @@
       const left = [...free];
       while (left.length >= 2) groups.push([left.pop(), left.pop()]);
       if (left.length && groups.length) { const k = left[0]; const best = groups.map((gr, gi) => [gi, alike(k, gr[0]).same]).sort((p, q) => q[1] - p[1])[0][0]; groups[best].push(k); }
-      if (!groups.length) { await a.say("We need a few more people for this one. Skipping it."); return; }
+      if (!groups.length) { await a.say("We need more people for this one. Skipping it."); return; }
       // Secret numbers, and who each person has to find (round the group).
       const nums = a.shuffle(Array.from({ length: 90 }, (_, k) => k + 10));
       const num = {}, target = {}, group = {}, found = {}, rnd = {}, lit = {};
@@ -200,7 +204,10 @@
       const best = all.filter((p) => p.of >= 3).sort((p, q) => q.r - p.r || q.same - p.same)[0];
       if (best) a.stats.alike = { a: best.x, b: best.y, same: best.same, of: best.of };
       // Things in common, to talk about once they've found each other.
-      const common = (x, y) => a.shuffle(Object.keys(ans[x]).filter((qi) => qi in ans[y] && ans[x][qi] === ans[y][qi]).map(Number)).slice(0, 3).map((qi) => `${a.catIcon(qi)} ${a.said(qi, ans[x][qi])}`);
+      // What two people share, in words that make sense alone: "Night owl", "Both have been on a plane".
+      const common = (x, y) => a.shuffle(Object.keys(ans[x]).filter((qi) => qi in ans[y] && ans[x][qi] === ans[y][qi]).map(Number))
+        .map((qi) => { const b = a.blurb(qi, ans[x][qi]); return b && `${a.catIcon(qi)} ${a.Q[qi].t === "yes" ? `Both ${b.replace(/^(has|is|can|was|does|knows|keeps|uses|thinks|would|could|always|waves|made|built|had|gave|lost|learned|visited|started|thanks|reads|collects|plays|likes|beat|talks|speaks)\b/, (w) => ({ has: "have", is: "are", can: "can", was: "were", does: "do", knows: "know", keeps: "keep", uses: "use", thinks: "think", would: "would", could: "could", always: "always", waves: "wave", made: "made", built: "built", had: "had", gave: "gave", lost: "lost", learned: "learned", visited: "visited", started: "started", thanks: "thank", reads: "read", collects: "collect", plays: "play", likes: "like", beat: "beat", talks: "talk", speaks: "speak" })[w] || w)}` : b}`; })
+        .filter(Boolean).slice(0, 3);
       const cards = groups.map((gr, gi) => {
         const m = gr.length === 2 ? alike(gr[0], gr[1]) : null;
         return a.el("div", { class: "match", "data-g": gi }, a.el("div", { class: "faces" }, ...gr.map((id) => a.el("span", {}, a.face(a.byId(id))))),
@@ -223,8 +230,8 @@
         const decoys = a.shuffle(nums.slice(ids.length).filter((n) => n !== num[t])).slice(0, 3);
         rnd[id] = a.round();
         sent[id] = a.shuffle([num[t], ...decoys]);
-        a.put(id, { screen: "choices", round: rnd[id], prompt: `Your match: ${a.face(them)} ${them.name}. ${m.of ? `You agree on ${m.same} of ${m.of}!` : ""} Find them and tap their secret number.`,
-          options: sent[id].map(String), keys: ["#", "#", "#", "#"], header: `Your secret number: ${num[id]}`, note, hint: "Ask them for it. (Yours is at the top.)", locked: "Checking..." });
+        a.put(id, { screen: "choices", round: rnd[id], prompt: `Find ${a.face(them)} ${them.name}!`, note: note || (m.of ? `You match on ${m.same} of ${m.of}` : null),
+          options: sent[id].map(String), keys: ["#", "#", "#", "#"], header: `Your secret number: ${num[id]}`, hint: "Ask for their number. Tap it.", locked: "Checking..." });
       };
       const g = gate();
       let done = 0, order = 0;
@@ -238,7 +245,7 @@
         const them = a.byId(target[id]);
         a.S("found");
         a.add(id, 150);
-        a.put(id, { screen: "result", good: true, title: `You found ${them ? them.name : "them"}!`, points: 150, text: common(id, target[id]).length ? `You both: ${common(id, target[id]).join(" · ")}` : "Now find out what you have in common!", after: "Talk about it while the others find each other." });
+        a.put(id, { screen: "result", good: true, title: `You found ${them ? them.name : "them"}!`, points: 150, text: common(id, target[id]).length ? `You both said: ${common(id, target[id]).join(" · ")}` : "Now find out what you have in common!", after: "Talk about it while the others find each other." });
         checkGroup(id);
       } });
       /** When everyone in a match has found their person (or left), the match lights up on the TV. */
@@ -265,7 +272,7 @@
       const h = document.querySelector("#stage .g-kindred h2");
       if (h) h.textContent = best ? `Most alike tonight: ${a.byId(best.x).name} & ${a.byId(best.y).name}, ${best.same} of ${best.of} the same!` : "Time!";
       a.S("big");
-      await Promise.all([a.say(best ? `Time! The most alike pair tonight: ${a.byId(best.x).name} and ${a.byId(best.y).name}. ${best.same} out of ${best.of} the same.` : "Time!", { now: true }), a.wait(6000)]);
+      await Promise.all([a.say(best ? `Time! The most alike pair tonight. ${a.byId(best.x).name} and ${a.byId(best.y).name}.` : "Time!", { now: true }), a.wait(6000)]);
     },
   });
 
@@ -273,12 +280,12 @@
   BF.game({
     key: "truths", name: "Two Truths & a Lie", icon: "🃏", color: "#c05bd6",
     tagline: "We made one of these up. Spot it.",
-    how: "Three things about one person. Two are true, and we made one up. Guess the lie!",
-    intro: ["Two Truths and a Lie. I'll pick someone and show three things about them. I made one of them up. You find it.", "Last one: Two Truths and a Lie. Three facts about one of you. One is fake. Find it."],
+    how: "Three facts about one person. One is fake. Find it.",
+    intro: ["Two Truths and a Lie. One of these is fake. Find it.", "Last one. Two Truths and a Lie. Spot the fake."],
     async run(a) {
       const SECS = 20;
       const spot = a.shuffle(a.ready(3)).slice(0, 5);
-      if (!spot.length) { await a.say("Not enough answers for this one yet. Skipping it."); return; }
+      if (!spot.length) { await a.say("Not enough answers yet. Skipping this one."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < spot.length; i++) {
@@ -298,13 +305,13 @@
           a.el("h2", {}, a.el("span", { class: "face" }, a.face(who)), ` ${who.name}`),
           a.el("div", { class: "tcards" }, ...cardsEl), timer, lockins));
         a.S("reveal");
-        a.say(`Three things about ${who.name}. One of them is a lie.`, { now: true });
+        a.say(`Three things about ${who.name}. One is a lie.`, { now: true });
         const ids = a.cast().map((p) => p.id).filter((id) => id !== who.id), picks = {}, rnd = {};
         for (const id of ids) {
           rnd[id] = a.round();
-          a.put(id, { screen: "choices", round: rnd[id], prompt: `Which one about ${who.name} is the lie?`, options: facts.map((f, k) => `${a.said(f.qi, shownV[k])} (${f.q.q})`), keys: L, seconds: SECS, header: `${a.face(who)} ${who.name}`, locked: "Locked in! Watch the big screen." });
+          a.put(id, { screen: "choices", round: rnd[id], prompt: `Which is the lie about ${who.name}?`, options: facts.map((f, k) => (f.q.t === "yes" ? `${a.said(f.qi, shownV[k])}: ${f.q.q}` : a.said(f.qi, shownV[k]))), keys: L, seconds: SECS, header: `${a.face(who)} ${who.name}`, locked: "Locked in! Watch the big screen." });
         }
-        a.put(who.id, { screen: "wait", title: "It's you! 😐", text: "Poker face. One of those is made up. Every person you fool is points for you (25 each)." });
+        a.put(who.id, { screen: "wait", title: "It's you! 😐", text: "Poker face. You score for everyone you fool." });
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(picks).length} / ${ids.length} guessed`; };
         draw();
@@ -334,7 +341,7 @@
         });
         a.S(right.length ? "right" : "wrong");
         a.fx.burstAt(cardsEl[lieK], 40, ["#c05bd6", "#fff3e0", "#ffb23e"]);
-        a.say(`The lie was ${L[lieK]}. ${who.name} actually said ${a.said(lie.qi, lie.v)}. ${right.length} of you caught it.`, { now: true });
+        a.say(`The lie was ${L[lieK]}. ${right.length} of you caught it.`, { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const ok = picks[id] === lieK;

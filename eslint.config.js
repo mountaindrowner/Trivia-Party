@@ -29,7 +29,7 @@ export default [
   // Bonfire Ice Breaker on the TV: browser scripts sharing BONFIRE (the questions) and BF (core.js).
   {
     files: ["bonfire/**/*.js"],
-    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", BF: "writable", THP: "writable", qrcode: "readonly" } },
+    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", BF: "writable", BONFIRE_MUSIC: "writable", THP: "writable", qrcode: "readonly" } },
     rules,
   },
   // The phone page.

@@ -11,7 +11,7 @@ things about people they didn't know before.
 - **Same bones as Spark Wars and Holy Huddle:** the room server and the phone page are in `../huddle/` (the
   `bonfire` room type allows 40 players and 20 in the audience).
 - **Files:** `core.js` (the room, the questions while joining, the host's voice, the show and the Campfire Report),
-  `games.js` (the four mini-games), `data/questions.js` (the library), `bonfire.css`, `index.html`.
+  `games.js` (the four mini-games), `music.js` (the campfire guitar), `data/questions.js` (the library), `bonfire.css`, `index.html`.
   `../huddle/build.py` inlines it all into one page for the server.
 - **Tests:** `node tools/run-tests.mjs e2e` plays a whole night with 40 phones (`../tests/e2e/bonfire.cjs`).
 
@@ -62,17 +62,32 @@ games. Points carry across the night.
 
 ## The host: a voice, no face
 
-The device's own speech (the Web Speech API), so it can say names. It picks the best voice the device has: Edge's
-"Natural" voices and the iPhone's "Enhanced" and "Premium" voices sound almost human; Chrome's "Google US
-English" is fine. Everything it says is also captioned at the bottom of the TV. 🗣 in the lobby turns it off.
-On an iPhone or iPad the sound starts after the first tap on the TV page.
+The device's own speech (the Web Speech API), so it can say names. It picks the best voice the device has (Edge's
+"Natural" voices and the iPhone's "Enhanced" and "Premium" voices sound almost human; Chrome's "Google US English"
+is fine), speaks a little slower than the device's default, one sentence at a time with a breath between them, and
+keeps every line short. The caption at the bottom of the TV shows the whole line and lights up the sentence being
+said. 🗣 in the lobby turns it off. On an iPhone or iPad the sound starts after the first tap on the TV page.
+
+## The campfire guitar
+
+`music.js`: an acoustic guitar playing by the fire, made in the browser (no audio files). Every note is a plucked
+string (Karplus-Strong), tuned exactly, through a guitar-body resonance and a little reverb, a hair loose in time
+and touch like a person playing. It fingerpicks open chords in G with a melody noodling over the top, and follows
+the screen: sparse on the title, laid-back fingerpicking in the lobby, a strummed jam with a soft cajon and shaker
+during the games, slow and warm for the report. It dips under the host's voice, and the game's little sounds
+(joins, lock-ins, reveals, the winner) are guitar too. A crackling fire plays underneath. 🎸 in the lobby turns the
+guitar off; 🔊 turns all sound off.
 
 ## The look
 
-A campfire at night: stars, a moon, pine trees and mountains, the fire flickering at the bottom with embers rising,
-and a crackling fire sound. Shrikhand (a fat retro script) for the big words, Outfit for the rest. Each mini-game
-has its own colour: orange for Who Said That?, blue for Read the Room, green for Kindred Spirits, purple for Two
-Truths & a Lie. The phones match (`../huddle/phone/phone.css`, the `data-game="bonfire"` part).
+A campfire at night: twinkling stars, a moon, a shooting star now and then, pine trees and mountains, mist drifting,
+fireflies, and the fire at the bottom with embers rising. Screens cross-fade (the new one rises into focus as the old
+one blurs away); big moments flare the fire, flash warm light and give the stage a little jolt; titles drop in letter
+by letter; scores count up; panels are frosted glass; a soft vignette and film grain sit over it all. Shrikhand (a
+fat retro script) for the big words, Outfit for the rest. Each mini-game has its own colour: orange for Who Said
+That?, blue for Read the Room, green for Kindred Spirits, purple for Two Truths & a Lie. The phones match
+(`../huddle/phone/phone.css`, the `data-game="bonfire"` parts): screens rise in piece by piece, buttons press in,
+results pop with a glow, embers drift up the background.
 
 ## Ideas for later
 
