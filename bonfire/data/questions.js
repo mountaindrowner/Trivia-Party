@@ -83,8 +83,8 @@ BONFIRE.QUESTIONS = [
   { c: "powers", t: "pair", q: "Hero or villain (in a movie)?", a: ["Hero", "Villain"] },
   { c: "powers", t: "pair", q: "Super speed or super strength?", a: ["Speed", "Strength"] },
   { c: "powers", t: "text", q: "Your superhero name?", hint: "Captain Nachos" },
-  { c: "powers", t: "text", q: "If you had a theme song, it would be...", hint: "Eye of the Tiger" },
-  { c: "powers", t: "text", q: "One wish (not more wishes). What is it?", hint: "A pet otter" },
+  { c: "powers", t: "text", q: "If you had a theme song, what would it be?", hint: "Eye of the Tiger" },
+  { c: "powers", t: "text", q: "If you got one wish, what would it be?", hint: "A pet otter" },
 
   /* ---------- 🎧 Music, movies & shows ---------- */
   { c: "media", t: "pick", q: "Pick a movie type.", a: ["Action", "Comedy", "Animated", "Scary-ish"] },
@@ -199,10 +199,10 @@ BONFIRE.QUESTIONS = [
   { c: "me", t: "yes", q: "Can you roll your tongue?", find: "can roll their tongue" },
   { c: "me", t: "yes", q: "Do you talk in your sleep (as far as you know)?", find: "talks in their sleep" },
   { c: "me", t: "yes", q: "Can you fall asleep anywhere?", find: "can fall asleep anywhere" },
-  { c: "me", t: "text", q: "Three words your friends would use for you?", hint: "Loud, loyal, hungry" },
+  { c: "me", t: "text", q: "Three words your friends would use to describe you?", hint: "Loud, loyal, hungry" },
   { c: "me", t: "text", q: "Something small that makes your day better?", hint: "A good playlist" },
-  { c: "me", t: "text", q: "Your most-used emoji, in words?", hint: "Crying laughing" },
-  { c: "me", t: "text", q: "A pet peeve?", hint: "Loud chewing" },
+  { c: "me", t: "text", q: "Which emoji do you use the most? Describe it in words.", hint: "Crying laughing" },
+  { c: "me", t: "text", q: "Your biggest pet peeve?", hint: "Loud chewing" },
 
   /* ---------- 📱 Phones & tech ---------- */
   { c: "tech", t: "pick", q: "Your phone battery is usually...", a: ["Full", "About half", "Red", "What phone?"] },
@@ -226,7 +226,7 @@ BONFIRE.QUESTIONS = [
   { c: "future", t: "text", q: "Something you want to learn this year?", hint: "How to skateboard" },
   { c: "future", t: "text", q: "A world record you'd try to break?", hint: "Most pancakes flipped" },
   { c: "future", t: "text", q: "What would you name your own restaurant?", hint: "Taco 'Bout It" },
-  { c: "future", t: "text", q: "If you wrote a book, its title would be...", hint: "Snacks and Other Adventures" },
+  { c: "future", t: "text", q: "If you wrote a book, what would it be called?", hint: "Snacks and Other Adventures" },
 
   /* ---------- 🤪 Random & silly ---------- */
   { c: "silly", t: "pick", q: "Which is the best pasta shape?", a: ["Spaghetti", "Mac", "Bow ties", "Spirals"] },
@@ -325,7 +325,7 @@ BONFIRE.QUESTIONS = [
   { c: "social", t: "pair", q: "Make the plans or show up to the plans?", a: ["Make them", "Show up"], core: true },
   { c: "social", t: "yes", q: "Have you ever started a group chat that took off?", find: "started a group chat that took off" },
   { c: "social", t: "yes", q: "Have you ever gone viral, even a little?", find: "has gone a little viral" },
-  { c: "social", t: "text", q: "Your go-to reaction gif or emoji, in words?", hint: "The skull" },
+  { c: "social", t: "text", q: "Your go-to reaction gif? Describe it in words.", hint: "The skull" },
   { c: "social", t: "text", q: "A phrase you say way too much?", hint: "It is what it is" },
   /* ---------- 🧪 Social experiments: silly little tests of who we are (great for "What percent of us...?") ---------- */
   { c: "experiment", t: "yes", q: "Do you always return your shopping cart?", find: "always returns their shopping cart", core: true },
@@ -383,7 +383,7 @@ BONFIRE.QUESTIONS = [
   { c: "convo", t: "text", q: "A petty opinion you will defend forever?", hint: "Crunchy peanut butter wins" },
   { c: "convo", t: "text", q: "Something everyone should try at least once?", hint: "Night swimming" },
   { c: "convo", t: "text", q: "The most interesting fact you know?", hint: "Octopuses have three hearts" },
-  { c: "convo", t: "text", q: "Anyone from history you'd grab lunch with?", hint: "Benjamin Franklin" },
+  { c: "convo", t: "text", q: "Someone from history you'd grab lunch with?", hint: "Benjamin Franklin" },
   { c: "convo", t: "text", q: "A famous person you'd want as your assistant for a day?", hint: "Gordon Ramsay" },
   { c: "convo", t: "text", q: "A small thing that made your week?", hint: "Free refill" },
   { c: "convo", t: "text", q: "A place nearby everyone should know about?", hint: "The taco truck on 5th" },

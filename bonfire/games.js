@@ -16,17 +16,21 @@
   /** Wait for everyone (or the clock). Returns { promise, end }. */
   function gate() { let end; const promise = new Promise((r) => { end = r; }); return { promise, end }; }
 
+  /** "Nobody caught it!", "Only one of you caught it.", "7 of you caught it.", "Everybody caught it!" */
+  function caught(n, of) { return !n ? "Nobody caught it!" : n === of ? "Everybody caught it!" : n === 1 ? "Only one of you caught it." : `${n} of you caught it.`; }
+
   /* ---------- 🗣️ Who Said That? ---------- */
   BF.game({
     key: "who", name: "Who Said That?", icon: "🗣️", color: "#ff8a3d",
-    tagline: "Somebody here typed this. Who?",
-    how: "Guess who wrote the answer on the screen. If it's yours, keep a straight face!",
-    intro: ["Who Said That. One of you wrote this. Guess who.", "First up. Who Said That. Guess who wrote it."],
+    tagline: "Somebody here wrote it. Can you guess who?",
+    steps: ["👀 An answer goes up on the screen", "📱 Guess who wrote it", "🤫 Yours? Keep a straight face"],
+    how: "An answer someone typed earlier goes up on the big screen. On your phone, guess who wrote it. If it's yours, keep a straight face!",
+    intro: "Who Said That? Here's how it works. I'll show you something one of you typed earlier. On your phone, guess who wrote it. And if it's yours... keep a straight face!",
     async run(a) {
       const SECS = 20;
       const authors = a.shuffle(a.ready(0, 1));
       const rounds = authors.slice(0, 5).map((p) => { const t = a.pickOne(a.answersOf(p.id, true)); return { id: p.id, qi: t.qi, text: t.v }; });
-      if (!rounds.length) { await a.say("Nobody typed anything. Let's skip this one."); return; }
+      if (!rounds.length) { await a.say("Nobody typed an answer this time, so let's skip this one."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < rounds.length; i++) {
@@ -41,7 +45,7 @@
           a.el("blockquote", { class: "bubble" }, r.text),
           timer, lockins));
         a.S("reveal");
-        a.say(`Somebody said: ${r.text}. Who was it?`, { now: true });
+        a.say(`The question was: ${a.Q[r.qi].q} One of you answered: ${r.text}. Who was it?`, { now: true });
         const picks = {}, opts = {}, rnd = {}, started = Date.now();
         for (const id of ids) {
           // The writer and three others (never the guesser), in a random order.
@@ -51,7 +55,7 @@
           a.put(id, { screen: "choices", round: rnd[id], prompt: `Who said "${r.text}"?`, options: opts[id].map((x) => `${a.face(a.byId(x))} ${a.byId(x).name}`),
             keys: ["", "", "", ""], seconds: SECS, header: a.Q[r.qi].q, hint: "Who wrote it?", locked: "Locked in!" });
         }
-        a.put(r.id, { screen: "wait", title: "That's yours! 🤫", text: "Keep a straight face. You score for everyone you fool." });
+        a.put(r.id, { screen: "wait", title: "That's yours! 🤫", text: "Keep a straight face! You get points for everyone you fool." });
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(picks).length} / ${ids.length} guessed`; };
         draw();
@@ -82,7 +86,7 @@
         document.querySelector("#stage .g-who").append(reveal);
         a.S("big");
         a.fx.burstAt(reveal, 50);
-        a.say(right.length > ids.length / 2 ? [`It was ${author.name}. Most of you knew that.`, `${author.name}. Of course.`] : [`It was ${author.name}! Stand up, ${author.name}.`, `It was ${author.name}! Didn't see that coming.`], { now: true });
+        a.say(right.length > ids.length / 2 ? [`It was ${author.name}! Most of you knew that one.`, `It was ${author.name}... of course it was.`] : [`It was ${author.name}! ${author.name}, stand up and take a bow.`, `It was ${author.name}! Bet you didn't see that coming.`], { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const ok = right.includes(id);
@@ -98,15 +102,16 @@
   BF.game({
     key: "room", name: "Read the Room", icon: "🔮", color: "#5b7cff",
     tagline: "How well do you know this crowd?",
-    how: "Guess the percent. Closest wins.",
-    intro: ["Read the Room. Guess the percent. Closest wins.", "Next up. Read the Room. How well do you know this crowd?"],
+    steps: ["❓ A question you all answered", "📱 Guess what percent said it", "🎯 The closest guess wins"],
+    how: "A question you all answered earlier. Guess what percent of the room picked an answer. The closest guess wins.",
+    intro: "Read the Room! I'll bring back a question you all answered earlier. Then you guess: what percent of this room said yes? Slide your guess on your phone. The closest guess wins.",
     async run(a) {
       const SECS = 20;
       // This-or-that and yes/no questions that enough of the room answered (the core ones first).
       const counts = {};
       for (const p of a.cast()) for (const x of a.answersOf(p.id)) if (x.q.t !== "pick") counts[x.qi] = (counts[x.qi] || 0) + 1;
       const qs = Object.keys(counts).map(Number).filter((qi) => counts[qi] >= 3).sort((x, y) => (a.Q[y].core ? 1 : 0) - (a.Q[x].core ? 1 : 0) || counts[y] - counts[x]).slice(0, 3);
-      if (!qs.length) { await a.say("Not enough answers yet. Let's skip this one."); return; }
+      if (!qs.length) { await a.say("We don't have enough answers for this one yet, so let's skip it."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < qs.length; i++) {
@@ -122,9 +127,9 @@
           a.el("h2", {}, "What percent of us said ", a.el("em", {}, opt), "?"),
           meter, a.el("div", { class: "ends" }, a.el("span", {}, `0% ${opt}`), a.el("span", {}, `100% ${opt}`)), timer, lockins));
         a.S("reveal");
-        a.say(`What percent of us said ${opt}?`, { now: true });
+        a.say(`${q.q} What percent of us said: ${opt}?`, { now: true });
         const guesses = {}, rnd = {};
-        for (const id of ids) { rnd[id] = a.round(); a.put(id, { screen: "slider", round: rnd[id], prompt: `What % of us said "${opt}"?`, header: q.q, seconds: SECS, start: 50, hint: "Slide, then lock it in." }); }
+        for (const id of ids) { rnd[id] = a.round(); a.put(id, { screen: "slider", round: rnd[id], prompt: `What % of us said "${opt}"?`, header: q.q, seconds: SECS, start: 50, hint: "Slide to your guess, then tap Lock it in." }); }
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(guesses).length} / ${ids.length} guessed`; };
         draw();
@@ -162,7 +167,7 @@
           small ? a.el("p", { class: "rare" }, `Only ${small.w.length} said ${s.opts[small.k]}: ${a.names(small.w)}. Wave! 👋`) : null));
         a.S("big");
         later(a, 900, () => a.fx.burstAt(mark, 40, ["#5b7cff", "#fff3e0", "#ffb23e"]));
-        a.say(`${actual} percent. ${closest[0] ? `${a.byId(closest[0]).name} was closest.` : ""}${small ? ` Only ${small.w.length} said ${s.opts[small.k]}. ${a.names(small.w)}, give us a wave!` : ""}`, { now: true });
+        a.say(`It's ${actual} percent! ${closest[0] ? (guesses[closest[0]] === actual ? `${a.byId(closest[0]).name} nailed it exactly!` : `${a.byId(closest[0]).name} was closest, with ${guesses[closest[0]]}.`) : ""}${small ? ` And only ${small.w.length} of you said ${s.opts[small.k]}. ${a.names(small.w)}... give us a wave!` : ""}`, { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const v = guesses[id];
@@ -179,8 +184,9 @@
   BF.game({
     key: "kindred", name: "Kindred Spirits", icon: "🤝", color: "#2fbf8f",
     tagline: "Somewhere in this room are your people.",
-    how: "Find the person most like you. Get their secret number. Tap it in.",
-    intro: ["Kindred Spirits. Find the person most like you. Get their secret number. Go!", "Time to move. Kindred Spirits. Go find your match."],
+    steps: ["🤝 You're matched with your most-alike person", "🔎 Find them and ask for their secret number", "📱 Tap it in"],
+    how: "You're matched with the person whose answers are most like yours. Your phone shows their name and your secret number. Find them, ask for their number, and tap it in!",
+    intro: "Kindred Spirits! I've matched each of you with the person whose answers are most like yours. Your phone shows their name, and your own secret number. Go find them, ask for their number, and tap it in. Ready? Go!",
     async run(a) {
       const SECS = 150;
       const ids = a.shuffle(a.cast().map((p) => p.id));
@@ -195,7 +201,7 @@
       const left = [...free];
       while (left.length >= 2) groups.push([left.pop(), left.pop()]);
       if (left.length && groups.length) { const k = left[0]; const best = groups.map((gr, gi) => [gi, alike(k, gr[0]).same]).sort((p, q) => q[1] - p[1])[0][0]; groups[best].push(k); }
-      if (!groups.length) { await a.say("We need more people for this one. Skipping it."); return; }
+      if (!groups.length) { await a.say("We need a few more people for this one, so let's skip it."); return; }
       // Secret numbers, and who each person has to find (round the group).
       const nums = a.shuffle(Array.from({ length: 90 }, (_, k) => k + 10));
       const num = {}, target = {}, group = {}, found = {}, rnd = {}, lit = {};
@@ -224,14 +230,14 @@
         const t = target[id], m = alike(id, t), them = a.byId(t);
         if (!them) { // their match left: let them off, and count them as found
           found[id] = true;
-          a.put(id, { screen: "result", good: true, title: "Your match had to leave!", points: 0, text: "Find someone you haven't met yet and ask them one of tonight's questions.", after: "" });
+          a.put(id, { screen: "result", good: true, title: "Your match had to leave!", points: 0, text: "No problem. Find someone you haven't met yet, and ask them one of tonight's questions.", after: "" });
           return checkGroup(id);
         }
         const decoys = a.shuffle(nums.slice(ids.length).filter((n) => n !== num[t])).slice(0, 3);
         rnd[id] = a.round();
         sent[id] = a.shuffle([num[t], ...decoys]);
         a.put(id, { screen: "choices", round: rnd[id], prompt: `Find ${a.face(them)} ${them.name}!`, note: note || (m.of ? `You match on ${m.same} of ${m.of}` : null),
-          options: sent[id].map(String), keys: ["#", "#", "#", "#"], header: `Your secret number: ${num[id]}`, hint: "Ask for their number. Tap it.", locked: "Checking..." });
+          options: sent[id].map(String), keys: ["#", "#", "#", "#"], header: `Your secret number: ${num[id]}`, hint: `Find ${them.name}, ask for their secret number, and tap it here. (Yours is at the top.)`, locked: "Checking..." });
       };
       const g = gate();
       let done = 0, order = 0;
@@ -272,20 +278,21 @@
       const h = document.querySelector("#stage .g-kindred h2");
       if (h) h.textContent = best ? `Most alike tonight: ${a.byId(best.x).name} & ${a.byId(best.y).name}, ${best.same} of ${best.of} the same!` : "Time!";
       a.S("big");
-      await Promise.all([a.say(best ? `Time! The most alike pair tonight. ${a.byId(best.x).name} and ${a.byId(best.y).name}.` : "Time!", { now: true }), a.wait(6000)]);
+      await Promise.all([a.say(best ? `Time's up! And the most alike pair tonight is... ${a.byId(best.x).name} and ${a.byId(best.y).name}!` : "Time's up!", { now: true }), a.wait(6000)]);
     },
   });
 
   /* ---------- 🃏 Two Truths & a Lie ---------- */
   BF.game({
     key: "truths", name: "Two Truths & a Lie", icon: "🃏", color: "#c05bd6",
-    tagline: "We made one of these up. Spot it.",
-    how: "Three facts about one person. One is fake. Find it.",
-    intro: ["Two Truths and a Lie. One of these is fake. Find it.", "Last one. Two Truths and a Lie. Spot the fake."],
+    tagline: "One of these is made up. Can you spot it?",
+    steps: ["🃏 Three things about one person", "🤥 One of them is made up", "📱 Find the lie"],
+    how: "Three things about one person, from their answers. Two are true, and one is a lie we made up. Find the lie!",
+    intro: "Two Truths and a Lie! I'll show you three things about one of you. Two are true. One is a lie I made up. Find the lie!",
     async run(a) {
       const SECS = 20;
       const spot = a.shuffle(a.ready(3)).slice(0, 5);
-      if (!spot.length) { await a.say("Not enough answers yet. Skipping this one."); return; }
+      if (!spot.length) { await a.say("We don't have enough answers for this one yet, so let's skip it."); return; }
       let handler = () => {};
       a.on({ input: (id, d) => handler(id, d) });
       for (let i = 0; i < spot.length; i++) {
@@ -305,13 +312,13 @@
           a.el("h2", {}, a.el("span", { class: "face" }, a.face(who)), ` ${who.name}`),
           a.el("div", { class: "tcards" }, ...cardsEl), timer, lockins));
         a.S("reveal");
-        a.say(`Three things about ${who.name}. One is a lie.`, { now: true });
+        a.say(`Here are three things about ${who.name}. One of them is a lie.`, { now: true });
         const ids = a.cast().map((p) => p.id).filter((id) => id !== who.id), picks = {}, rnd = {};
         for (const id of ids) {
           rnd[id] = a.round();
           a.put(id, { screen: "choices", round: rnd[id], prompt: `Which is the lie about ${who.name}?`, options: facts.map((f, k) => (f.q.t === "yes" ? `${a.said(f.qi, shownV[k])}: ${f.q.q}` : a.said(f.qi, shownV[k]))), keys: L, seconds: SECS, header: `${a.face(who)} ${who.name}`, locked: "Locked in! Watch the big screen." });
         }
-        a.put(who.id, { screen: "wait", title: "It's you! 😐", text: "Poker face. You score for everyone you fool." });
+        a.put(who.id, { screen: "wait", title: "It's you! 😐", text: "Poker face! One of those is made up. You get points for everyone you fool." });
         const g = gate();
         const draw = () => { count.textContent = `${Object.keys(picks).length} / ${ids.length} guessed`; };
         draw();
@@ -341,7 +348,9 @@
         });
         a.S(right.length ? "right" : "wrong");
         a.fx.burstAt(cardsEl[lieK], 40, ["#c05bd6", "#fff3e0", "#ffb23e"]);
-        a.say(`The lie was ${L[lieK]}. ${right.length} of you caught it.`, { now: true });
+        // The truth, in words that make sense out loud ("Cal has been on a plane", not "Yes").
+        const truth = lie.q.t === "yes" ? (lie.v ? `Truth is, ${who.name} ${lie.q.find}.` : `Truth is, ${who.name} said no to: ${lie.q.q}`) : `${who.name}'s real answer was: ${a.said(lie.qi, lie.v)}.`;
+        a.say(`The lie was ${L[lieK]}! ${truth} ${caught(right.length, ids.length)}`, { now: true });
         for (const id of ids) {
           if (!a.byId(id)) continue;
           const ok = picks[id] === lieK;

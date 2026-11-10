@@ -357,3 +357,8 @@ html body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibil
 .stagebox .results h1 .ch { display: inline-block; animation: drop 0.7s cubic-bezier(.2, 1.6, .4, 1) both; animation-delay: calc(var(--i) * 40ms + 0.3s); }
 
 @media (prefers-reduced-motion: reduce) { .stagebox::after { animation: none; } }
+/* Title cards: how to play, in three short steps. */
+.stagebox .card .steps { list-style: none; margin: 10px 0 0; padding: 0; display: flex; gap: 14px; }
+.stagebox .card .steps li { padding: 12px 20px; border-radius: 16px; background: var(--glass); border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); font-size: 20px; font-weight: 700;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: enter 0.55s cubic-bezier(.2, 1.2, .4, 1) both; animation-delay: calc(1.1s + var(--i) * 0.35s); }

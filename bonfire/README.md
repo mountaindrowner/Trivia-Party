@@ -40,7 +40,8 @@ dating, politics, health, or where anyone lives or works. `npm run check:content
 
 ## The show
 
-Each game gets a title card in its own colour, read out loud, then plays a few rounds. The top 10 shows between
+Each game gets a title card in its own colour, with how to play in three short steps on the TV, the full
+explanation read out loud (and captioned), and the same instructions on every phone. Then it plays a few rounds. The top 10 shows between
 games. Points carry across the night.
 
 1. **🗣️ Who Said That?** (5 rounds) One typed answer in a big speech bubble, read out loud. Every phone picks who

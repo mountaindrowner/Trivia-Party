@@ -29,6 +29,12 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
   tv.on('pageerror', (e) => errs.push('tv: ' + e.message));
   tv.on('console', (m) => { if (m.type() === 'error' || /Content Security Policy/.test(m.text())) errs.push('tv console: ' + m.text()); });
   await tv.addInitScript(() => localStorage.setItem('bonfire-prefs', JSON.stringify({ voice: false, muted: true, kindle: 10 })));
+  // Everything the host says, in order (CAPTIONS=1 prints the night's script at the end).
+  await tv.addInitScript(() => {
+    window.__said = [];
+    new MutationObserver(() => { const c = document.querySelector('.caption .text'); const t = c && c.textContent; if (t && window.__said.at(-1) !== t) window.__said.push(t); })
+      .observe(document, { subtree: true, childList: true, characterData: true });
+  });
   await tv.goto(BASE + '/tv');
   await tv.screenshot({ path: `${OUT}/tv-00-title.png` });
   await tv.click('text=Light the fire');
@@ -179,6 +185,7 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
   const found = await tv.$$eval('.match.found', (m) => m.length).catch(() => 0);
   console.log(`       screens seen by bots: ${JSON.stringify(st.kinds)} · errors: ${st.errors.join(',')} · ${Math.round((Date.now() - t0) / 1000)}s · kindred cards lit before the end: ${found}`);
   check(!st.errors.length, 'no bot got an error');
+  if (process.env.CAPTIONS) console.log('\nTHE HOST SAID:\n' + (await tv.evaluate(() => window.__said)).map((x) => '  · ' + x).join('\n'));
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors');
   console.log(`\n${ok} ok, ${bad} failed`);
   console.log(`       dropped lines that rejoined: ${st.drops || 0}`);

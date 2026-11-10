@@ -426,7 +426,7 @@ window.BF = (() => {
     keepAwake();
     crackle.start();
     if (!prefs.muted && prefs.music) music.start();
-    host.say("Welcome to the fire. Grab your phones and join in.", { now: true });
+    host.say("Welcome to the fire! Grab your phone, scan the code, and answer a few questions while everyone gets here.", { now: true });
     show(el("section", { class: "title" }, el("h1", { class: "logo" }, "Bonfire"), el("p", { class: "tag" }, "Lighting the fire...")));
     let r = saved();
     if (r) { const still = await fetch(`${BASE}/api/rooms/${r.code}`).then((x) => x.ok).catch(() => false); if (!still) r = null; }
@@ -464,7 +464,7 @@ window.BF = (() => {
           joinCount++;
           clearTimeout(joinTimer);
           joinTimer = setTimeout(() => {
-            if (phase === "lobby") host.say(joinCount > 1 ? [`${joinCount} more around the fire.`, `${joinCount} more just pulled up a log.`] : [`Welcome, ${p.name}.`, `Hey ${p.name}, pull up a log.`, `${p.name} is here.`], { minor: true });
+            if (phase === "lobby") host.say(joinCount > 1 ? [`${joinCount} more around the fire!`, `${joinCount} more just pulled up a log.`] : [`Welcome, ${p.name}!`, `Hey, ${p.name}. Pull up a log.`, `${p.name} is here!`], { minor: true });
             joinCount = 0;
           }, 1800);
           setTimeout(() => fx.burstAt(stage.querySelector(`.log[data-key="${p.id}"]`), 20), 60);
@@ -509,7 +509,8 @@ window.BF = (() => {
   }
 
   const GAMES = [];
-  /** A mini-game registers itself: { key, name, icon, tagline, how, intro, run(api) }. */
+  /** A mini-game registers itself: { key, name, icon, color, tagline, steps (3 short ones for the TV), how (for the
+      phones), intro (what the host says), run(api) }. */
   function game(def) { GAMES.push(def); }
 
   let tickerTimer = 0;
@@ -611,7 +612,7 @@ window.BF = (() => {
   async function startShow() {
     if (phase !== "lobby" && phase !== "end") return;
     const ready = cast().filter((p) => answersOf(p.id).length >= 2);
-    if (ready.length < 3) { host.say("Give everyone a minute to answer a few questions.", { now: true }); return; }
+    if (ready.length < 3) { host.say("Not quite yet! Give everyone a minute to answer a few questions first.", { now: true }); return; }
     let t = step();
     clearInterval(tickerTimer);
     lobbyNode = null;
@@ -623,8 +624,8 @@ window.BF = (() => {
     S("go");
     fx.heat(0.7);
     const list = GAMES.filter((g) => prefs.games[g.key] !== false);
-    put("players", { screen: "wait", title: "Here we go! 🔥", text: "Phones up. The first game is about to start." });
-    await host.say(["Alright. Phones up. Let's play.", "The fire's going. Let's play."], { now: true });
+    put("players", { screen: "wait", title: "Here we go! 🔥", text: "Keep your phone handy. The first game is about to start." });
+    await host.say(["Alright, everybody. Keep your phones handy... let's play!", "The fire's going. Phones out... let's play!"], { now: true });
     for (let i = 0; i < list.length; i++) {
       if (!live(t)) return;
       const g = list[i];
@@ -646,7 +647,7 @@ window.BF = (() => {
       el("div", { class: "big-icon" }, g.icon),
       el("h1", { "aria-label": g.name }, lettered(g.name)),
       el("p", { class: "tagline" }, g.tagline),
-      el("p", { class: "how" }, g.how)));
+      g.steps ? el("ol", { class: "steps" }, ...g.steps.map((x, i) => el("li", { style: `--i:${i}` }, x))) : el("p", { class: "how" }, g.how)));
     put("players", { screen: "wait", title: `${g.icon} ${g.name}`, text: g.how });
     S("big");
     fx.burst(640, 260, 50, [g.color, "#fff3e0", "#ffb23e"]);
@@ -662,7 +663,7 @@ window.BF = (() => {
       el("ol", { class: "board" }, ...order.map((p, i) => el("li", { class: i < 3 ? "top" : "", style: `--i:${i}` }, el("span", { class: "rank" }, i + 1), el("span", { class: "face" }, face(p)), el("span", { class: "name" }, p.name), el("span", { class: "pts", "data-to": scores[p.id] }, "0")))),
       el("p", { class: "next" }, `Next up: ${next.icon} ${next.name}`)));
     stage.querySelectorAll(".standings:not(.leaving) .pts[data-to]").forEach((n, i) => setTimeout(() => countUp(n, Number(n.dataset.to)), 250 + i * 90));
-    if (order[0]) host.say([`${order[0].name} is out in front.`, `${order[0].name} leads the way so far.`], { now: true });
+    if (order[0]) host.say([`${order[0].name} is out in front!`, `So far, ${order[0].name} leads the way.`], { now: true });
     for (const p of cast()) {
       const place = order.findIndex((x) => x.id === p.id) + 1;
       put(p.id, { screen: "wait", title: place ? `You're ${nth(place)}!` : "Keep going!", text: `${fmt(scores[p.id] || 0)} points. Next up: ${next.icon} ${next.name}` });
@@ -688,8 +689,8 @@ window.BF = (() => {
           return el("div", { class: "part", style: `--w:${Math.max(pc, 4)}%` }, el("b", {}, `${pc}%`), el("span", {}, o));
         })))))));
     const lead = facts.map((f) => { const k = f.s.who.map((w, i) => [w.length, i]).sort((a, b) => b[0] - a[0])[0]; return { f, k: k[1], pc: Math.round((100 * k[0]) / f.s.total) }; });
-    const said1 = lead.slice(0, 2).map((x) => `${x.pc} percent said ${x.f.s.opts[x.k]}`).join(". ");
-    await Promise.all([host.say(facts.length ? `Here's who we are. ${said1}.` : "Here's who we are.", { now: true }), wait(7000, t)]);
+    const said1 = lead.slice(0, 2).map((x) => `${Q[x.f.qi].q} ${x.pc} percent of us said: ${x.f.s.opts[x.k]}`).join(". ");
+    await Promise.all([host.say(facts.length ? `Here's who we are, as a group. ${said1}.` : "Here's who we are, as a group.", { now: true }), wait(9000, t)]);
     if (!live(t)) return;
     // 2. Awards, always kind.
     const ids = cast().map((p) => p.id), best = (o) => ids.filter((id) => o[id]).sort((a, b) => o[b] - o[a])[0];
@@ -707,7 +708,7 @@ window.BF = (() => {
         el("div", { class: "awards" }, ...awards.map(([a, who, why], i) => el("div", { class: "award", style: `--i:${i}` }, el("small", {}, a), el("strong", {}, who), why ? el("span", {}, why) : null)))));
       S("big");
       fx.confetti(140);
-      await Promise.all([host.say(awards.slice(0, 2).map(([a, who]) => `${a.replace(/^\S+\s/, "")}. ${who}.`).join(" "), { now: true }), wait(8000, t)]);
+      await Promise.all([host.say(`And now, tonight's awards. ${awards.slice(0, 2).map(([a, who]) => `${a.replace(/^\S+\s/, "")}: ${who}!`).join(" ")}`, { now: true }), wait(9000, t)]);
       if (!live(t)) return;
     }
     // 3. The podium, and everyone's card on their phone.
@@ -723,7 +724,7 @@ window.BF = (() => {
     S("big");
     fx.confetti(220);
     stage.querySelectorAll(".results:not(.leaving) .podium b[data-to]").forEach((n) => setTimeout(() => countUp(n, Number(n.dataset.to), 0, 1600), 1300));
-    if (order[0]) host.say(`${order[0].name} wins the night! Thanks for playing. Now go talk to someone new.`, { now: true });
+    if (order[0]) host.say(`And the winner of the night is... ${order[0].name}! Thanks for playing, everybody. Now go find someone you learned something about tonight, and say hi.`, { now: true });
     for (const p of cast()) {
       const place = order.findIndex((x) => x.id === p.id) + 1;
       const mine = shuffle(answersOf(p.id)).map((a) => [a.qi, blurb(a.qi, a.v)]).filter((x) => x[1]).slice(0, 3).map(([qi, b]) => `${catIcon(qi)} ${b[0].toUpperCase()}${b.slice(1)}`);
