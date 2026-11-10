@@ -63,14 +63,17 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
   const bots = [];
   for (let i = 0; i < NAMES.length; i++) {
     const bot = { name: NAMES[i], last: null };
-    await new Promise((resolve) => {
+    await new Promise((resolve) => { const open = () => {
+      // Like a real phone: a keep-alive every 20 seconds, and rejoin with the saved key if the line drops.
       const ws = new WebSocket(`${wsBase}/ws/${code}?role=player`);
       bot.ws = ws;
+      const hb = setInterval(() => { try { ws.send('{"t":"hb"}'); } catch (e) {} }, 20000);
+      ws.onclose = () => { clearInterval(hb); if (bot.id && !bot.done) { st.drops = (st.drops || 0) + 1; setTimeout(open, 800); } };
       const sendIn = (data) => { try { ws.send(JSON.stringify({ t: 'input', data })); } catch (e) {} };
       ws.onmessage = (e) => {
         const m = JSON.parse(e.data);
-        if (m.t === 'hello') return ws.send(JSON.stringify({ t: 'join', name: NAMES[i], avatar: AV[i % AV.length] }));
-        if (m.t === 'joined') { bot.id = m.id; return resolve(); }
+        if (m.t === 'hello') return ws.send(JSON.stringify(bot.id ? { t: 'rejoin', id: bot.id, key: bot.key } : { t: 'join', name: NAMES[i], avatar: AV[i % AV.length] }));
+        if (m.t === 'joined') { if (!m.rejoined) { bot.id = m.id; bot.key = m.key; resolve(); } return; }
         if (m.t === 'error') { st.errors.push(NAMES[i] + ':' + m.code); return; }
         if (m.t !== 'msg') return;
         const s = m.data; bot.last = s;
@@ -93,7 +96,7 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
           later(400 + Math.random() * 2000, () => sendIn({ type: 'slider', round: s.round, value: Math.floor(Math.random() * 101) }));
         }
       };
-    });
+    }; open(); });
     bots.push(bot);
     if (i === 5) await tv.screenshot({ path: `${OUT}/tv-01-lobby-filling.png` });
   }
@@ -163,7 +166,8 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
   check(!st.errors.length, 'no bot got an error');
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors');
   console.log(`\n${ok} ok, ${bad} failed`);
-  for (const bot of bots) try { bot.ws.close(); } catch (e) {}
+  console.log(`       dropped lines that rejoined: ${st.drops || 0}`);
+  for (const bot of bots) { bot.done = true; try { bot.ws.close(); } catch (e) {} }
   await b.close();
   process.exit(bad || errs.length ? 1 : 0);
 })();
