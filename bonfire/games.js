@@ -194,7 +194,7 @@
       if (!groups.length) { await a.say("We need a few more people for this one. Skipping it."); return; }
       // Secret numbers, and who each person has to find (round the group).
       const nums = a.shuffle(Array.from({ length: 90 }, (_, k) => k + 10));
-      const num = {}, target = {}, group = {}, found = {}, rnd = {};
+      const num = {}, target = {}, group = {}, found = {}, rnd = {}, lit = {};
       ids.forEach((id, k) => { num[id] = nums[k]; });
       groups.forEach((gr, gi) => gr.forEach((id, k) => { target[id] = gr[(k + 1) % gr.length]; group[id] = gi; }));
       const best = all.filter((p) => p.of >= 3).sort((p, q) => q.r - p.r || q.same - p.same)[0];
@@ -215,7 +215,11 @@
       const sent = {}; // the numbers on each phone's buttons, in the order it got them
       const ask = (id, note) => {
         const t = target[id], m = alike(id, t), them = a.byId(t);
-        if (!them) return;
+        if (!them) { // their match left: let them off, and count them as found
+          found[id] = true;
+          a.put(id, { screen: "result", good: true, title: "Your match had to leave!", points: 0, text: "Find someone you haven't met yet and ask them one of tonight's questions.", after: "" });
+          return checkGroup(id);
+        }
         const decoys = a.shuffle(nums.slice(ids.length).filter((n) => n !== num[t])).slice(0, 3);
         rnd[id] = a.round();
         sent[id] = a.shuffle([num[t], ...decoys]);
@@ -231,20 +235,25 @@
         const pick = sent[id] ? sent[id][d.pick | 0] : NaN;
         if (pick !== num[target[id]]) { a.S("wrong"); return ask(id, "Not their number! Ask again."); }
         found[id] = true;
-        const gi = group[id], gr = groups[gi], them = a.byId(target[id]);
+        const them = a.byId(target[id]);
         a.S("found");
         a.add(id, 150);
-        a.put(id, { screen: "result", good: true, title: `You found ${them.name}!`, points: 150, text: common(id, target[id]).length ? `You both: ${common(id, target[id]).join(" · ")}` : "Now find out what you have in common!", after: "Talk about it while the others find each other." });
-        if (gr.every((x) => found[x])) {
-          order++; done++;
-          const card = document.querySelector(`#stage .match[data-g="${gi}"]`);
-          if (card) { card.classList.add("found"); card.append(a.el("b", { class: "order" }, `#${order}`)); a.fx.burstAt(card, 30, ["#2fbf8f", "#fff3e0", "#ffb23e"]); }
-          if (order <= 3) gr.forEach((x) => a.add(x, 100 * (4 - order)));
-          if (order === 1) { a.stats.foundAt.push(gr); a.say(`${gr.map((x) => a.byId(x).name).join(" and ")} found each other first!`, { now: true }); }
-          draw();
-          if (done === groups.length) g.end();
-        }
+        a.put(id, { screen: "result", good: true, title: `You found ${them ? them.name : "them"}!`, points: 150, text: common(id, target[id]).length ? `You both: ${common(id, target[id]).join(" · ")}` : "Now find out what you have in common!", after: "Talk about it while the others find each other." });
+        checkGroup(id);
       } });
+      /** When everyone in a match has found their person (or left), the match lights up on the TV. */
+      function checkGroup(id) {
+        const gi = group[id], gr = groups[gi];
+        if (lit[gi] || !gr.every((x) => found[x] || !a.byId(x))) return;
+        lit[gi] = true;
+        order++; done++;
+        const card = document.querySelector(`#stage .match[data-g="${gi}"]`);
+        if (card) { card.classList.add("found"); card.append(a.el("b", { class: "order" }, `#${order}`)); a.fx.burstAt(card, 30, ["#2fbf8f", "#fff3e0", "#ffb23e"]); }
+        if (order <= 3) gr.forEach((x) => a.add(x, 100 * (4 - order)));
+        if (order === 1 && gr.filter((x) => a.byId(x)).length > 1) { a.stats.foundAt.push(gr); a.say(`${a.names(gr)} found each other first!`, { now: true }); }
+        draw();
+        if (done === groups.length) g.end();
+      }
       ids.forEach((id) => ask(id));
       const tick = bar(a, timer, SECS, g.end);
       await g.promise;

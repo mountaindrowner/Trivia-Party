@@ -257,6 +257,19 @@ window.BF = (() => {
     return { screen: "wait", title: "Pull up a log! 🔥", text: "You're in from the next round." };
   }
 
+  /* Everyone's answers are kept in this tab (sessionStorage) too, so reloading the TV page doesn't lose them. */
+  const KEEP = "bonfire-answers";
+  function keep() { try { if (room) sessionStorage.setItem(KEEP, JSON.stringify({ code: room.code, coreQs, prof })); } catch (e) {} }
+  function restore(code) {
+    try {
+      const k = JSON.parse(sessionStorage.getItem(KEEP) || "null");
+      if (!k || k.code !== code) return false;
+      coreQs = k.coreQs;
+      for (const [id, p] of Object.entries(k.prof)) prof[id] = Object.assign(p, { round: -1 });
+      return true;
+    } catch (e) { return false; }
+  }
+
   /* ---------- Kindling: questions while everyone joins ---------- */
   const prof = {};   // id -> { queue: [question index], at, round, answers: { index: answer }, done }
   let coreQs = [];   // the questions everyone answers tonight
@@ -279,6 +292,22 @@ window.BF = (() => {
     const not = new Set([...coreQs, ...skip]);
     const text = shuffle(Q.map((q, i) => i).filter((i) => Q[i].t === "text" && allowed(i) && !not.has(i))).slice(0, 1);
     return shuffle([...text, ...shuffle(Q.map((q, i) => i).filter((i) => Q[i].t !== "text" && allowed(i) && !not.has(i))).slice(0, n - 1)]);
+  }
+  /** The leader changed a setting: questions not asked yet follow it. (The core ones only change if nobody has
+      answered anything yet, so the room can still be compared.) */
+  function replan() {
+    const anyone = Object.values(prof).some((p) => Object.keys(p.answers).length);
+    if (!anyone) chooseCore();
+    for (const [id, p] of Object.entries(prof)) {
+      const asked = p.queue.slice(0, p.at + (p.done ? 0 : 1));
+      const want = anyone ? p.queue.filter((qi) => coreQs.includes(qi) && !asked.includes(qi) && allowed(qi)) : [];
+      const fresh = (anyone ? more(Math.max(0, prefs.kindle - asked.length - want.length), asked) : makeQueue(prefs.kindle).filter((qi) => !asked.includes(qi)))
+        .slice(0, Math.max(0, prefs.kindle - asked.length - want.length));
+      p.queue = [...asked, ...want, ...fresh];
+      if (p.done && p.at < p.queue.length) { p.done = false; askNext(id); }
+    }
+    keep();
+    refresh();
   }
   function startKindling(id) {
     if (!prof[id]) prof[id] = { queue: makeQueue(prefs.kindle), at: 0, round: -1, answers: {}, done: false };
@@ -310,6 +339,7 @@ window.BF = (() => {
     } else if (d.type !== "skip") return;
     p.at++;
     p.round = -1;
+    keep();
     if (lobbyNode) { refresh(); const chip = stage.querySelector(`.log[data-key="${id}"]`); if (chip && p.at === p.queue.length) { fx.burstAt(chip, 18); S("found"); } }
     setTimeout(() => askNext(id), 250);
   }
@@ -351,7 +381,7 @@ window.BF = (() => {
     save({ code: r.code, hostKey: r.hostKey });
     room = { code: r.code, hostKey: r.hostKey, vip: null, locked: false };
     players = []; ending = false;
-    chooseCore();
+    if (!restore(r.code)) chooseCore();
     connect();
     lobby();
   }
@@ -369,7 +399,6 @@ window.BF = (() => {
   function onMessage(m) {
     if (m.t === "room") {
       retry = 0;
-      const had = players.length;
       players = m.room.players;
       room.vip = m.room.vip;
       room.locked = m.room.locked;
@@ -390,7 +419,8 @@ window.BF = (() => {
         else sendTo([p.id], screenFor(p.id));
       }
       if (ev.kind === "back" && p) sendTo([p.id], screenFor(p.id));
-      if (ev.kind === "host-connected" && had) players.forEach((x) => x.connected && sendTo([x.id], screenFor(x.id)));
+      // The TV (re)connected, after a blip or a reload: every phone gets its screen again (in the lobby, its question).
+      if (ev.kind === "host-connected") players.forEach((x) => { if (!x.connected) return; if (phase === "lobby" && !x.audience) startKindling(x.id); else sendTo([x.id], screenFor(x.id)); });
       refresh();
       return;
     }
@@ -496,8 +526,8 @@ window.BF = (() => {
         el("div", { class: "games" }, ...GAMES.map((g) => el("button", { class: "game" + (prefs.games[g.key] === false ? " off" : ""), style: `--c:${g.color}`, onclick: () => { prefs.games[g.key] = prefs.games[g.key] === false; if (!GAMES.some((x) => prefs.games[x.key] !== false)) prefs.games[g.key] = true; savePrefs(); drawSettings(); S("tick"); } },
           el("span", { class: "icon" }, g.icon), el("strong", {}, g.name))))),
       el("div", { class: "opts" },
-        chips("Questions each", [[8, "8"], [10, "10"], [12, "12"]], prefs.kindle, (v) => { prefs.kindle = v; }),
-        chips("Faith questions", [[true, "On"], [false, "Off"]], prefs.faith, (v) => { prefs.faith = v; }),
+        chips("Questions each", [[8, "8"], [10, "10"], [12, "12"]], prefs.kindle, (v) => { prefs.kindle = v; replan(); }),
+        chips("Faith questions", [[true, "On"], [false, "Off"]], prefs.faith, (v) => { prefs.faith = v; replan(); }),
         el("button", { class: "btn go start", onclick: startShow }, "🔥 Start the games"),
         el("button", { class: "icon-btn lock", title: "Lock the room (no new players)", onclick: () => hostSend({ t: "lock", locked: !room.locked }) }, room.locked ? "🔓" : "🔒"),
         el("button", { class: "icon-btn" + (prefs.voice ? "" : " off"), title: "The host's voice", onclick: () => { prefs.voice = !prefs.voice; savePrefs(); drawSettings(); if (prefs.voice) host.say("I'm back.", { now: true }); else host.quiet(); } }, "🗣"),
@@ -514,6 +544,7 @@ window.BF = (() => {
     save(null);
     room = null; players = []; cur = null; lobbyNode = null;
     for (const k in prof) delete prof[k];
+    try { sessionStorage.removeItem(KEEP); } catch (e) {}
     for (const k in shown) delete shown[k];
     titleScreen();
   }
@@ -525,7 +556,7 @@ window.BF = (() => {
   async function startShow() {
     if (phase !== "lobby" && phase !== "end") return;
     const ready = cast().filter((p) => answersOf(p.id).length >= 2);
-    if (ready.length < 3) return;
+    if (ready.length < 3) { host.say("Give everyone a minute to answer a few questions first. We need at least three people ready.", { now: true }); return; }
     let t = step();
     clearInterval(tickerTimer);
     lobbyNode = null;

@@ -102,6 +102,21 @@ const TYPED = ['Fries in a milkshake', 'Captain Nachos', 'Iceland', 'A red panda
   }
   check(bots.length === N - 1, `${N} people joined (${N - 1} bots and a real phone)`);
 
+  // The leader turns Faith questions off: nobody gets one from now on.
+  await tv.click('.pill:has-text("Faith questions")');
+  const faithLeft = await tv.evaluate(() => Object.values(BONFIRE_TV.prof).reduce((n, p) => n + p.queue.slice(p.at + 1).filter((qi) => BONFIRE.QUESTIONS[qi].c === 'faith').length, 0));
+  check(faithLeft === 0, `turning Faith questions off takes them out of everyone's questions still to come (${faithLeft} left)`);
+  // Reload the TV page while people are still answering: their answers come back, and the phones carry on.
+  const sum = () => tv.evaluate(() => Object.values(BONFIRE_TV.prof).reduce((n, p) => n + Object.keys(p.answers).length, 0));
+  const before = await sum();
+  await tv.reload();
+  await tv.click('text=Light the fire');
+  await tv.waitForSelector('.lobby .code span', { timeout: 10000 });
+  const sameCode = await tv.$$eval('.lobby .code span', (x) => x.map((y) => y.textContent).join(''));
+  await tv.waitForTimeout(1500);
+  const after = await sum();
+  check(sameCode === code && after >= before && before > 0, `reloading the TV keeps the room and everyone's answers (${before} before, ${after} after)`);
+
   // The real phone answers its own questions.
   const phoneTurn = async () => {
     try {
