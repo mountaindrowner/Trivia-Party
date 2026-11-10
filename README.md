@@ -5,16 +5,17 @@ Trial Room minigames, and race Grumbles the Goat to the Narrow Gate. Your host i
 
 It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to answer).
 
-**Two games live in this repo, on the same bones:**
+**Three games live in this repo, on the same bones:**
 
-| | Trivia Holy Party (this game) | Spark Wars (`spark/`) |
-| --- | --- | --- |
-| For | Kids and families | The middle school youth group |
-| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams |
-| Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` |
+| | Trivia Holy Party (this game) | Spark Wars (`spark/`) | Bonfire Ice Breaker (`bonfire/`) |
+| --- | --- | --- | --- |
+| For | Kids and families | The middle school youth group | Young adults getting to know each other |
+| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams | Up to 40 phones |
+| Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` | `bonfire.thecrossroads.workers.dev/tv` |
 
 The shared bones are in `huddle/`: the room server (one code, deployed once per game), the phone page (one code,
-each game with its own look) and the Bible questions in `js/data.js` and `js/more/`. See `spark/README.md`.
+each game with its own look) and the Bible questions in `js/data.js` and `js/more/`. See `spark/README.md` and
+`bonfire/README.md`.
 
 ## Play
 
@@ -81,6 +82,7 @@ Edit `js/data.js` (age levels) or `js/data-modes.js` (Challenge Modes). The firs
 | --- | --- |
 | `index.html`, `js/`, `css/` | Trivia Holy Party (plain browser scripts sharing `THP`; `js/data.js`, `js/more/` are the questions) |
 | `spark/` | Spark Wars, the TV side (see `spark/README.md`) |
+| `bonfire/` | Bonfire Ice Breaker, the TV side and its questions (see `bonfire/README.md`) |
 | `huddle/phone/` | The phone page both games use |
 | `huddle/server/` | The room server (a Cloudflare Worker) and its tests, `huddle/build.py` builds its pages |
 | `itch/` | The itch.io build of Trivia Holy Party |

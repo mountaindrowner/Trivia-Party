@@ -1,66 +1,76 @@
-# Bonfire Ice Breaker (draft design)
+# Bonfire Ice Breaker
 
-A get-to-know-you party game for up to 40 people, each on their own phone. Everyone answers a few quick, fun
-questions about themselves while the room fills up, and the games are built out of those answers: guess who said
-what, guess how the room voted, find your match, hunt each other down for bingo. The point isn't the score. It's
-that by the end everyone knows a few surprising things about people they didn't know before.
+A get-to-know-you night for up to 40 young adults, each on their own phone. Everyone answers a few quick, fun
+questions about themselves while the room fills up, then the show runs a string of mini-games built out of those
+answers, and ends on the Campfire Report. The point isn't the score: by the end everyone knows a few surprising
+things about people they didn't know before.
 
-- **Where:** its own site, `bonfire.thecrossroads.workers.dev` (TV at `/tv`), on the same bones as Spark Wars and
-  Holy Huddle: the room server and the phone page in `../huddle/`, the TV page here.
-- **Who:** up to 40 players (plus an audience), any age from middle school up. Nothing too personal (see
-  `data/questions.js` for the rules the questions follow).
+- **Play:** open `https://bonfire.thecrossroads.workers.dev/tv` on the TV or projector (a laptop is easiest) and
+  click **Light the fire**. Everyone else goes to `bonfire.thecrossroads.workers.dev` on their phone, or scans the
+  QR code, and types the 4-letter code.
+- **Same bones as Spark Wars and Holy Huddle:** the room server and the phone page are in `../huddle/` (the
+  `bonfire` room type allows 40 players and 20 in the audience).
+- **Files:** `core.js` (the room, the questions while joining, the host's voice, the show and the Campfire Report),
+  `games.js` (the four mini-games), `data/questions.js` (the library), `bonfire.css`, `index.html`.
+  `../huddle/build.py` inlines it all into one page for the server.
+- **Tests:** `node tools/run-tests.mjs e2e` plays a whole night with 40 phones (`../tests/e2e/bonfire.cjs`).
 
-## Kindling: answering questions while everyone joins
+## Kindling: questions while everyone joins
 
-As each phone joins it starts getting questions, one at a time, about 10 in all (3 to 4 minutes):
+As each phone joins it gets questions one at a time: 8, 10 or 12 (the leader picks), about 3 minutes.
 
-- **Shared questions:** about 4 that everyone answers, so the whole room can be compared ("How many of us...?").
-- **Random questions:** the rest, picked from the library, so every night is different and people have different
-  things to discover about each other.
-- A mix of formats: this-or-that, pick one, yes/no ("Have you ever..."), and one or two short typed answers.
-- **Skip** on every question. Typed answers go through the same word filter as Spark Wars, and the phone says
-  plainly that answers may show on the big screen with your name.
-- **The TV:** the fire grows as answers come in, each new player's name drops into the circle, and live stats
-  pop up ("23 of you would rather fly than be invisible!").
-- **The leader picks:** which categories are in (Faith on or off, say), and how many questions.
-- **Later, if wanted:** a link to answer ahead of time, at home, before the night.
+- **Core questions:** 4 that everyone answers, so the room can be compared ("How many of us...?") and everyone
+  has something to match on. Picked each night from the questions marked `core`.
+- **The rest at random**, so every night is different, including 2 short typed answers.
+- **Skip this one** on every question. Typed answers go through the server's word filter, and the phone says
+  answers can show up on the big screen with your name.
+- **The TV:** everyone's name around the fire, filling with colour as they answer (lit up when they're done), and
+  a live fact about the room every few seconds ("Text or call? 16 of 32 said Text").
+- **The leader picks:** the games (click one to leave it out), questions each, and Faith questions on or off.
+- The VIP (the first to join) can start the games from their phone.
 
-The library (`data/questions.js`): 247 questions in 15 categories (food, would you rather, powers, music and movies,
-hobbies, sports, places, animals, growing up, totally me, tech, dreams, silly, faith, have you ever).
+The library (`data/questions.js`): 271 questions in 18 categories (food, would you rather, powers, music and movies,
+hobbies, sports, places, animals, growing up, totally me, tech, dreams, silly, faith, have you ever, adulting,
+throwback, group chat life). Light and revealing, never too personal: no family situations, money, looks,
+dating, politics, health, or where anyone lives or works. `npm run check:content` checks every one.
 
-## The games (each 3 to 6 minutes, pick any order)
+## The show
 
-1. **Who Said That?** One typed answer on the TV ("The weirdest food combo I love: fries in a milkshake"). Every
-   phone gets 4 names to choose from (the person who wrote it gets "Shh! Keep a straight face"). Points for
-   guessing right; the writer gets points for everyone they fool. Then the reveal: "It was JORDAN! Stand up,
-   Jordan!"
-2. **Read the Room.** A this-or-that from the shared questions: "What percent of us would rather fly?" Everyone
-   slides a guess on their phone; closest wins. The reveal shows the split, then calls out the rare ones: "Only 3
-   of you picked cats: Ava, Sam and Liam. Find each other!"
-3. **Kindred Spirits.** Everyone is paired with the person whose answers match theirs the most (or an opposites
-   round: the least). The phone says "Your match: Jordan 🦊. You agree on 7 of 9! Go find them." When both tap
-   "Found you!", they get points, and their phones show 3 things they have in common to talk about. The TV shows
-   the pairs linking up live. The room actually moves.
-4. **Find Someone Who (bingo).** Each phone gets a 4×4 card from the room's own yes answers ("has been on a
-   plane", "can juggle"), so every square really is someone in the room. Go ask people; when you find one, tap the
-   square and pick their name. It checks their answer. First bingo wins; the TV shows the leaders.
-5. **Two Truths and a Lie.** The spotlight lands on one player: the TV shows three things about them, built from
-   their answers, with one flipped to false ("Jordan would rather be invisible"). Everyone guesses the lie;
-   Jordan gets points for each person fooled. 6 to 8 spotlights a round.
-6. **The Campfire Report** (the ending). The group's personality: "This group is 64% night owls, Team Tacos
-   wins, everyone's dream trip is Tokyo". Funny awards made from the answers (always kind: "Most Adventurous:
-   9 Have You Evers"), and a trading card of each player's top answers on their own phone to screenshot.
+Each game gets a title card in its own colour, read out loud, then plays a few rounds. The top 10 shows between
+games. Points carry across the night.
 
-## Look and feel
+1. **🗣️ Who Said That?** (5 rounds) One typed answer in a big speech bubble, read out loud. Every phone picks who
+   wrote it from 4 names; the writer's phone says "keep a straight face". Right: 100 to 150 (quicker is more); the
+   writer gets 25 for everyone fooled (up to 300). Then: "It was Mia! Mia, stand up and take a bow."
+2. **🔮 Read the Room** (3 rounds) "What percent of us said Books?" Everyone slides a guess on their phone; the
+   meter fills to the real number. Up to 150 points for the closest. Then the rare ones get called out by name:
+   "Only 3 of you said Cats: Ava, Sam and Liam. Give us a wave."
+3. **🤝 Kindred Spirits** Everyone is paired with the person whose answers match theirs the most (a trio if the
+   numbers are odd). Each phone shows "Your match: Pip. You agree on 4 of 4!" and its own secret number; go find
+   them, ask for their number, tap it in. Found: 150 points, the first three pairs a bonus, and both phones show
+   what you have in common to talk about. The TV lights up each pair as they find each other (2½ minutes).
+4. **🃏 Two Truths & a Lie** (5 spotlights) Three things about one player from their answers, one flipped to false.
+   Everyone guesses the lie (100 points); the player gets 25 for everyone fooled.
+5. **🔥 The Campfire Report** "This is us": how the room split on the core questions, read out loud. Then kind
+   awards (best poker face, reads the room, knows everybody, twin flames, most adventurous, found their match
+   first), the podium, and on every phone a card with three of your own answers. **Play again** (same answers,
+   new rounds) or **More questions** (5 new questions each, then play again).
 
-A campfire at night: a deep blue sky with stars, the fire in the middle of the TV, sparks rising, logs around it
-where the players' names sit. Each game gets its own twist on that world, like the Spark Wars games.
+## The host: a voice, no face
 
-## To decide
+The device's own speech (the Web Speech API), so it can say names. It picks the best voice the device has: Edge's
+"Natural" voices and the iPhone's "Enhanced" and "Premium" voices sound almost human; Chrome's "Google US
+English" is fine. Everything it says is also captioned at the bottom of the TV. 🗣 in the lobby turns it off.
+On an iPhone or iPad the sound starts after the first tap on the TV page.
 
-- Who it's for (youth group, adults, mixed, a retreat), so the question mix and the jokes fit.
-- Questions on the night (as above) or a questionnaire ahead of time, or both.
-- Which games for the first version (suggested: Who Said That?, Read the Room, Kindred Spirits, then the
-  Campfire Report).
-- Teams or no teams (an icebreaker may work better with everyone mixing).
-- The host: Barnabas again, or someone new for the campfire.
+## The look
+
+A campfire at night: stars, a moon, pine trees and mountains, the fire flickering at the bottom with embers rising,
+and a crackling fire sound. Shrikhand (a fat retro script) for the big words, Outfit for the rest. Each mini-game
+has its own colour: orange for Who Said That?, blue for Read the Room, green for Kindred Spirits, purple for Two
+Truths & a Lie. The phones match (`../huddle/phone/phone.css`, the `data-game="bonfire"` part).
+
+## Ideas for later
+
+- **Find Someone Who** (bingo): a 4×4 card of the room's own yes answers ("has been on a plane"); go ask people.
+- A link to answer the questions at home before the night.

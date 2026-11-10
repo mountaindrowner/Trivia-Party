@@ -26,10 +26,10 @@ export default [
     },
     rules,
   },
-  // Bonfire Ice Breaker on the TV: browser scripts sharing BONFIRE (its data) and SW (the Spark Wars core it builds on).
+  // Bonfire Ice Breaker on the TV: browser scripts sharing BONFIRE (the questions) and BF (core.js).
   {
     files: ["bonfire/**/*.js"],
-    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", SW: "writable", THP: "writable", qrcode: "readonly" } },
+    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", BF: "writable", THP: "writable", qrcode: "readonly" } },
     rules,
   },
   // The phone page.
@@ -43,7 +43,7 @@ export default [
   // End-to-end tests (Node + Playwright; the callbacks they pass to page.evaluate run in the browser).
   {
     files: ["tests/**/*.cjs"],
-    languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser, SPARK: "readonly", THP: "writable", SPARK_DATA: "writable", SPARK_VOICE: "writable" } },
+    languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser, SPARK: "readonly", BONFIRE_TV: "readonly", THP: "writable", SPARK_DATA: "writable", SPARK_VOICE: "writable" } },
     rules,
   },
   // Node: tests, tools, this file.

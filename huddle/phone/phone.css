@@ -151,3 +151,47 @@ html[data-game="spark"] .line .card { background: #33206b; border: 3px solid var
   border: 4px solid #0d0820; box-shadow: 6px 6px 0 #0d0820; transform: rotate(-2deg); animation: pop 0.4s ease-out; }
 .banner small { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.14em; }
 .banner strong { font: 800 112px/1 "Bricolage Grotesque", "Lilita One", system-ui, sans-serif; }
+
+/* A number to slide (Bonfire's "What percent of us...?") */
+.slider-value { font-size: 72px; line-height: 1; }
+input.slider { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; padding: 0; border-radius: 99px; background: rgba(255, 255, 255, 0.2); box-shadow: none; border: 0; }
+input.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; border-radius: 50%; background: var(--gold); border: 4px solid var(--ink); }
+input.slider::-moz-range-thumb { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); border: 4px solid var(--ink); }
+.slider-ends { display: flex; justify-content: space-between; font-size: 14px; color: var(--soft); margin-top: -8px; }
+
+/* ---------- Bonfire: same page, a campfire at night (Shrikhand and Outfit) ---------- */
+html[data-game="bonfire"] {
+  --ink: #1a0d07; --sky: #1d2550; --sky-hi: #3b2a6b; --night: #0c1030; --gold: #ffb23e; --pink: #ff6b3d; --green: #7ee08a; --soft: #e9d8c4;
+}
+html[data-game="bonfire"] body {
+  font-family: "Outfit", system-ui, sans-serif; font-weight: 600;
+  background: radial-gradient(ellipse 80% 45% at 50% 105%, rgba(255, 140, 50, 0.55), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1.5px) 0 0 / 46px 52px,
+    radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1.5px) 23px 30px / 61px 47px, linear-gradient(#0c1030, #1d2550 60%, #3a1d2a) fixed;
+}
+html[data-game="bonfire"] :is(h1, h2, .big) { font-family: "Shrikhand", "Georgia", serif; font-weight: 400; letter-spacing: 0; }
+html[data-game="bonfire"] h1 { color: var(--gold); text-shadow: 0 0 24px rgba(255, 140, 50, 0.7), 3px 3px 0 var(--ink); }
+html[data-game="bonfire"] h2 { color: #fff3e0; }
+html[data-game="bonfire"] :is(.prompt, button, input, .me .name) { font-family: "Outfit", system-ui, sans-serif; letter-spacing: 0; }
+html[data-game="bonfire"] .prompt { font-size: 24px; font-weight: 700; line-height: 1.2; }
+html[data-game="bonfire"] button { font-weight: 700; font-size: 21px; border: 0; border-radius: 18px; background: linear-gradient(#ffc45e, #ff8a3d); color: #2a1206; box-shadow: 0 5px 0 #8a3a12, 0 10px 24px rgba(255, 120, 40, 0.35); }
+html[data-game="bonfire"] button:active { transform: translateY(4px); box-shadow: 0 1px 0 #8a3a12; }
+html[data-game="bonfire"] button.ghost { background: rgba(255, 255, 255, 0.08); color: #fff3e0; border: 2px solid rgba(255, 255, 255, 0.25); box-shadow: none; font-size: 18px; }
+html[data-game="bonfire"] .choices button { color: #fff; font-weight: 700; font-size: 20px; text-align: left; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35); }
+html[data-game="bonfire"] .choices button:nth-child(4n+1) { background: linear-gradient(#ff8a3d, #e5602a); }
+html[data-game="bonfire"] .choices button:nth-child(4n+2) { background: linear-gradient(#5b7cff, #3f5ad9); }
+html[data-game="bonfire"] .choices button:nth-child(4n+3) { background: linear-gradient(#2fbf8f, #1f9a72); }
+html[data-game="bonfire"] .choices button:nth-child(4n+4) { background: linear-gradient(#c05bd6, #9a3fb3); }
+html[data-game="bonfire"] .choices.two button { min-height: 96px; justify-content: center; font-size: 24px; text-align: center; }
+html[data-game="bonfire"] .choices button[aria-pressed="true"] { outline: 4px solid #fff3e0; outline-offset: 3px; }
+html[data-game="bonfire"] input { border: 0; border-radius: 16px; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35); font-weight: 700; }
+html[data-game="bonfire"] .me { background: rgba(12, 16, 48, 0.6); border: 2px solid rgba(255, 178, 62, 0.4); border-radius: 24px; }
+html[data-game="bonfire"] .header { background: rgba(255, 178, 62, 0.15); border: 2px solid rgba(255, 178, 62, 0.5); color: #ffd9a0; font-weight: 700; }
+html[data-game="bonfire"] .tag.gold { background: var(--gold); color: var(--ink); }
+html[data-game="bonfire"] .result { border-radius: 24px; }
+html[data-game="bonfire"] .result.good { background: linear-gradient(rgba(47, 191, 143, 0.45), rgba(47, 191, 143, 0.25)); }
+html[data-game="bonfire"] .result.bad { background: linear-gradient(rgba(255, 107, 61, 0.4), rgba(255, 107, 61, 0.2)); }
+html[data-game="bonfire"] .timer i { background: linear-gradient(90deg, #ff6b3d, #ffb23e); }
+html[data-game="bonfire"] .bar { background: var(--gold); }
+html[data-game="bonfire"] input.slider { background: linear-gradient(90deg, #5b7cff, #ff6b3d); }
+html[data-game="bonfire"] .banner { border: 0; box-shadow: 0 8px 30px rgba(255, 120, 40, 0.5); }
+html[data-game="bonfire"] .banner strong { font-family: "Shrikhand", serif; font-weight: 400; }

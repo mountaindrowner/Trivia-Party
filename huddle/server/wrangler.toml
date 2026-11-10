@@ -1,6 +1,7 @@
 # Two sites from the same relay code (src/relay.js), each with its own pages and its own rooms:
 #   holyhuddle  Holy Huddle, in Trivia Holy Party (8 players)   npx wrangler deploy
 #   sparkwars   Spark Wars, the youth group game (30 players)   npx wrangler deploy --env spark
+#   bonfire     Bonfire Ice Breaker (40 players)                npx wrangler deploy --env bonfire
 # Run `python3 huddle/build.py` first (see huddle/README.md).
 name = "holyhuddle"
 main = "src/holy.js"
@@ -74,3 +75,35 @@ LIMIT_WINDOW_SEC = "600"
 LIMIT_CREATE = "20"
 LIMIT_LOOK = "300"
 LIMIT_WS = "600"
+
+# ---------- Bonfire Ice Breaker ----------
+[env.bonfire]
+name = "bonfire"
+main = "src/bonfire.js"
+workers_dev = true
+
+[[env.bonfire.rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[[env.bonfire.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[env.bonfire.durable_objects.bindings]]
+name = "GATES"
+class_name = "Gate"
+
+[[env.bonfire.migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Gate"]
+
+[env.bonfire.vars]
+ALLOWED_ORIGINS = "https://bonfire.thecrossroads.workers.dev"
+IDLE_MINUTES = "120"
+# 40 phones on one Wi-Fi share one address, and each may reconnect a few times.
+LIMIT_WINDOW_SEC = "600"
+LIMIT_CREATE = "20"
+LIMIT_LOOK = "400"
+LIMIT_WS = "800"

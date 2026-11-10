@@ -1,7 +1,7 @@
 // Runs the tests against local copies of both sites (started here with `wrangler dev`, then stopped).
 //   node tools/run-tests.mjs relay   the room server: 68 checks on the Holy Huddle site, 16 on the Spark Wars site
 //   node tools/run-tests.mjs e2e     whole games in a browser (Playwright): Holy Huddle, a Spark Wars night with 30
-//                                    players, and a Lightning Round at tables. Slow (about 15 minutes).
+//                                    players, a Lightning Round at tables, and a Bonfire night with 40. Slow (about 20 minutes).
 // Run `npm run build` first. Screenshots from the e2e tests go to tests/e2e/shots/ (not committed).
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -48,10 +48,12 @@ try {
   } else if (which === "e2e") {
     servers.push(await serve("Holy Huddle", 8787, []));
     servers.push(await serve("Spark Wars", 8788, ["--env", "spark"]));
+    servers.push(await serve("Bonfire", 8789, ["--env", "bonfire"]));
     const shots = (n) => path.join("tests", "e2e", "shots", n);
     results.push(["e2e: Holy Huddle game", await run("Holy Huddle: a whole game", "tests/e2e/holy-huddle.cjs", ["http://127.0.0.1:8787", shots("holy"), "jericho,order"])]);
     results.push(["e2e: Spark Wars night", await run("Spark Wars: a night with 30 players", "tests/e2e/spark-night.cjs", ["http://127.0.0.1:8788", shots("night")])]);
     results.push(["e2e: Lightning Round at tables", await run("Spark Wars: Lightning Round at 4 tables", "tests/e2e/lightning.cjs", ["http://127.0.0.1:8788", shots("lightning"), "4", "4"])]);
+    results.push(["e2e: Bonfire night", await run("Bonfire: a night with 40 people", "tests/e2e/bonfire.cjs", ["http://127.0.0.1:8789", shots("bonfire"), "40"])]);
   } else throw new Error(`unknown test set "${which}" (relay or e2e)`);
 } finally {
   servers.forEach(stop);

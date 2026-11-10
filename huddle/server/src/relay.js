@@ -1,4 +1,4 @@
-/* The room relay shared by our phone party games (Holy Huddle in Trivia Holy Party, and Spark Wars): the small
+/* The room relay shared by our phone party games (Holy Huddle in Trivia Holy Party, Spark Wars and Bonfire): the small
    server between the TV and the phones.
    It knows nothing about any game. It only runs rooms: makes room codes, lets phones join with a nickname, passes
    messages between the TV (the host) and the phones, and lets phones that drop out rejoin. The TV runs the game.
@@ -16,6 +16,9 @@ export const GAMES = {
   "spark-wars": { maxPlayers: 30, maxAudience: 20,
     avatars: ["bolt", "flame", "rocket", "comet", "fox", "wolf", "shark", "tiger", "panda", "owl", "octopus", "dino",
       "dragon", "robot", "alien", "ghost", "ball", "guitar", "skate", "pizza", "crown", "gem", "cactus", "eagle2"] },
+  "bonfire": { maxPlayers: 40, maxAudience: 20,
+    avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
+      "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "wolf", "guitar"] },
 };
 const rules = (game) => GAMES[game] || GAMES["holy-trivia"];
 const MAX_LIFETIME_MS = 12 * 3600e3; // a room never lives longer than this, even if it's busy

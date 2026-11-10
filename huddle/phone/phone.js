@@ -8,12 +8,16 @@
     sheep: "🐑", donkey: "🫏", lion: "🦁", dove: "🕊️", fish: "🐟", camel: "🐫", whale: "🐋", raven: "🐦", frog: "🐸", ox: "🐂", goat: "🐐", eagle: "🦅",
     bolt: "⚡", flame: "🔥", rocket: "🚀", comet: "☄️", fox: "🦊", wolf: "🐺", shark: "🦈", tiger: "🐯", panda: "🐼", owl: "🦉", octopus: "🐙", dino: "🦖",
     dragon: "🐉", robot: "🤖", alien: "👾", ghost: "👻", ball: "🏀", guitar: "🎸", skate: "🛹", pizza: "🍕", crown: "👑", gem: "💎", cactus: "🌵", eagle2: "🦅",
+    tent: "⛺", moon: "🌙", star: "⭐", pine: "🌲", mountain: "🏔️", canoe: "🛶", lantern: "🏮", bear: "🐻", raccoon: "🦝", deer: "🦌", hedgehog: "🦔",
+    butterfly: "🦋", mushroom: "🍄", coffee: "☕", dango: "🍡", compass: "🧭", map: "🗺️", sparkles: "✨", snail: "🐌", beaver: "🦫",
   };
-  const GAME = document.documentElement.dataset.game === "spark" ? "spark" : "holy";
-  const BRAND = GAME === "spark"
-    ? { name: "Spark Wars", logo: "⚡", face: "⚡", pick: "Pick your icon:", find: "Find your name on the big screen.", look: "Look at the big screen!" }
-    : { name: "Holy Huddle", logo: "🐑", face: "🐑", pick: "Pick your animal:", find: "Find your name on the TV.", look: "Look at the TV!" };
-  const SAVE_KEY = GAME === "spark" ? "sparkwars-session" : "holyhuddle-session";
+  const GAME = ["spark", "bonfire"].includes(document.documentElement.dataset.game) ? document.documentElement.dataset.game : "holy";
+  const BRAND = {
+    spark: { name: "Spark Wars", logo: "⚡", face: "⚡", pick: "Pick your icon:", find: "Find your name on the big screen.", look: "Look at the big screen!" },
+    bonfire: { name: "Bonfire", logo: "🔥", face: "🔥", pick: "Pick your campfire icon:", find: "Find your name around the fire.", look: "Look at the big screen!" },
+    holy: { name: "Holy Huddle", logo: "🐑", face: "🐑", pick: "Pick your animal:", find: "Find your name on the TV.", look: "Look at the TV!" },
+  }[GAME];
+  const SAVE_KEY = { spark: "sparkwars-session", bonfire: "bonfire-session", holy: "holyhuddle-session" }[GAME];
   const SESSION_HOURS = 3;
   const app = document.getElementById("app");
   const bar = document.getElementById("bar");
@@ -192,6 +196,7 @@
     if (kind === "multi") return multiScreen(s);
     if (kind === "write") return writeScreen(s);
     if (kind === "slots") return slotsScreen(s);
+    if (kind === "slider") return sliderScreen(s);
     if (kind === "result") {
       buzz(s.good ? [40, 40, 40] : 200);
       return show(header(s), el("div", { class: "result " + (s.good ? "good" : "bad") },
@@ -253,7 +258,9 @@
       } }, el("span", { class: "k", "aria-hidden": "true" }, (s.keys || keys)[i % (s.keys || keys).length]), o)));
     const note = el("p", { class: "center soft" }, s.hint || "Tap your answer.");
     const timer = el("div", { class: "timer", "aria-hidden": "true" }, el("i"));
-    show(header(s), s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note);
+    // An optional way out (Bonfire's questions: "Skip this one").
+    const skip = s.skip ? el("button", { class: "ghost", onclick: () => { if (!done && send({ type: "skip", round: s.round })) { done = true; list.classList.add("done"); note.textContent = "Skipped!"; buzz(15); } } }, s.skip) : null;
+    show(header(s), s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timer : null, list, note, skip);
     if (s.seconds) {
       // The TV keeps the real time; this bar is only a guide, counted from when the question arrived.
       const fill = timer.firstChild, total = s.seconds * 1000, end = Date.now() + total;
@@ -368,6 +375,21 @@
     show(header(s), s.note ? el("p", { class: "center" }, el("span", { class: "tag gold" }, s.note)) : null, el("p", { class: "prompt" }, s.prompt || ""),
       s.seconds ? timeBar(s.seconds) : null, el("div", { class: "writebox" }, box, count), err, go, auto, note);
     setTimeout(() => { try { box.focus(); } catch (e) {} }, 50);
+  }
+  /** Pick a number on a slider, then lock it in (Bonfire's "What percent of us...?"). Sends { type: "slider", round, value }. */
+  function sliderScreen(s) {
+    const min = s.min ?? 0, max = s.max ?? 100, unit = s.unit ?? "%";
+    let done = false;
+    const big = el("div", { class: "big center slider-value" }, `${s.start ?? 50}${unit}`);
+    const range = el("input", { type: "range", class: "slider", min, max, step: s.step || 1, value: s.start ?? 50, "aria-label": s.prompt || "Your guess" });
+    range.addEventListener("input", () => { big.textContent = `${range.value}${unit}`; if (range.value % 10 === 0) buzz(5); });
+    const note = el("p", { class: "center soft" }, s.hint || "Slide, then lock it in.");
+    const go = el("button", { onclick: () => {
+      if (done || !send({ type: "slider", round: s.round, value: Number(range.value) })) return;
+      done = true; range.disabled = true; go.disabled = true; go.textContent = "Locked in!"; note.textContent = s.locked || "Locked in! Look at the big screen."; buzz(30);
+    } }, s.button || "Lock it in!");
+    show(header(s), el("p", { class: "prompt" }, s.prompt || ""), s.seconds ? timeBar(s.seconds) : null, big, range,
+      el("div", { class: "slider-ends" }, el("span", {}, `${min}${unit}`), el("span", {}, `${max}${unit}`)), go, note);
   }
   /** Where does this card go? Tap a gap in the line (Timeline). Sends the gap's index: 0 = before the first card. */
   function slotsScreen(s) {

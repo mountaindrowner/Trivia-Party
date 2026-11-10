@@ -1,7 +1,8 @@
-/* global THP, SPARK_DATA, SPARK_LINES, SPARK_VOICE -- the game files this loads set these */
+/* global THP, SPARK_DATA, SPARK_LINES, SPARK_VOICE, BONFIRE -- the game files this loads set these */
 // Checks every piece of game content for mistakes a game would trip over: `npm run check:content`.
 //   Trivia Holy Party: the questions and the final-race prompts.
 //   Spark Wars: Bluff the Bible facts, Timeline sets, the curriculum lessons, Barnabas's lines and his recordings.
+//   Bonfire Ice Breaker: the "about me" questions.
 // It loads the same files the games load and exits with an error if anything is wrong.
 import fs from "node:fs";
 import path from "node:path";
@@ -88,6 +89,26 @@ for (const l of lessons) {
     seenL.set(q.q, l.n);
   }
 }
+
+/* ---------- Bonfire Ice Breaker: the "about me" questions ---------- */
+globalThis.BONFIRE = {};
+load("bonfire/data/questions.js");
+const seenB = new Set();
+BONFIRE.QUESTIONS.forEach((q, i) => {
+  checked++;
+  const at = `Bonfire question ${i} "${String(q.q).slice(0, 50)}"`;
+  if (!BONFIRE.CATS[q.c]) bad(at, `unknown category "${q.c}"`);
+  if (!q.q || !q.q.trim()) bad(at, "no question text");
+  if (q.t === "pair" && (!Array.isArray(q.a) || q.a.length !== 2)) bad(at, "a this-or-that needs exactly 2 options");
+  else if (q.t === "pick" && (!Array.isArray(q.a) || q.a.length < 3 || q.a.length > 4)) bad(at, "a pick-one needs 3 or 4 options");
+  else if (q.t === "yes" && !q.find) bad(at, "a yes/no needs `find` (how a yes reads)");
+  else if (q.t === "text" && !q.hint) bad(at, "a typed answer needs a `hint`");
+  else if (!["pair", "pick", "yes", "text"].includes(q.t)) bad(at, `unknown type "${q.t}"`);
+  if ((q.a || []).some((x) => x.length > 32)) bad(at, "an option is longer than 32 characters (too long for a phone button)");
+  if (seenB.has(q.q)) bad(at, "asked twice");
+  seenB.add(q.q);
+});
+if (BONFIRE.QUESTIONS.filter((q) => q.core && q.t !== "text").length < 8) bad("Bonfire", "needs at least 8 core questions (the ones everyone answers)");
 
 /* Barnabas: every line the code asks for exists; recordings exist for every line; recorded files exist. */
 const code = ["spark/core.js", ...fs.readdirSync(path.join(ROOT, "spark")).filter((f) => f.endsWith(".js") && f !== "core.js" && f !== "host-lines.js").map((f) => "spark/" + f)]

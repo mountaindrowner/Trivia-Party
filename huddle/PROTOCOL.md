@@ -105,12 +105,13 @@ The phone page draws these; anything it doesn't know shows the lobby. Every scre
 | `lobby` | | The player's animal and name, "You're in!", and for the VIP **Everybody's in!** | `{ type: "start" }` |
 | `wait` | `title`, `text` | A waiting message | |
 | `message` | `title`, `text` | A message | |
-| `choices` | `round`, `prompt`, `options`, `seconds`; optional `note` (a gold tag on top), `hint` (the line under the buttons), `locked` (shown once picked), `keys` (the symbols on the buttons), `look` (`jars` or `targets` for Spark Wars) | Answer buttons and a time bar | `{ type: "pick", round, pick }` once |
+| `choices` | `round`, `prompt`, `options`, `seconds`; optional `note` (a gold tag on top), `hint` (the line under the buttons), `locked` (shown once picked), `keys` (the symbols on the buttons), `look` (`jars` or `targets` for Spark Wars, `two` for Bonfire's this-or-that), `skip` (a button label: a way out) | Answer buttons and a time bar | `{ type: "pick", round, pick }` once, or `{ type: "skip", round }` |
 | `tap` | `round`, `title`, `text`, `seconds`, `label` | A big button to tap as fast as you can | `{ type: "taps", round, n }` a few times a second |
 | `order` | `round`, `title`, `items`, `seconds` | Items to tap first to last, with Undo | `{ type: "order", round, seq }` (indexes into `items`) |
 | `multi` | `round`, `prompt`, `options`, `seconds` | Tap all that apply, then **Lock it in!** | `{ type: "multi", round, picks }` |
 | `write` | `round`, `prompt`, `placeholder`, `max` (40), `auto` (a button label, e.g. "🎲 Lie for me"), `seconds`, `hint`, `locked`, `note`, `button` | A text box to type a short answer (Spark Wars' Bluff the Bible) | `{ type: "write", round, text }`, or `{ type: "write", round, auto: true }` |
 | `slots` | `round`, `title`, `card`, `items` (the line so far, first to last), `seconds`, `hint`, `locked` | The new card, and the line with a gap button before, between and after the cards (Timeline) | `{ type: "slot", round, at }` (0 = before the first card) |
+| `slider` | `round`, `prompt`, `min` (0), `max` (100), `unit` ("%"), `start` (50), `step`, `seconds`, `hint`, `locked`, `button` | A big number and a slider, then **Lock it in!** (Bonfire's Read the Room) | `{ type: "slider", round, value }` |
 | `result` | `good`, `title`, `points`, `text`, `after` (the line under it; `""` for none) | Right or wrong, and the points | |
 | `final` | `place`, `points`, `of`, `audience`, `unit` (default "points"), `text` | The medal or place, and the points | |
 

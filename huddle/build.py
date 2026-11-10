@@ -1,10 +1,12 @@
 """Builds the pages each party-game site hands out, into huddle/server/static/<site>/ (not committed):
   holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
   spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
+  bonfire/phone.html  the Bonfire join page            bonfire/tv.html  Bonfire Ice Breaker, for the TV at /tv
   spark/clips/, spark/icons/, spark/files.js   Barnabas's recorded lines (/voice/clips/), the app icons and the
                     web app manifest, bundled into the Spark Wars Worker
 The phone page is the same code for both, with its own look (<html data-game="...">).
-Run before `npx wrangler deploy` (Holy Huddle) or `npx wrangler deploy --env spark` (Spark Wars), or `wrangler dev`."""
+Run before `npx wrangler deploy` (Holy Huddle), `npx wrangler deploy --env spark` (Spark Wars),
+`npx wrangler deploy --env bonfire` (Bonfire), or `wrangler dev`."""
 import os, re, subprocess, sys
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +34,12 @@ spark = (base.replace('<html lang="en">', '<html lang="en" data-game="spark">')
          .replace('content="#2b1a7a"', 'content="#23104f"'))
 assert 'data-game="spark"' in spark and "Bricolage" in spark and "Luckiest" in spark and 'data-theme="talents"' in spark
 write(os.path.join(static, "spark", "phone.html"), spark)
+bonfire = (base.replace('<html lang="en">', '<html lang="en" data-game="bonfire">')
+           .replace("<title>Holy Huddle</title>", "<title>Bonfire</title>")
+           .replace("family=Lilita+One&", "family=Shrikhand&family=Outfit:wght@500;600;700;800&family=Lilita+One&")
+           .replace('content="#2b1a7a"', 'content="#0c1030"'))
+assert 'data-game="bonfire"' in bonfire and "Shrikhand" in bonfire
+write(os.path.join(static, "bonfire", "phone.html"), bonfire)
 
 # Trivia Holy Party: the whole game, for the TV.
 subprocess.run([sys.executable, os.path.join(root, "tools", "build.py"), os.path.join(static, "holy", "tv.html")], check=True)
@@ -43,6 +51,14 @@ html = re.sub(r'<script src="([^"]+\.js)"></script>',
               lambda m: "<script>\n" + read(root, "spark", m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
 assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Spark Wars file was not inlined"
 write(os.path.join(static, "spark", "tv.html"), html)
+
+# Bonfire Ice Breaker: bonfire/index.html with its css and js (and the question library) inlined.
+html = read(root, "bonfire", "index.html")
+html = re.sub(r'<link rel="stylesheet" href="([^"]+\.css)">', lambda m: "<style>\n" + read(root, "bonfire", m.group(1)) + "\n</style>", html)
+html = re.sub(r'<script src="([^"]+\.js)"></script>',
+              lambda m: "<script>\n" + read(root, "bonfire", m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
+assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Bonfire file was not inlined"
+write(os.path.join(static, "bonfire", "tv.html"), html)
 
 # Barnabas's recorded lines, bundled into the Spark Wars Worker: the MP3s next to a module that imports them all.
 # (Cloudflare's static-asset upload doesn't work from a cloud session, so they ride along in the Worker; at about
