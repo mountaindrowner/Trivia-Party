@@ -1,6 +1,6 @@
 # Bonfire Ice Breaker
 
-A get-to-know-you night for up to 40 young adults, each on their own phone. Everyone answers a few quick, fun
+A get-to-know-you night for up to 40 young adults, each on their own phone. No teams: everyone mixes. Everyone answers a few quick, fun
 questions about themselves while the room fills up, then the show runs a string of mini-games built out of those
 answers, and ends on the Campfire Report. The point isn't the score: by the end everyone knows a few surprising
 things about people they didn't know before.
@@ -20,7 +20,7 @@ things about people they didn't know before.
 As each phone joins it gets questions one at a time: 8, 10 or 12 (the leader picks), about 3 minutes.
 
 - **Core questions:** 4 that everyone answers, so the room can be compared ("How many of us...?") and everyone
-  has something to match on. Picked each night from the questions marked `core`.
+  has something to match on. Picked each night from the questions marked `core`: always two social experiments.
 - **The rest at random**, so every night is different, including 2 short typed answers.
 - **Skip this one** on every question. Typed answers go through the server's word filter, and the phone says
   answers can show up on the big screen with your name.
@@ -29,9 +29,13 @@ As each phone joins it gets questions one at a time: 8, 10 or 12 (the leader pic
 - **The leader picks:** the games (click one to leave it out), questions each, and Faith questions on or off.
 - The VIP (the first to join) can start the games from their phone.
 
-The library (`data/questions.js`): 271 questions in 18 categories (food, would you rather, powers, music and movies,
-hobbies, sports, places, animals, growing up, totally me, tech, dreams, silly, faith, have you ever, adulting,
-throwback, group chat life). Light and revealing, never too personal: no family situations, money, looks,
+The library (`data/questions.js`): 347 questions in 21 categories: silly and random (fights with geese, fruit
+villains, things that feel illegal), the basics (eggs, seasons, introvert or extrovert), good conversation (light
+but interesting, the kind icebreaker lists recommend: the best concert you've been to, a skill you'd master
+instantly, a petty opinion you'll defend forever), social experiments (do you return your shopping cart, would you
+press the button, could you beat a goose: two of these are in everyone's questions each night, for Read the Room),
+and food, would you rather, powers, music and movies, hobbies, sports, places, animals, growing up, totally me,
+tech, dreams, faith, have you ever, adulting, throwback and group chat life. Light and revealing, never too personal: no family situations, money, looks,
 dating, politics, health, or where anyone lives or works. `npm run check:content` checks every one.
 
 ## The show

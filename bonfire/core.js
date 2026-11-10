@@ -264,7 +264,9 @@ window.BF = (() => {
   function chooseCore() {
     const pool = shuffle(Q.map((q, i) => i).filter((i) => Q[i].core && allowed(i)));
     const twoWay = pool.filter((i) => Q[i].t === "pair" || Q[i].t === "yes");
-    coreQs = [...twoWay.slice(0, 3), ...pool.filter((i) => !twoWay.slice(0, 3).includes(i)).slice(0, 1)];
+    // Two of the silly social experiments every night (the best ones for "What percent of us...?"), then two more.
+    const tests = twoWay.filter((i) => Q[i].c === "experiment").slice(0, 2), others = twoWay.filter((i) => !tests.includes(i));
+    coreQs = [...tests, ...others.slice(0, 1), ...pool.filter((i) => !tests.includes(i) && i !== others[0]).slice(0, 1)];
   }
   function makeQueue(n, skip) {
     const not = new Set([...coreQs, ...(skip || [])]);
