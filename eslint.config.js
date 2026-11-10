@@ -26,6 +26,12 @@ export default [
     },
     rules,
   },
+  // Bonfire Ice Breaker on the TV: browser scripts sharing BONFIRE (its data) and SW (the Spark Wars core it builds on).
+  {
+    files: ["bonfire/**/*.js"],
+    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", SW: "writable", THP: "writable", qrcode: "readonly" } },
+    rules,
+  },
   // The phone page.
   { files: ["huddle/phone/**/*.js"], languageOptions: { sourceType: "script", globals: globals.browser }, rules },
   // The room server: a Cloudflare Worker (ES modules).
