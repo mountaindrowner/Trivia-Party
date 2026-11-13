@@ -7,6 +7,11 @@
    See huddle/PROTOCOL.md for every message. */
 import { DurableObject } from "cloudflare:workers";
 import { checkName, checkText } from "./names.js";
+import * as divide from "./divide.js";
+
+/* Games the server itself runs (for the rest, the TV or the host's phone runs the game and the server only passes
+   messages). Signal Divide is one: its cards must stay secret even from the host's phone. */
+const ENGINES = { "signal-divide": divide };
 
 const CODE_LETTERS = "BCDFGHJKLMNPRSTVWZ"; // no vowels, so a code can't spell a word; no Q, X or Y
 /** Each game's room rules. A site only makes rooms for its own games (see holy.js and spark.js). */
@@ -20,6 +25,10 @@ export const GAMES = {
     avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
       "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "wolf", "guitar"] },
   // Lights Out, on the Bonfire site: one night of wolves at camp, run from the host's phone. No audience: everyone has a card.
+  // Signal Divide, on the Bonfire site: 12 to 15 people in two zones, run by the server itself (divide.js).
+  "signal-divide": { maxPlayers: 15, maxAudience: 0,
+    avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
+      "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "guitar"] },
   "lights-out": { maxPlayers: 12, maxAudience: 0,
     avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
       "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "guitar"] },
@@ -216,7 +225,37 @@ export class Room extends DurableObject {
     if (Date.now() - this.savedAt > 60e3) await this.save();
   }
   async armAlarm() {
-    await this.ctx.storage.setAlarm(Math.min(this.room.lastActive + this.idleMs, this.room.createdAt + MAX_LIFETIME_MS));
+    const e = this.engine(), next = e ? e.nextDeadline(this.room.engine) : null;
+    await this.ctx.storage.setAlarm(Math.min(this.room.lastActive + this.idleMs, this.room.createdAt + MAX_LIFETIME_MS, next ?? Infinity));
+  }
+
+  /* --- a game the server runs itself (ENGINES) --- */
+  engine() {
+    return (this.room && ENGINES[this.room.game]) || null;
+  }
+  /** The engine's idea of who's in the room: everyone who joined, with whether they're connected right now. */
+  syncEngine() {
+    const list = Object.values(this.room.players).filter((p) => !p.audience).sort((a, b) => a.joinedAt - b.joinedAt);
+    this.engine().sync(this.room.engine, list.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, connected: p.connected })));
+  }
+  /** After any change: lock the room when it's full or the cards are dealt, save, and send every screen its own view. */
+  async engineChanged() {
+    const st = this.room.engine, max = rules(this.room.game).maxPlayers;
+    this.room.locked = st.phase !== "lobby" || Object.keys(st.roster).length >= max;
+    await this.save();
+    this.broadcast();
+    await this.armAlarm();
+  }
+  /** Each phone gets only what it may know (divide.playerView); the host's phone gets the console, and its own card
+      view when the host plays. */
+  broadcast(only) {
+    const e = this.engine(), st = this.room.engine, now = Date.now();
+    for (const ws of this.sockets((a) => a.role === "player" && a.id && (!only || a.id === only))) {
+      const id = ws.deserializeAttachment().id;
+      this.send(ws, { t: "msg", data: { screen: "divide", view: e.playerView(st, id, now) } });
+    }
+    const host = this.hostSocket();
+    if (host && !only) this.send(host, { t: "view", data: e.hostView(st, now), me: st.host.plays ? e.playerView(st, divide.HOST_ID, now) : null });
   }
 
   /** Called by the front door. A code still in use is refused, so the front door picks another. */
@@ -227,6 +266,7 @@ export class Room extends DurableObject {
       code, game, createdAt: Date.now(), lastActive: Date.now(), hostKeyHash: await hash(hostKey),
       locked: false, vip: null, players: {}, kicked: [],
     };
+    if (ENGINES[game]) this.room.engine = ENGINES[game].create({ fast: this.env.DIVIDE_FAST === "1" }); // fast: local tests only
     await this.save();
     await this.armAlarm();
     return { ok: true, hostKey };
@@ -299,6 +339,7 @@ export class Room extends DurableObject {
       server.serializeAttachment({ role: "host" });
       this.send(server, { t: "room", event: { kind: "host-connected" }, room: this.snapshot(), now: Date.now() });
       for (const ws of this.sockets((a) => a.role === "player" && a.id)) this.send(ws, { t: "host", on: true });
+      if (this.engine()) { const e = this.engine(), st = this.room.engine; this.send(server, { t: "view", data: e.hostView(st, Date.now()), me: st.host.plays ? e.playerView(st, divide.HOST_ID, Date.now()) : null }); }
     } else if (role === "player") {
       // A phone has 30 seconds to join or rejoin, and a room only takes so many lines at once.
       const now = Date.now(), lines = [];
@@ -369,7 +410,18 @@ export class Room extends DurableObject {
 
   /* --- the TV --- */
   async fromHost(ws, msg) {
-    const r = this.room;
+    const r = this.room, e = this.engine();
+    if (e) {
+      // The host's console ("cmd") and, when the host plays, the host's own taps ("me"). Nothing else changes the game.
+      if (msg.t === "cmd" || msg.t === "me") {
+        const res = msg.t === "cmd" ? e.hostCommand(r.engine, msg.data, { now: Date.now() }) : e.command(r.engine, divide.HOST_ID, msg.data, { now: Date.now() });
+        if (res.resync) this.syncEngine();
+        if (!res.ok) this.send(ws, { t: "error", code: "sd-" + res.error, of: msg.t });
+        return this.engineChanged();
+      }
+      if (msg.t === "kick" && r.engine.phase !== "lobby") return this.send(ws, { t: "error", code: "sd-phase", of: "kick" });
+      if (msg.t === "lock" || msg.t === "to" || msg.t === "vip") return; // the server decides these itself
+    }
     if (msg.t === "to") {
       // Send something to phones: "all", "players", "audience", or a list of player ids.
       const to = msg.to, data = msg.data;
@@ -392,6 +444,7 @@ export class Room extends DurableObject {
       if (r.vip === id) { r.vip = null; this.pickVip(); }
       await this.save();
       this.tellHost({ kind: "kick", id, name: p.name });
+      if (this.engine()) { this.syncEngine(); await this.engineChanged(); }
       return;
     }
     if (msg.t === "lock") {
@@ -433,6 +486,7 @@ export class Room extends DurableObject {
       await this.save();
       this.send(ws, { t: "joined", id, key, name: name.name, avatar, audience, vip: r.vip === id, host: !!this.hostSocket() });
       this.tellHost({ kind: "join", id });
+      if (this.engine()) { this.syncEngine(); await this.engineChanged(); }
       return;
     }
     if (msg.t === "rejoin" && !att.id) {
@@ -447,7 +501,14 @@ export class Room extends DurableObject {
       await this.save();
       this.send(ws, { t: "joined", id: p.id, rejoined: true, name: p.name, avatar: p.avatar, audience: p.audience, vip: r.vip === p.id, host: !!this.hostSocket() });
       this.tellHost({ kind: "back", id: p.id });
+      if (this.engine()) { this.syncEngine(); await this.engineChanged(); }
       return;
+    }
+    if (msg.t === "input" && att.id && r.players[att.id] && this.engine()) {
+      // The server runs this game: the tap goes to the engine, and a refused one comes back with a reason.
+      const res = this.engine().command(r.engine, att.id, msg.data, { now: Date.now() });
+      if (!res.ok) this.send(ws, { t: "msg", data: { screen: "divide", view: this.engine().playerView(r.engine, att.id, Date.now()), toast: res.error } });
+      return this.engineChanged();
     }
     if (msg.t === "input" && att.id && r.players[att.id]) {
       // Anything typed is checked here, before the TV (and the room) can see it.
@@ -485,6 +546,7 @@ export class Room extends DurableObject {
     p.connected = false;
     await this.save();
     this.tellHost({ kind: "leave", id: p.id });
+    if (this.engine()) { this.syncEngine(); await this.engineChanged(); }
   }
 
   async endRoom(why) {
@@ -498,10 +560,13 @@ export class Room extends DurableObject {
     await this.ctx.storage.deleteAll();
   }
 
-  /** Rooms clean themselves up: 2 hours with nothing happening, or 12 hours at most. */
+  /** Rooms clean themselves up: 2 hours with nothing happening, or 12 hours at most. (A server-run game's deadlines
+      wake the room as well.) */
   async alarm() {
     if (!this.room) return;
     const now = Date.now();
+    // A game the server runs: its clock (a round ending, a leader's grace running out) comes through here too.
+    if (this.engine() && this.engine().tick(this.room.engine, { now })) { await this.save(); this.broadcast(); }
     if (now - this.room.lastActive >= this.idleMs || now - this.room.createdAt >= MAX_LIFETIME_MS) return this.endRoom("expired");
     await this.armAlarm();
   }

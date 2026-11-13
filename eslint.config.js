@@ -29,7 +29,7 @@ export default [
   // Bonfire Ice Breaker on the TV: browser scripts sharing BONFIRE (the questions) and BF (core.js).
   {
     files: ["bonfire/**/*.js"],
-    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", BF: "writable", BONFIRE_MUSIC: "writable", LIGHTS_OUT: "writable", LIGHTS_OUT_RULES: "writable", LO_CARD: "writable", THP: "writable", qrcode: "readonly" } },
+    languageOptions: { sourceType: "script", globals: { ...globals.browser, BONFIRE: "writable", BF: "writable", BONFIRE_MUSIC: "writable", LIGHTS_OUT: "writable", SD_VIEW: "writable", SIGNAL_DIVIDE: "writable", LIGHTS_OUT_RULES: "writable", LO_CARD: "writable", THP: "writable", qrcode: "readonly" } },
     rules,
   },
   // The phone page.
@@ -43,7 +43,7 @@ export default [
   // End-to-end tests (Node + Playwright; the callbacks they pass to page.evaluate run in the browser).
   {
     files: ["tests/**/*.cjs"],
-    languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser, SPARK: "readonly", BONFIRE_TV: "readonly", BONFIRE: "readonly", LIGHTS_OUT: "readonly", THP: "writable", SPARK_DATA: "writable", SPARK_VOICE: "writable" } },
+    languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser, SPARK: "readonly", BONFIRE_TV: "readonly", BONFIRE: "readonly", LIGHTS_OUT: "readonly", SIGNAL_DIVIDE: "readonly", THP: "writable", SPARK_DATA: "writable", SPARK_VOICE: "writable" } },
     rules,
   },
   // Node: tests, tools, this file.

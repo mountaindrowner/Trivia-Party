@@ -1,0 +1,98 @@
+/* Signal Divide on the host's phone (divide.js): the same broadcast room as the players' screens (view.css). */
+:root { --bg: #0b0d12; --panel: #141821; --line: rgba(220, 228, 255, 0.14); --steel: #cfd6e6; --soft: #8e97ad; --hi: #b48cff; --ok: #59e3a4; --warn: #ffd25e;
+  --signal: #3ea6ff; --static: #ff8a1f; --neutral: #b8bcc8; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font: 600 17px/1.4 "Outfit", system-ui, sans-serif; color: #eef1f8; overflow-x: hidden;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px), radial-gradient(circle at 50% -10%, #2a2142, #0b0d12 60%) fixed, #0b0d12; }
+#app { max-width: 560px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 40px; display: grid; gap: 14px; }
+h1, h2, .hd-logo, .hd-code, .hd-clock, .hd-zl { font-family: "Chakra Petch", "Outfit", sans-serif; margin: 0; }
+button { font: 700 17px "Outfit", system-ui, sans-serif; border-radius: 14px; cursor: pointer; min-height: 46px; padding: 10px 14px; transition: transform 0.12s; }
+button:active { transform: translateY(2px); }
+button:disabled { opacity: 0.45; cursor: default; }
+.hd-big { width: 100%; font-size: 20px; padding: 16px; border: 0; color: #0b0d12; background: linear-gradient(#e9e1ff, #b48cff); box-shadow: 0 4px 0 #6b4bb8, 0 10px 30px rgba(180, 140, 255, 0.3); }
+.hd-ghost { border: 1.5px solid var(--line); background: rgba(255, 255, 255, 0.05); color: #eef1f8; }
+.hd-ghost.danger { border-color: rgba(255, 107, 122, 0.6); color: #ffc2c9; }
+.hd-small { font-size: 14px; min-height: 36px; padding: 6px 10px; }
+input { font: 700 18px "Outfit", system-ui, sans-serif; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: #10131b; color: #fff; width: 100%; }
+input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--hi); }
+.hd-bar { position: fixed; z-index: 5; top: 0; left: 0; right: 0; padding: 8px; text-align: center; background: #ff6b7a; color: #fff; font-weight: 800; }
+.hd-err { margin: 0; color: #ffb0ba; min-height: 1em; text-align: center; }
+.hd-wait { text-align: center; color: var(--soft); padding-top: 30vh; }
+.hd-toast { padding: 10px 12px; border-radius: 12px; font-weight: 700; background: rgba(255, 210, 94, 0.14); border: 1px solid var(--warn); word-break: break-all; }
+.hd-fine { margin: 0; font-size: 14px; color: var(--soft); }
+
+/* Title: radio waves rising behind the name. */
+.hd-title { display: grid; gap: 14px; text-align: center; padding-top: 4vh; }
+.hd-waves { position: relative; height: 130px; }
+.hd-waves i { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 3px solid var(--hi); opacity: 0; animation: hdWave 3s ease-out infinite; }
+.hd-waves i:nth-child(2) { animation-delay: 1s; }
+.hd-waves i:nth-child(3) { animation-delay: 2s; }
+@keyframes hdWave { 0% { transform: scale(0.4); opacity: 0.9; } 100% { transform: scale(5); opacity: 0; } }
+.hd-logo { font-size: clamp(52px, 15vw, 76px); font-weight: 700; line-height: 0.88; color: #fff; text-shadow: 0 0 30px rgba(180, 140, 255, 0.7); }
+.hd-logo span { display: block; color: transparent; -webkit-text-stroke: 2px #cfd6e6; letter-spacing: 0.16em; }
+.hd-tag { margin: 0; font-size: 20px; font-weight: 800; }
+.hd-sub { margin: 0; color: var(--soft); }
+.hd-check { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; }
+.hd-field { display: grid; gap: 6px; text-align: left; font-size: 14px; color: var(--soft); }
+.hd-back { color: var(--soft); font-size: 15px; }
+
+/* Lobby. */
+.hd-join { display: grid; justify-items: center; gap: 8px; padding: 16px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
+.hd-qr { width: min(72vw, 300px); background: #fff; border-radius: 16px; padding: 6px; box-shadow: 0 0 40px rgba(180, 140, 255, 0.35); }
+.hd-qr svg { display: block; width: 100%; height: auto; }
+.hd-codeline { margin: 0; font-size: 14px; color: var(--soft); text-align: center; }
+.hd-codeline b { color: #fff; }
+.hd-code { font-size: 44px; font-weight: 700; letter-spacing: 0.22em; color: #fff; text-shadow: 0 0 20px rgba(180, 140, 255, 0.6); }
+.hd-counts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.hd-counts b { font: 700 34px "Chakra Petch", sans-serif; }
+.hd-counts small { flex-basis: 100%; color: var(--soft); font-size: 15px; }
+.hd-people { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.hd-people li { --fc: var(--line); display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1.5px solid transparent; }
+.hd-people li.ready { border-color: rgba(89, 227, 164, 0.4); }
+.hd-people li.away { opacity: 0.5; }
+.hd-people li[data-faction] { border-left: 4px solid var(--fc); grid-column: span 2; }
+.hd-people li[data-faction="signal"] { --fc: var(--signal); }
+.hd-people li[data-faction="static"] { --fc: var(--static); }
+.hd-people li[data-faction="neutral"] { --fc: var(--neutral); }
+.hd-av { font-size: 22px; }
+.hd-nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-nm small { color: var(--soft); }
+.hd-st { font-size: 13px; color: var(--soft); white-space: nowrap; }
+.hd-people li.ready .hd-st { color: var(--ok); }
+.hd-x { min-height: 30px; padding: 2px 8px; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--soft); }
+.hd-teach { padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.hd-teach summary { cursor: pointer; font-weight: 800; }
+.hd-teach p, .hd-teach ul { margin: 10px 0 0; font-size: 15px; line-height: 1.45; color: #dfe4f0; }
+.hd-teach ul { padding-left: 18px; display: grid; gap: 6px; }
+.hd-teach .hd-ghost { margin-top: 10px; }
+
+/* Console. */
+.hd-tabs { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; border-radius: 16px; background: rgba(11, 13, 18, 0.9); border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.hd-tabs button { border: 0; background: transparent; color: var(--soft); }
+.hd-tabs button[aria-selected="true"] { background: var(--hi); color: #0b0d12; }
+.hd-body { display: grid; gap: 14px; }
+.hd-status { display: grid; justify-items: center; gap: 2px; padding: 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); text-align: center; }
+.hd-status.paused { border-color: var(--warn); }
+.hd-status small { color: var(--soft); }
+.hd-status h2 { font-size: 24px; }
+.hd-clock { font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 24px rgba(180, 140, 255, 0.5); }
+.hd-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hd-zone { padding: 12px; border-radius: 18px; border: 2px solid var(--steel); background: #10131b; }
+.hd-zone p { margin: 4px 0 0; font-size: 14px; }
+.hd-zone .ok { color: var(--ok); }
+.hd-zone .warn { color: var(--warn); }
+.hd-zl { font-size: 48px; font-weight: 700; line-height: 1; }
+.hd-zc { color: var(--soft); }
+.hd-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.hd-controls button { flex: 1 1 40%; }
+.hd-fix { display: grid; gap: 6px; margin-top: 10px; }
+.hd-fixrow { display: flex; align-items: center; gap: 6px; }
+.hd-fixrow span { flex: 1; }
+.hd-log { list-style: none; margin: 0; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); font-size: 13px; color: var(--soft); display: grid; gap: 4px; }
+.hd-win { --fc: var(--neutral); display: grid; gap: 8px; padding: 20px; text-align: center; border-radius: 22px; border: 3px solid var(--fc); background: radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--fc) 35%, transparent), #10131b 70%); }
+.hd-win[data-faction="signal"] { --fc: var(--signal); }
+.hd-win[data-faction="static"] { --fc: var(--static); }
+.hd-win h2 { font-size: 40px; color: var(--fc); }
+.hd-win p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .hd-waves i { animation: none; opacity: 0.3; } }

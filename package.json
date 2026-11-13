@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint . && stylelint \"**/*.css\"",
     "check:content": "node tools/check-content.mjs",
-    "test:rules": "node tests/lights-out-rules.cjs",
+    "test:rules": "node tests/lights-out-rules.cjs && node tests/signal-divide-engine.mjs",
     "build": "python3 huddle/build.py",
     "test:relay": "node tools/run-tests.mjs relay",
     "test:e2e": "node tools/run-tests.mjs e2e",

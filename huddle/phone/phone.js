@@ -22,6 +22,11 @@
     document.documentElement.dataset.mode = "night";
     BRAND = { ...BRAND, name: "Lights Out", logo: "🌙", face: "🌙", find: "Your name is on the host's phone.", look: "Look up at the host's phone!" };
   };
+  /* Signal Divide (a Bonfire room the server itself runs): the broadcast-room look, and no TV to wait for. */
+  const divideMode = () => {
+    document.documentElement.dataset.mode = "divide";
+    BRAND = { ...BRAND, name: "Signal Divide", logo: "📡", face: "📡", find: "Your name is on the host's phone.", look: "Check your zone!" };
+  };
   const SAVE_KEY = { spark: "sparkwars-session", bonfire: "bonfire-session", holy: "holyhuddle-session" }[GAME];
   const SESSION_HOURS = 3;
   const app = document.getElementById("app");
@@ -74,6 +79,7 @@
       if (info.offline) { err.textContent = "Can't reach the game. Check your internet."; return; }
       if (info.locked) { err.textContent = "That game is locked. Ask the host to unlock it."; return; }
       if (info.game === "lights-out") nightMode();
+      if (info.game === "signal-divide") divideMode();
       avatarScreen(code, name, info);
     } },
       el("label", { for: "code" }, "Room code", codeIn),
@@ -119,6 +125,7 @@
       let m; try { m = JSON.parse(e.data); } catch (err) { return; }
       if (m.t === "hb") return;
       if (m.t === "hello" && m.game === "lights-out") nightMode();
+      if (m.t === "hello" && m.game === "signal-divide") divideMode();
       if (m.t === "hello") return line.send(JSON.stringify(how.join ? { t: "join", ...how.join } : { t: "rejoin", ...how.rejoin }));
       if (m.t === "joined") {
         retry = 0; setBar(null);
@@ -127,13 +134,18 @@
         store.set({ ...me, at: Date.now() });
         how = { code: me.code, rejoin: { id: me.id, key: me.key } }; // reconnects from now on rejoin
         if (!m.rejoined) { buzz(60); draw({ screen: "lobby" }); } else draw(lastScreen);
-        if (!hostOn) setBar("Waiting for the TV", true);
+        if (!hostOn && document.documentElement.dataset.mode !== "divide") setBar("Waiting for the TV", true);
         keepAlive();
         return;
       }
       if (m.t === "you") { Object.assign(me, { vip: m.vip, audience: m.audience }); store.set({ ...me, at: Date.now() }); if (m.vip) buzz(80); return draw(lastScreen); }
       if (m.t === "msg") return draw(m.data || {});
-      if (m.t === "host") { hostOn = m.on; return setBar(m.on ? null : "Waiting for the TV", true); }
+      if (m.t === "host") {
+        hostOn = m.on;
+        // In Signal Divide the server runs the game, so it carries on without the host's phone.
+        if (document.documentElement.dataset.mode === "divide") return setBar(null);
+        return setBar(m.on ? null : "Waiting for the TV", true);
+      }
       if (m.t === "error") {
         if (m.code === "rejoin") { store.clear(); leaving = true; line.close(); return joinScreen(how.code, "Your spot in that game is gone. Join again?"); }
         if (onJoinError && !me) { leaving = true; line.close(); return onJoinError(NAME_ERRORS[m.code] || "Something went wrong. Try again.", /^name-/.test(m.code)); }
@@ -205,6 +217,8 @@
     if (kind === "write") return writeScreen(s);
     if (kind === "slots") return slotsScreen(s);
     if (kind === "slider") return sliderScreen(s);
+    // Signal Divide: the server's view of this player (bonfire/divide/view.js, built into the Bonfire phone page).
+    if (kind === "divide" && window.SD_VIEW && s.view) return window.SD_VIEW.render(app, s.view, { el, send, buzz, host: false }, s.toast);
     // Lights Out: your secret card (bonfire/night/card.js, built into the Bonfire phone page).
     if (kind === "secret" && window.LO_CARD) return show(meCard(), window.LO_CARD.view(s, { el, send, buzz, face: AVATAR_EMOJI[me.avatar] || BRAND.face, name: me.name }));
     if (kind === "result") {
@@ -439,8 +453,10 @@
   } else {
     joinScreen(fromLink);
     // A Lights Out code from the host's QR: show the night look from the start.
+    // (Signal Divide too.)
     if (fromLink && GAME === "bonfire") fetch(api(`/api/rooms/${fromLink}`)).then((r) => (r.ok ? r.json() : null)).then((info) => {
-      if (info && info.game === "lights-out" && !me && !document.documentElement.dataset.mode) { const typed = document.getElementById("name"); nightMode(); joinScreen(fromLink, null, typed ? typed.value : undefined); }
+      const mode = info && { "lights-out": nightMode, "signal-divide": divideMode }[info.game];
+      if (mode && !me && !document.documentElement.dataset.mode) { const typed = document.getElementById("name"); mode(); joinScreen(fromLink, null, typed ? typed.value : undefined); }
     }).catch(() => {});
   }
 })();

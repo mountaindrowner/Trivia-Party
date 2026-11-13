@@ -30,7 +30,7 @@ jobs:
         run: npm run lint && ruff check .
       - name: Content
         run: npm run check:content
-      - name: Lights Out rules
+      - name: Lights Out rules and the Signal Divide engine
         run: npm run test:rules
       - name: Build the pages
         run: npm run build

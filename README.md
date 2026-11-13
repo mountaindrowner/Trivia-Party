@@ -10,8 +10,8 @@ It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to ans
 | | Trivia Holy Party (this game) | Spark Wars (`spark/`) | Bonfire Ice Breaker (`bonfire/`) |
 | --- | --- | --- | --- |
 | For | Kids and families | The middle school youth group | Young adults getting to know each other |
-| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams | Up to 40 phones; or **Lights Out**, a one-night wolves game for 3–12 run from one phone |
-| Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` | `bonfire.thecrossroads.workers.dev/tv`, and `/night` for Lights Out |
+| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams | Up to 40 phones; or **Lights Out** (wolves, 3–12) or **Signal Divide** (two zones, 12–15), run from one phone |
+| Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` | `bonfire.thecrossroads.workers.dev/tv`; `/night` (Lights Out), `/divide` (Signal Divide) |
 
 The shared bones are in `huddle/`: the room server (one code, deployed once per game), the phone page (one code,
 each game with its own look) and the Bible questions in `js/data.js` and `js/more/`. See `spark/README.md` and
@@ -82,12 +82,13 @@ Edit `js/data.js` (age levels) or `js/data-modes.js` (Challenge Modes). The firs
 | --- | --- |
 | `index.html`, `js/`, `css/` | Trivia Holy Party (plain browser scripts sharing `THP`; `js/data.js`, `js/more/` are the questions) |
 | `spark/` | Spark Wars, the TV side (see `spark/README.md`) |
-| `bonfire/` | Bonfire Ice Breaker, the TV side and its questions; `bonfire/night/` is Lights Out (see `bonfire/README.md`) |
+| `bonfire/` | Bonfire Ice Breaker, the TV side and its questions; `bonfire/night/` is Lights Out, `bonfire/divide/` Signal Divide (see `bonfire/README.md`) |
 | `huddle/phone/` | The phone page both games use |
 | `huddle/server/` | The room server (a Cloudflare Worker) and its tests, `huddle/build.py` builds its pages |
 | `itch/` | The itch.io build of Trivia Holy Party |
 | `tools/` | `build.py` (one-file build), `check-content.mjs`, `run-tests.mjs` |
-| `tests/e2e/` | Whole games in a real browser (Playwright); `tests/lights-out-rules.cjs` checks Lights Out's rules |
+| `tests/e2e/` | Whole games in a real browser (Playwright); `tests/lights-out-rules.cjs` and `tests/signal-divide-engine.mjs` check the rules |
+| `docs/signal-divide/` | The Signal Divide design package (rules, screens, engineering, host guide, tests) |
 
 Install once: `npm install` here and in `huddle/server/`. Then:
 

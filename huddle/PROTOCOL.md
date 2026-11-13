@@ -90,6 +90,27 @@ Codes are 4 letters from `BCDFGHJKLMNPRSTVWZ` (no vowels, so no words). Lowercas
 - Rooms delete themselves after 2 hours with nothing happening, or 12 hours at most. Nothing about players is kept
   after that. No accounts, no cookies, no logs of names.
 
+## Games the server runs itself (Signal Divide)
+
+For most games the TV (or the host's phone) runs the game and the relay only passes messages. **Signal Divide**
+(`signal-divide`, on the Bonfire site) is different: its cards must stay secret even from the host's phone, so the
+room runs the game itself (`server/src/divide.js`) and the host's phone is only a console. In such a room:
+
+- A phone's `{ t: "input", data }` goes to the engine, not the host. The phone gets `{ t: "msg", data: { screen:
+  "divide", view } }` after every change: its own view only (its card, its zone's people, leader, votes and picks,
+  the clock as a server deadline). A refused tap comes back with `toast` (the reason).
+  Taps: `{ type: "ready", on }`, `{ type: "here" }`, `{ type: "vote", for }` (an id, or null to take it back),
+  `{ type: "offer", to }`, `{ type: "accept" }`, `{ type: "decline" }`, `{ type: "select", ids }`, `{ type: "lock" }`,
+  `{ type: "predict", pick: "signal" | "static" }`.
+- The host sends `{ t: "cmd", data }` for the console (`play` (on, name), `deal`, `start`, `pause`, `resume`,
+  `fixZone` (id, zone), `fixLeader` (zone, id), `abort`, `rematch`) and, when the host plays, `{ t: "me", data }` for
+  their own taps. It gets `{ t: "view", data, me }`: the console view (head counts, arrivals, leaders, locks, the
+  log; never a card before the result) and, when the host plays, their own player view. Refused: `{ t: "error",
+  code: "sd-<reason>" }`. `to`, `lock` and `vip` from the host are ignored (the room decides); `kick` only in the lobby.
+- The room locks itself when it's full (15, counting a host who plays) and when the cards are dealt.
+- The engine's deadlines (a round ending, a leader's grace, the start countdown, the prediction) wake the room
+  through its alarm, so the game runs on with no phone connected at all.
+
 ## Screens the TV sends (`data` in `msg`)
 
 The phone page draws these; anything it doesn't know shows the lobby. Every screen may also carry:
@@ -114,6 +135,7 @@ The phone page draws these; anything it doesn't know shows the lobby. Every scre
 | `slider` | `round`, `prompt`, `min` (0), `max` (100), `unit` ("%"), `start` (50), `step`, `seconds`, `hint`, `locked`, `button` | A big number and a slider, then **Lock it in!** (Bonfire's Read the Room) | `{ type: "slider", round, value }` |
 | `result` | `good`, `title`, `points`, `text`, `after` (the line under it; `""` for none) | Right or wrong, and the points | |
 | `final` | `place`, `points`, `of`, `audience`, `unit` (default "points"), `text` | The medal or place, and the points | |
+| `divide` | `view` (from the server's engine), `toast` | Signal Divide: a player's screen (`bonfire/divide/view.js`) | the taps above |
 | `secret` | `stage` (`wait`, `deal`, `night`, `day`, `vote`, `reveal-wait`, `reveal`), `round`, `title`, `text`, `how` (steps: [icon, text]), `seconds`, `card` (`icon`, `name`, `team`, `teamName`, `goal`, `night`), `lines` (what you learned), `linesTitle`, `deck`, `button`, `ready`, `action` (`kind`: `player`, `two`, `center`, `counselor`, `hunch` or `vote`; `prompt`, `players` [`{ id, name, face }`], `skip`, `done`, `doneText`), `reveal` | Lights Out's secret card (`bonfire/night/card.js`): face down, held to peek; the night's job or the vote under it; or the reveal | `{ type: "ready", round }`, `{ type: "night", round, players, center }`, `{ type: "vote", round, target }` |
 
 The TV numbers every question, trial and race round (`round`) and ignores answers for any other round.
