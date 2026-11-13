@@ -6,10 +6,11 @@
   "scripts": {
     "lint": "eslint . && stylelint \"**/*.css\"",
     "check:content": "node tools/check-content.mjs",
+    "test:rules": "node tests/lights-out-rules.cjs",
     "build": "python3 huddle/build.py",
     "test:relay": "node tools/run-tests.mjs relay",
     "test:e2e": "node tools/run-tests.mjs e2e",
-    "check": "npm run lint && npm run check:content && npm run build && npm run test:relay"
+    "check": "npm run lint && npm run check:content && npm run test:rules && npm run build && npm run test:relay"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

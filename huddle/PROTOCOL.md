@@ -114,6 +114,7 @@ The phone page draws these; anything it doesn't know shows the lobby. Every scre
 | `slider` | `round`, `prompt`, `min` (0), `max` (100), `unit` ("%"), `start` (50), `step`, `seconds`, `hint`, `locked`, `button` | A big number and a slider, then **Lock it in!** (Bonfire's Read the Room) | `{ type: "slider", round, value }` |
 | `result` | `good`, `title`, `points`, `text`, `after` (the line under it; `""` for none) | Right or wrong, and the points | |
 | `final` | `place`, `points`, `of`, `audience`, `unit` (default "points"), `text` | The medal or place, and the points | |
+| `secret` | `stage` (`deal`, `night`, `day`, `vote`, `reveal`, `wait`), `round`, `title`, `text`, `seconds`, `card` (`icon`, `name`, `team`, `teamName`, `goal`, `night`), `lines` (what you learned), `linesTitle`, `deck`, `button`, `ready`, `action` (`kind`: `player`, `two`, `center`, `counselor`, `hunch` or `vote`; `prompt`, `players` [`{ id, name, face }`], `skip`, `done`, `doneText`), `reveal` | Lights Out's secret card (`bonfire/night/card.js`): face down, held to peek; the night's job or the vote under it; or the reveal | `{ type: "ready", round }`, `{ type: "night", round, players, center }`, `{ type: "vote", round, target }` |
 
 The TV numbers every question, trial and race round (`round`) and ignores answers for any other round.
 

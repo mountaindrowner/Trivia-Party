@@ -90,6 +90,52 @@ That?, blue for Read the Room, green for Kindred Spirits, purple for Two Truths 
 (`../huddle/phone/phone.css`, the `data-game="bonfire"` parts): screens rise in piece by piece, buttons press in,
 results pop with a glow, embers drift up the background.
 
+## Lights Out: one night of wolves at camp (`night/`)
+
+A second Bonfire mode, for 3 to 12 people with **no TV**: made for camp. Open
+`https://bonfire.thecrossroads.workers.dev/night` on your phone, tap **Start a game** (tick "I'm playing too" to get a
+card yourself), and everyone scans the QR code on your phone. When everyone's in, tap **Deal the cards**. Your phone
+is the narrator: it talks (the phone's own voice, with captions), plays night sounds and the campfire guitar in a
+minor key, keeps the time, and shows the reveal.
+
+It's the **one-night** style of Werewolf/Mafia, which most groups (and most reviews) rate best for a casual crowd:
+nobody gets knocked out and sits bored, and a round takes about ten minutes. An original take with camp roles:
+
+| Card | Side | At night |
+| --- | --- | --- |
+| 🐺 Wolf | Wolves | Sees the other wolves; a lone wolf peeks at one middle card |
+| 🦝 Raccoon | Wolves | Sees the wolves (they don't know about it). Wins if no wolf is voted out, even if it is |
+| 🔦 Counselor | Camp | Looks at one player's card, or two middle cards |
+| 🤫 Sneak | Camp | Swaps cards with someone, and sees the new card: that's who they are now |
+| 🧦 Prankster | Camp | Swaps two other players' cards, without looking |
+| 😴 Sleepwalker | Camp | Swaps with a middle card without looking (always) |
+| 🦉 Night Owl | Camp | Looks at their own card again at the end of the night |
+| 🛏️ Bunkmate ×2 | Camp | See each other |
+| 🏠 Homesick | Own | Nothing. Wins only by getting voted out |
+| 🏕️ Camper | Camp | Nothing (taps a hunch) |
+
+- **The deck** has 3 more cards than players (3 lie face down in the middle), and grows with the group: 2 wolves,
+  a Counselor, a Sneak and a Prankster always; Night Owl from 4, Raccoon from 5, Homesick from 6, Bunkmates from 8,
+  Sleepwalker from 9, a third wolf from 10. **Easy** keeps it to wolves, a Counselor, a Prankster and campers.
+  Everyone sees which cards are in play.
+- **The deal:** every phone gets a face-down card: hold your thumb on it to peek, let go and it flips back. The first
+  round, the phone reads the rules out loud (and the night waits for them).
+- **The night:** everyone taps at the same time, and everyone has something to tap (no job? tap a hunch), so nobody
+  can tell who's doing what. The jobs are carried out in order afterwards (`rules.js`). At least 20 seconds, at
+  most 75.
+- **The morning:** what you learned is on the back of your card. 3, 5 or 7 minutes to talk (**+1 minute** and
+  **Vote now** on the host's phone).
+- **The vote:** everyone taps one person. The most votes is out (all of them on a tie), but only if someone got more
+  than one vote. Vote out a wolf: the camp wins. No wolf out: the wolves win (unless Homesick went home). No
+  wolves among the players at all: the camp wins only if nobody is voted out.
+- **The reveal:** who's out and what they really were, said out loud, then on every phone: whether you won,
+  everyone's starting and ending card, the middle cards, and "what really happened" (the night, step by step,
+  also read out). **Play again** deals new cards to the same people; wins are kept for the night.
+- If the host's page reloads, the round carries on. Someone who joins mid-round gets a card next round.
+- **Files:** `rules.js` (the rules, no page: tested by `tests/lights-out-rules.cjs`), `card.js` and `card.css` (the
+  secret card, on the players' phones and the host's), `night.js`, `night.css`, `index.html` (the host's page).
+  The room type is `lights-out` (12 players, no audience). `node tests/e2e/lights-out.cjs` plays two rounds with 12.
+
 ## Ideas for later
 
 - **Find Someone Who** (bingo): a 4×4 card of the room's own yes answers ("has been on a plane"); go ask people.

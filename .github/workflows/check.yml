@@ -30,6 +30,8 @@ jobs:
         run: npm run lint && ruff check .
       - name: Content
         run: npm run check:content
+      - name: Lights Out rules
+        run: npm run test:rules
       - name: Build the pages
         run: npm run build
       - name: Room server tests

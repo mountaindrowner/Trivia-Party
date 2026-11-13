@@ -6,7 +6,8 @@
    The playing: open chords in G, fingerpicked (an alternating thumb on the bass, fingers on the top strings) or
    strummed, with a melody noodling over the top from the G major pentatonic, and everything a little loose in time
    and touch, like a person playing. Moods follow the screen: "title" (sparse), "lobby" (laid-back fingerpicking),
-   "game" (a strummed jam with a soft cajon and shaker), "report" (slow and warm).
+   "game" (a strummed jam with a soft cajon and shaker), "report" (slow and warm), and for Lights Out "night" (dark and
+   slow, in E minor) and "day" (restless fingerpicking to talk over).
    The host's voice ducks it: duck(true) while speaking.
 
    BONFIRE_MUSIC(getContext) -> { start(), stop(), duck(on), mood(name), sfx(name) } */
@@ -106,6 +107,9 @@ window.BONFIRE_MUSIC = (getContext) => {
     lobby: { bpm: 80, prog: ["G", "Em", "Cadd9", "D", "G", "D", "Em", "Cadd9"], style: "pick", noodle: 0.55 },
     game: { bpm: 100, prog: ["G", "D", "Em", "C", "G", "D", "C", "D"], style: "strum", noodle: 0.4 },
     report: { bpm: 70, prog: ["C", "G", "Am", "G", "C", "G", "D", "D"], style: "pick", noodle: 0.6 },
+    // Lights Out: a dark, slow night in E minor, and a restless morning to talk over.
+    night: { bpm: 54, prog: ["Em", "Cadd9", "Em", "Bm"], style: "sparse", noodle: 0.3 },
+    day: { bpm: 86, prog: ["Em", "C", "G", "D"], style: "pick", noodle: 0.25 },
   };
 
   /* The scheduler: a few tenths of a second ahead, one eighth note at a time. */

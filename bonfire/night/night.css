@@ -1,0 +1,114 @@
+/* Lights Out on the host's phone (night.js): a camp at night, moonlight and pine trees, fireflies drifting.
+   Shrikhand for the big words, Outfit for the rest (as in Bonfire). The card and the reveal are in card.css. */
+:root { --moon: #e6ebff; --midnight: #05081c; --ink: #0a0f2c; --soft: #aeb8e6; --wolf: #ff4d61; --camp: #5fe0a0; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font: 600 17px/1.4 "Outfit", system-ui, sans-serif; color: #eef1ff; overflow-x: hidden;
+  background: radial-gradient(circle at 80% 4%, rgba(230, 235, 255, 0.28), transparent 18%), linear-gradient(#05081c, #0d1440 55%, #131a3a) fixed; }
+h1, h2, .logo { font-family: "Shrikhand", Georgia, serif; font-weight: 400; margin: 0; }
+button { font: 700 19px "Outfit", system-ui, sans-serif; color: var(--ink); border: 0; border-radius: 16px; padding: 14px 18px; cursor: pointer;
+  background: linear-gradient(#eef1ff, #a9b6ff); box-shadow: 0 5px 0 #4b57a8, 0 10px 24px rgba(140, 160, 255, 0.3); transition: transform 0.12s, box-shadow 0.12s, opacity 0.2s; }
+button:active { transform: translateY(4px); box-shadow: 0 1px 0 #4b57a8; }
+button:disabled { opacity: 0.45; cursor: default; transform: none; }
+button.ghost { background: rgba(255, 255, 255, 0.08); color: #eef1ff; border: 2px solid rgba(230, 235, 255, 0.25); box-shadow: none; font-size: 17px; }
+button.small { font-size: 15px; padding: 10px 14px; }
+.big-btn { font-size: 22px; padding: 18px; }
+input { font: 700 19px "Outfit", system-ui, sans-serif; padding: 14px 16px; border-radius: 14px; border: 2px solid rgba(230, 235, 255, 0.3); background: rgba(10, 15, 44, 0.7); color: #fff; width: 100%; }
+input[type="checkbox"] { width: 24px; height: 24px; accent-color: #a9b6ff; }
+.err { color: #ff9aa6; min-height: 1em; margin: 0; text-align: center; }
+
+#app { position: relative; z-index: 2; max-width: 560px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px 120px; }
+.screen { display: grid; gap: 16px; animation: rise 0.5s cubic-bezier(.2, .9, .3, 1) both; }
+.screen.still { animation: none; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } }
+.bar { position: fixed; z-index: 5; top: 0; left: 0; right: 0; padding: 8px; text-align: center; background: var(--wolf); color: #fff; font-weight: 800; }
+
+/* The night around it all: stars, pines along the bottom, fireflies. */
+.stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.8;
+  background: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1.5px) 0 0 / 46px 52px, radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1.5px) 23px 30px / 61px 47px;
+  animation: twinkle 6s ease-in-out infinite alternate; }
+@keyframes twinkle { to { opacity: 0.45; } }
+.trees { position: fixed; left: 0; right: 0; bottom: 0; height: 110px; z-index: 1; pointer-events: none; opacity: 0.9;
+  background: conic-gradient(from 150deg at 50% 0, transparent, #03050f 1deg 59deg, transparent 60deg) 0 100% / 46px 110px repeat-x,
+    conic-gradient(from 155deg at 50% 0, transparent, #070b20 1deg 49deg, transparent 50deg) 20px 100% / 34px 80px repeat-x; }
+.flies { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.flies i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #e6ff8a; box-shadow: 0 0 10px 3px rgba(220, 255, 120, 0.6); opacity: 0; animation: fly 9s ease-in-out infinite; }
+.flies i:nth-child(1) { left: 12%; top: 70%; } .flies i:nth-child(2) { left: 80%; top: 62%; animation-delay: 1.5s; } .flies i:nth-child(3) { left: 30%; top: 82%; animation-delay: 3s; }
+.flies i:nth-child(4) { left: 64%; top: 78%; animation-delay: 4.5s; } .flies i:nth-child(5) { left: 90%; top: 86%; animation-delay: 2.2s; } .flies i:nth-child(6) { left: 6%; top: 88%; animation-delay: 5.6s; }
+.flies i:nth-child(7) { left: 48%; top: 66%; animation-delay: 6.8s; } .flies i:nth-child(8) { left: 72%; top: 92%; animation-delay: 7.7s; }
+@keyframes fly { 20% { opacity: 1; } 50% { transform: translate(18px, -30px); opacity: 0.4; } 80% { opacity: 1; } 100% { transform: translate(-10px, -60px); opacity: 0; } }
+
+/* Title */
+.title { display: grid; gap: 14px; text-align: center; padding-top: 4vh; }
+.moonrise { position: relative; height: 150px; }
+.moonrise .moon { position: absolute; left: 50%; top: 6px; width: 120px; height: 120px; margin-left: -60px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #fff, #dfe5ff 45%, #b9c3ef); box-shadow: 0 0 60px 20px rgba(200, 210, 255, 0.35); animation: glow 5s ease-in-out infinite alternate; }
+.moonrise .moon::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 62% 60%, rgba(120, 130, 190, 0.35) 9%, transparent 10%), radial-gradient(circle at 40% 70%, rgba(120, 130, 190, 0.3) 6%, transparent 7%), radial-gradient(circle at 70% 32%, rgba(120, 130, 190, 0.3) 5%, transparent 6%); }
+@keyframes glow { to { box-shadow: 0 0 80px 30px rgba(200, 210, 255, 0.5); } }
+/* A pair of eyes in the dark, blinking now and then. */
+.moonrise .eyes { position: absolute; left: 50%; bottom: -6px; width: 46px; height: 10px; margin-left: -23px;
+  background: radial-gradient(circle at 20% 50%, #ffdf5e 3px, transparent 4px), radial-gradient(circle at 80% 50%, #ffdf5e 3px, transparent 4px); filter: drop-shadow(0 0 6px #ffcf3e); animation: blink 5s infinite; }
+@keyframes blink { 0%, 44%, 50%, 100% { transform: scaleY(1); } 47% { transform: scaleY(0.1); } }
+.logo { font-size: clamp(54px, 16vw, 84px); line-height: 0.95; color: var(--moon); text-shadow: 0 0 30px rgba(160, 180, 255, 0.8), 4px 4px 0 #05081c; transform: rotate(-3deg); }
+.tag { margin: 0; font-size: 21px; font-weight: 800; }
+.sub { margin: 0; color: var(--soft); }
+.check { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 19px; }
+.field { display: grid; gap: 6px; text-align: left; font-size: 15px; color: var(--soft); }
+.back { color: var(--soft); font-size: 15px; margin-top: 10px; }
+
+/* Lobby */
+.lobby { display: grid; gap: 16px; }
+.joinbox { display: grid; justify-items: center; gap: 10px; padding: 16px; border-radius: 26px; background: rgba(10, 15, 44, 0.6); border: 1px solid rgba(230, 235, 255, 0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.qr { width: min(72vw, 300px); background: #fff; border-radius: 18px; padding: 6px; box-shadow: 0 0 40px rgba(200, 210, 255, 0.35); }
+.qr svg { display: block; width: 100%; height: auto; }
+.codeline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px; text-align: center; }
+.codeline small { color: var(--soft); font-size: 14px; }
+.codeline b { font-size: 15px; }
+.code { font: 400 34px/1 "Shrikhand", Georgia, serif; letter-spacing: 0.12em; color: var(--moon); }
+.lobby h2 { font-size: 26px; }
+.lobby h2 small { display: block; font: 600 15px "Outfit", sans-serif; color: var(--soft); }
+.people { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.people li { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(230, 235, 255, 0.15); min-width: 0; }
+.people li.new { animation: rise 0.4s both; }
+.people li.away { opacity: 0.5; }
+.people .face { font-size: 24px; }
+.people .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.people .nm small { color: var(--soft); }
+.people .wins { font-size: 13px; color: #ffd27a; }
+.people .x { padding: 4px 9px; font-size: 14px; background: transparent; color: var(--soft); box-shadow: none; border: 1px solid rgba(230, 235, 255, 0.2); border-radius: 10px; }
+.settings { display: grid; gap: 8px; padding: 12px; border-radius: 18px; background: rgba(255, 255, 255, 0.05); }
+.settings .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.settings .row > span { width: 84px; font-size: 15px; color: var(--soft); }
+.opt { padding: 8px 12px; font-size: 15px; background: rgba(255, 255, 255, 0.08); color: #eef1ff; box-shadow: none; border: 1.5px solid rgba(230, 235, 255, 0.2); }
+.opt[aria-pressed="true"] { background: var(--moon); color: var(--ink); }
+
+/* A round */
+.phase { position: relative; display: grid; justify-items: center; gap: 2px; padding: 10px 0 4px; text-align: center; }
+.phase .sky { height: 64px; }
+.phase .moon, .phase .sun { display: block; width: 58px; height: 58px; border-radius: 50%; }
+.phase .moon { background: radial-gradient(circle at 36% 34%, #fff, #dfe5ff 45%, #b9c3ef); box-shadow: 0 0 40px 12px rgba(200, 210, 255, 0.4); }
+.phase .sun { background: radial-gradient(circle, #fff6c8, #ffc75e 60%, #ff9a3e); box-shadow: 0 0 50px 16px rgba(255, 190, 90, 0.5); animation: glow 4s ease-in-out infinite alternate; }
+.phase h1 { font-size: 40px; color: var(--moon); text-shadow: 0 0 24px rgba(160, 180, 255, 0.6); }
+.phase.day h1 { color: #ffd27a; text-shadow: 0 0 24px rgba(255, 180, 80, 0.6); }
+.status { margin: 0; color: var(--soft); font-size: 16px; }
+.clock { margin: 0; }
+.clock b { font: 400 64px/1 "Shrikhand", Georgia, serif; color: #fff; text-shadow: 0 0 24px rgba(200, 210, 255, 0.6); font-variant-numeric: tabular-nums; }
+.phase.night .clock b, .phase.vote .clock b { font-size: 30px; color: var(--soft); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.controls .big-btn { flex: 1 1 100%; }
+.mine { padding-top: 6px; border-top: 1px dashed rgba(230, 235, 255, 0.2); }
+.watch { text-align: center; color: var(--soft); }
+.suspense { display: grid; justify-items: center; gap: 6px; padding: 30px 0; }
+.drum { font-size: 90px; margin: 0; animation: thump 0.5s ease-in-out infinite alternate; }
+@keyframes thump { to { transform: scale(1.12) rotate(-4deg); } }
+.outname { margin: 0; font: 400 44px/1.05 "Shrikhand", Georgia, serif; color: #fff; text-align: center; animation: rise 0.6s both; }
+.outname.soft { font-size: 26px; color: var(--soft); }
+
+/* What the voice says, along the bottom. */
+.caption { position: fixed; z-index: 4; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); max-width: 540px; margin: 0 auto; padding: 12px 16px;
+  border-radius: 18px; background: rgba(5, 8, 28, 0.88); border: 1px solid rgba(230, 235, 255, 0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  font-size: 16px; line-height: 1.35; color: var(--soft); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.caption span { transition: color 0.3s; }
+.caption span + span::before { content: " "; }
+.caption span.on { color: #fff; }
+@media (prefers-reduced-motion: reduce) { .stars, .flies i, .moonrise .moon, .moonrise .eyes, .drum, .phase .sun { animation: none; } .flies i { opacity: 0.8; } }

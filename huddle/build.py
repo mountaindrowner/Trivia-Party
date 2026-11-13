@@ -2,6 +2,7 @@
   holy/phone.html   the Holy Huddle join page          holy/tv.html   all of Trivia Holy Party, for the TV at /tv
   spark/phone.html  the Spark Wars join page           spark/tv.html  Spark Wars, for the TV at /tv
   bonfire/phone.html  the Bonfire join page            bonfire/tv.html  Bonfire Ice Breaker, for the TV at /tv
+                                                       bonfire/night.html  Lights Out, for the host's phone at /night
   spark/clips/, spark/icons/, spark/files.js   Barnabas's recorded lines (/voice/clips/), the app icons and the
                     web app manifest, bundled into the Spark Wars Worker
 The phone page is the same code for both, with its own look (<html data-game="...">).
@@ -37,8 +38,11 @@ write(os.path.join(static, "spark", "phone.html"), spark)
 bonfire = (base.replace('<html lang="en">', '<html lang="en" data-game="bonfire">')
            .replace("<title>Holy Huddle</title>", "<title>Bonfire</title>")
            .replace("family=Lilita+One&", "family=Shrikhand&family=Outfit:wght@500;600;700;800&family=Lilita+One&")
-           .replace('content="#2b1a7a"', 'content="#0c1030"'))
-assert 'data-game="bonfire"' in bonfire and "Shrikhand" in bonfire
+           .replace('content="#2b1a7a"', 'content="#0c1030"')
+           # Lights Out's secret card (a Bonfire room run from the host's phone): its look and its screen.
+           .replace("</head>", "<style>\n" + read(root, "bonfire", "night", "card.css") + "</style>\n</head>")
+           .replace("<script>\n", "<script>\n" + read(root, "bonfire", "night", "card.js") + "\n</script>\n<script>\n", 1))
+assert 'data-game="bonfire"' in bonfire and "Shrikhand" in bonfire and "LO_CARD" in bonfire and ".lo-card" in bonfire
 write(os.path.join(static, "bonfire", "phone.html"), bonfire)
 
 # Trivia Holy Party: the whole game, for the TV.
@@ -59,6 +63,15 @@ html = re.sub(r'<script src="([^"]+\.js)"></script>',
               lambda m: "<script>\n" + read(root, "bonfire", m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
 assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Bonfire file was not inlined"
 write(os.path.join(static, "bonfire", "tv.html"), html)
+
+# Lights Out: bonfire/night/index.html (the host's phone, at /night) with its css and js inlined.
+night_dir = os.path.join(root, "bonfire", "night")
+html = read(night_dir, "index.html")
+html = re.sub(r'<link rel="stylesheet" href="([^"]+\.css)">', lambda m: "<style>\n" + read(night_dir, m.group(1)) + "\n</style>", html)
+html = re.sub(r'<script src="([^"]+\.js)"></script>',
+              lambda m: "<script>\n" + read(night_dir, m.group(1)).replace("</script", "<\\/script") + "\n</script>", html)
+assert not re.search(r'(href|src)="[^"]+\.(css|js)"', html), "a Lights Out file was not inlined"
+write(os.path.join(static, "bonfire", "night.html"), html)
 
 # Barnabas's recorded lines, bundled into the Spark Wars Worker: the MP3s next to a module that imports them all.
 # (Cloudflare's static-asset upload doesn't work from a cloud session, so they ride along in the Worker; at about

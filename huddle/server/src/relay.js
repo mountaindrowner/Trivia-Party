@@ -19,6 +19,10 @@ export const GAMES = {
   "bonfire": { maxPlayers: 40, maxAudience: 20,
     avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
       "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "wolf", "guitar"] },
+  // Lights Out, on the Bonfire site: one night of wolves at camp, run from the host's phone. No audience: everyone has a card.
+  "lights-out": { maxPlayers: 12, maxAudience: 0,
+    avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
+      "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "guitar"] },
 };
 const rules = (game) => GAMES[game] || GAMES["holy-trivia"];
 const MAX_LIFETIME_MS = 12 * 3600e3; // a room never lives longer than this, even if it's busy
@@ -114,15 +118,17 @@ async function page(html, url) {
 }
 
 /* ---------- The front door: plain web requests ---------- */
-/** One site: its phone page at /, its game at /tv, rooms for its own games, and any files it carries
-    (`files`: { "/path": { body, type } }, e.g. Spark Wars' recorded voice lines). */
-export function site({ phone, tv, games, files = {} }) {
+/** One site: its phone page at /, its game at /tv, any more pages (`pages`: { "/path": html }, e.g. Bonfire's
+    Lights Out at /night), rooms for its own games, and any files it carries (`files`: { "/path": { body, type } },
+    e.g. Spark Wars' recorded voice lines). */
+export function site({ phone, tv, games, pages = {}, files = {} }) {
   return { async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get("origin");
     const ip = addressKey(request.headers.get("cf-connecting-ip") || "local");
     if (url.pathname === "/health") return json({ ok: true });
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/tv")) return page(url.pathname === "/" ? phone : tv, url);
+    if (request.method === "GET" && Object.hasOwn(pages, url.pathname)) return page(pages[url.pathname], url);
     const file = request.method === "GET" && files[url.pathname];
     if (file) return new Response(file.body, { headers: { "content-type": file.type, "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" } });
     if (!originAllowed(origin, env)) return json({ error: "origin" }, 403);

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05081c">
+  <title>Lights Out</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Outfit:wght@500;600;700;800&display=swap">
+  <link rel="stylesheet" href="card.css">
+  <link rel="stylesheet" href="night.css">
+</head>
+<body>
+  <!-- The host's phone: the QR code, the voice and the clock, and (when the host plays) the host's own card. -->
+  <div class="stars" aria-hidden="true"></div>
+  <div class="trees" aria-hidden="true"></div>
+  <div class="flies" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="bar" class="bar" role="status" hidden></div>
+  <main id="app" aria-live="polite"></main>
+  <p id="caption" class="caption" hidden></p>
+  <script src="../../js/vendor/qrcode.js"></script>
+  <script src="../music.js"></script>
+  <script src="rules.js"></script>
+  <script src="card.js"></script>
+  <script src="night.js"></script>
+  <script>LIGHTS_OUT.boot();</script>
+</body>
+</html>
