@@ -102,7 +102,8 @@ room runs the game itself (`server/src/divide.js`) and the host's phone is only 
   Taps: `{ type: "ready", on }`, `{ type: "here" }`, `{ type: "vote", for }` (an id, or null to take it back),
   `{ type: "offer", to }`, `{ type: "accept" }`, `{ type: "decline" }`, `{ type: "select", ids }`, `{ type: "lock" }`,
   `{ type: "predict", pick: "signal" | "static" }`.
-- The host sends `{ t: "cmd", data }` for the console (`play` (on, name), `deal`, `start`, `pause`, `resume`,
+- The host sends `{ t: "cmd", data }` for the console (`options` (zones: { A, B }, pace: quick | standard | long,
+  voice), `play` (on, name), `deal`, `start`, `pause`, `resume`,
   `fixZone` (id, zone), `fixLeader` (zone, id), `abort`, `rematch`) and, when the host plays, `{ t: "me", data }` for
   their own taps. It gets `{ t: "view", data, me }`: the console view (head counts, arrivals, leaders, locks, the
   log; never a card before the result) and, when the host plays, their own player view. Refused: `{ t: "error",

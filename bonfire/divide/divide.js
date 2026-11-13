@@ -110,8 +110,12 @@ window.SIGNAL_DIVIDE = (() => {
   }
 
   /* ---------- What the console shows ---------- */
+  /* While the host is typing a zone's name, the lobby isn't redrawn under them (it is as soon as they're done). */
+  let drawLater = false;
+  document.addEventListener("focusout", () => { if (drawLater) { drawLater = false; setTimeout(draw, 0); } });
   function draw() {
     if (!view) return;
+    if (document.activeElement && document.activeElement.classList.contains("hd-zin")) { drawLater = true; return; }
     // Redrawn on every change: keep any section the host opened, open.
     const open = new Set([...app.querySelectorAll("details[open] > summary")].map((x) => x.textContent));
     const parts = [];
@@ -138,23 +142,55 @@ window.SIGNAL_DIVIDE = (() => {
       return svg;
     } catch (e) { return el("div", {}, "Scan not available"); }
   }
-  const SCRIPT = "There are two secret teams: Signal and Static. Signal needs the Beacon and the Jammer to finish apart. Static wants them to finish together. "
-    + "Your phone gives you a secret card and a zone. Your zone is where you stand, not your team. "
-    + "Talk with the people in your zone, and decide who to trust. Each zone has a leader, and the leader decides who moves to the other zone at the end of each round. "
-    + "We play three rounds: three minutes, two minutes, then one minute. The first time, each leader sends two people. After that, one. "
-    + "You can show someone just your team, or your whole card, but nobody has to. Your card never changes when you move. "
-    + "If there's an odd number of us, there's also a Forecaster, on no team, who predicts the winner. Bluff about the game, never about anyone's real life.";
-  function readAloud() {
+  /* The teaching script, with tonight's zones and times in it. */
+  const words = (secs) => (secs % 60 ? `${Math.floor(secs / 60) ? `${Math.floor(secs / 60)} and a half` : secs + " seconds"}` : `${["zero", "one", "two", "three", "four"][secs / 60]}`);
+  function script(v) {
+    const z = v.opts.zones, plan = v.lobby.plan, secs = plan.secs, out = plan.out;
+    const where = z.A || z.B ? `Zone A is ${z.A || "the first zone"}, and Zone B is ${z.B || "the second"}. ` : "";
+    return "There are two secret teams: Signal and Static. Signal needs the Beacon and the Jammer to finish apart. Static wants them to finish together. "
+      + `Your phone gives you a secret card and a zone. Your zone is where you stand, not your team. ${where}`
+      + "Talk with the people in your zone, and decide who to trust. Each zone has a leader, and the leader decides who moves to the other zone at the end of each round. "
+      + `We play three rounds: ${words(secs[0])}, ${words(secs[1])}, then ${words(secs[2])} minute${secs[2] > 60 ? "s" : ""}. `
+      + (out[0] === out[1] ? `Each time, each leader sends ${out[0] === 1 ? "one person" : out[0] + " people"}. ` : `The first time, each leader sends ${out[0]} people. After that, one. `)
+      + "You can show someone just your team, or your whole card, but nobody has to. Your card never changes when you move. "
+      + "Keep your sound on: your phone tells you when to move. If there's an odd number of us, there's also a Forecaster, on no team, who predicts the winner. "
+      + "Bluff about the game, never about anyone's real life.";
+  }
+  function readAloud(text) {
     try {
       speechSynthesis.cancel();
-      for (const part of SCRIPT.match(/[^.!?]+[.!?]+/g)) { const u = new SpeechSynthesisUtterance(part.trim()); u.rate = 0.95; speechSynthesis.speak(u); }
+      for (const part of text.match(/[^.!?]+[.!?]+/g)) { const u = new SpeechSynthesisUtterance(part.trim()); u.rate = 0.95; speechSynthesis.speak(u); }
     } catch (e) {}
+  }
+  /* The presets: the zones' names (so phones say "Move to Zone B, the Youth Room"), the pace, the announcer. */
+  const PAIRS = [["Inside", "Outside"], ["Upstairs", "Downstairs"], ["Front", "Back"], ["Kitchen", "Lounge"], ["Left", "Right"]];
+  const PACE = { quick: "Quick", standard: "Standard", long: "Long" };
+  const PACE_SECS = { quick: [120, 90, 60], standard: [180, 120, 60], long: [240, 180, 120] };
+  function setup(v) {
+    const o = v.opts, n = v.lobby.count, plan = v.lobby.plan;
+    const zone = (z) => {
+      const box = el("input", { class: "hd-zin", maxlength: 18, placeholder: z === "A" ? "e.g. Youth Room" : "e.g. Kitchen", value: o.zones[z], "aria-label": `Zone ${z}'s name` });
+      box.addEventListener("change", () => cmd({ type: "options", zones: { ...o.zones, [z]: box.value } }));
+      return el("label", { class: "hd-zrow" }, el("b", {}, z), box);
+    };
+    const chip = (label, on, fn) => el("button", { class: "hd-chip", "aria-pressed": String(!!on), onclick: fn }, label);
+    const sizes = n >= 6 ? `${Math.ceil(n / 2)} and ${Math.floor(n / 2)}` : "";
+    return el("details", { class: "hd-teach hd-setup", open: true }, el("summary", {}, "⚙️ Set up the night"),
+      el("p", { class: "hd-lab" }, "Where are the zones? (Phones show these names.)"),
+      zone("A"), zone("B"),
+      el("div", { class: "hd-chips" }, ...PAIRS.map(([a, b]) => chip(`${a} / ${b}`, o.zones.A === a && o.zones.B === b, () => cmd({ type: "options", zones: { A: a, B: b } })))),
+      el("p", { class: "hd-lab" }, "Pace (talk time for rounds 1, 2 and 3)"),
+      el("div", { class: "hd-chips" }, ...Object.keys(PACE).map((k) => chip(`${PACE[k]} · ${PACE_SECS[k].map((x) => mmss(x * 1000)).join(" · ")}`, o.pace === k, () => cmd({ type: "options", pace: k })))),
+      el("p", { class: "hd-lab" }, "Announcer"),
+      el("div", { class: "hd-chips" }, chip("🗣 Leaders' phones announce", o.voice, () => cmd({ type: "options", voice: true })), chip("🔇 Silent", !o.voice, () => cmd({ type: "options", voice: false }))),
+      el("p", { class: "hd-fine" }, "Your phone can only be heard in one zone, so each zone's leader's phone says the time and the moves out loud for that zone."),
+      n >= 6 ? el("p", { class: "hd-plan" }, `With ${n}: zones of ${sizes}, ${plan.out.join(", then ")} sent from each zone after rounds 1, 2 and 3${n % 2 ? ", and one Forecaster" : ""}.`) : null);
   }
 
   function lobby() {
     const L = view.lobby, url = `${BASE}/?room=${room.code}`, n = L.count, missing = L.people.filter((p) => !p.ready);
     const canDeal = n >= L.min && n <= L.max && !missing.length;
-    const why = n < L.min ? `Need ${L.min - n} more to start (${L.min} to ${L.max} players).` : n > L.max ? `Too many: ${L.max} at most.` : missing.length ? `Waiting for ${missing.length} to tap I'm ready: ${missing.map((p) => p.name).join(", ")}.` : "Everyone's ready!";
+    const why = n < L.min ? `Need ${L.min - n} more to start (${L.min} to ${L.max} players; best with ${L.best[0]} to ${L.best[1]}).` : n > L.max ? `Too many: ${L.max} at most.` : missing.length ? `Waiting for ${missing.length} to tap I'm ready: ${missing.map((p) => p.name).join(", ")}.` : "Everyone's ready!";
     const play = el("input", { type: "checkbox", checked: view.plays });
     play.addEventListener("change", () => { prefs.play = play.checked; store.set(PREFS, prefs); cmd({ type: "play", on: play.checked, name: prefs.name || "Host" }); });
     return [
@@ -168,10 +204,12 @@ window.SIGNAL_DIVIDE = (() => {
         el("span", { class: "hd-st" }, p.ready ? "✔ ready" : "…"),
         p.host ? null : el("button", { class: "hd-x", "aria-label": `Remove ${p.name}`, onclick: () => { if (confirm(`Remove ${p.name}?`)) { try { ws.send(JSON.stringify({ t: "kick", id: p.id })); } catch (e) {} } } }, "✕")))),
       el("label", { class: "hd-check" }, play, ` I'm playing too${prefs.name ? ` (as ${prefs.name})` : ""}`),
-      el("details", { class: "hd-teach" }, el("summary", {}, "📣 Teach it in 45 seconds"), el("p", {}, SCRIPT), el("button", { class: "hd-ghost", onclick: readAloud }, "🔊 Read it out loud")),
+      setup(view),
+      el("details", { class: "hd-teach" }, el("summary", {}, "📣 Teach it in 45 seconds"), el("p", {}, script(view)), el("button", { class: "hd-ghost", onclick: () => readAloud(script(view)) }, "🔊 Read it out loud")),
       el("details", { class: "hd-teach" }, el("summary", {}, "🧭 Before you deal"),
         el("ul", {}, el("li", {}, "Pick two zones that can't overhear each other: two rooms, or far corners. Say which is A and which is B."),
           el("li", {}, "Rules: stay in your zone, no texting or signals across, move only when your phone says."),
+          el("li", {}, "Ask everyone to turn their sound up: phones beep and buzz when it's time to move."),
           el("li", {}, "Everyone needs internet the whole game (Wi-Fi or data)."),
           el("li", {}, "Can't scan? Type the 4 letters at the address above."))),
       el("button", { class: "hd-big", disabled: !canDeal, onclick: () => { if (confirm(`Lock the room and deal cards to ${n} players? Nobody can join after this.`)) cmd({ type: "deal" }); } }, canDeal ? `🔒 Lock & deal (${n} players)` : "Lock & deal"),
@@ -192,11 +230,13 @@ window.SIGNAL_DIVIDE = (() => {
     parts.push(el("div", { class: "hd-zones" }, ...["A", "B"].map((z) => {
       const Z = v.zones[z], away = Z.people.filter((p) => !p.arrived);
       return el("div", { class: "hd-zone" },
-        el("div", { class: "hd-zl" }, z), el("p", { class: "hd-zc" }, `${Z.count} people`),
+        el("div", { class: "hd-zl" }, z, v.opts.zones[z] ? el("small", {}, v.opts.zones[z]) : null), el("p", { class: "hd-zc" }, `${Z.count} people`),
         el("p", {}, "👑 ", Z.leader ? Z.leader.name : "–"),
         v.phase === "round" || v.phase === "lock" ? el("p", { class: Z.locked ? "ok" : "" }, Z.locked ? "✔ Picks locked" : "Choosing...") : null,
         away.length ? el("p", { class: "warn" }, `🚶 On the way: ${away.map((p) => p.name).join(", ")}`) : el("p", { class: "ok" }, "✔ Everyone's here"));
     })));
+    if (v.phase === "moving" && v.moves.length) parts.push(el("div", { class: "hd-moves" }, el("b", {}, v.final ? "Final exchange" : "Exchange"),
+      ...["A", "B"].map((z) => el("p", {}, `${z} → ${z === "A" ? "B" : "A"}: `, el("b", {}, v.moves.filter((m) => m.from === z).map((m) => m.name).join(", "))))));
     const controls = el("div", { class: "hd-controls" });
     if (v.phase === "arrival" || v.phase === "moving") controls.append(el("button", { class: "hd-ghost", disabled: v.paused, onclick: () => { if (!v.waiting.length || confirm(`Go on without ${v.waiting.join(", ")} tapping "I'm here"? Only if they really are in their zone.`)) cmd({ type: "start" }); } }, v.final ? "Everyone's in place: reveal" : "Start the round now"));
     controls.append(el("button", { class: "hd-ghost", onclick: () => cmd({ type: v.paused ? "resume" : "pause" }) }, v.paused ? "▶ Resume" : "⏸ Pause"));
@@ -215,9 +255,13 @@ window.SIGNAL_DIVIDE = (() => {
   }
   function result() {
     const r = view.result, F = SD_VIEW.FACTIONS, R = SD_VIEW.ROLES;
+    // The reveal plays here too, in step with every phone; then the full result.
+    const left = r.at + SD_VIEW.CINE_MS - (Date.now() + offset);
+    if (left > 0) { setTimeout(draw, left + 50); return [SD_VIEW.cinematic(el, r, r.at, offset, view)]; }
     return [
       el("div", { class: "hd-win", "data-faction": r.winner }, el("h2", {}, `${F[r.winner].short} WINS`),
         el("p", {}, r.together ? `Beacon ${r.beacon.name} and Jammer ${r.jammer.name} ended together in Zone ${r.zone.beacon}.` : `Beacon ${r.beacon.name} (Zone ${r.zone.beacon}) and Jammer ${r.jammer.name} (Zone ${r.zone.jammer}) ended apart.`),
+        el("p", { class: "hd-fine" }, "Get everyone back together to talk it over: who bluffed best?"),
         r.forecaster ? el("p", {}, `🔮 Forecaster ${r.forecaster.name}: ${r.forecaster.pick ? `predicted ${F[r.forecaster.pick].name}, ${r.forecaster.won ? "right!" : "wrong."}` : "no prediction."}`) : null),
       el("ul", { class: "hd-people" }, ...r.everyone.map((p) => el("li", { "data-faction": R[p.role].faction }, el("span", { class: "hd-av" }, face(p)), el("span", { class: "hd-nm" }, p.name), el("span", { class: "hd-st" }, `${R[p.role].name} · Zone ${p.zone}`)))),
       el("button", { class: "hd-big", onclick: () => cmd({ type: "rematch" }) }, "Rematch: back to the lobby"),

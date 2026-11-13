@@ -1,7 +1,7 @@
 /* Signal Divide: a player's screen (view.js), on the players' phones and the host's. A dark broadcast room: graphite,
    faint scan lines, steel and a violet glow for the everyday screen. Team colours (Signal blue, Static orange, the
    Forecaster's grey) appear only on a card you chose to show, and at the reveal. Chakra Petch for the big type. */
-.sd, .sd-overlay { --bg: #0b0d12; --panel: #141821; --line: rgba(220, 228, 255, 0.14); --steel: #cfd6e6; --soft: #8e97ad; --hi: #b48cff;
+.sd, .sd-overlay, .sd-curtain, .sd-ten { --bg: #0b0d12; --panel: #141821; --line: rgba(220, 228, 255, 0.14); --steel: #cfd6e6; --soft: #8e97ad; --hi: #b48cff;
   --signal: #3ea6ff; --static: #ff8a1f; --neutral: #b8bcc8; --ok: #59e3a4;
   font-family: "Outfit", system-ui, sans-serif; color: #eef1f8; }
 .sd { display: grid; gap: 14px; text-align: left; }
@@ -54,7 +54,9 @@ html .sd .sd-link { min-height: 0; padding: 4px 10px; font-size: 14px; }
 html .sd .sd-peek { display: flex; align-items: center; gap: 8px; text-align: left; border: 1.5px solid var(--steel); color: #fff; box-shadow: none;
   background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 6px, transparent 6px 12px), #161a24;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; }
-.sd-peek-icon { font-size: 28px; }
+/* A little face-down card on the button. */
+.sd-peek-icon { flex: none; width: 26px; height: 36px; border-radius: 5px; border: 2px solid var(--steel);
+  background: repeating-linear-gradient(45deg, rgba(180, 140, 255, 0.5) 0 3px, transparent 3px 6px), #1d2232; box-shadow: 0 0 10px rgba(180, 140, 255, 0.4); }
 .sd-peek b { display: block; font-size: 17px; }
 .sd-peek small { display: block; font-size: 12px; font-weight: 600; color: var(--soft); }
 html .sd .sd-cardbar .sd-ghost { font-size: 15px; padding: 10px 6px; }
@@ -82,7 +84,7 @@ html .sd-overlay .sd-hide { min-width: 220px; border: 0; color: #0b0d12; backgro
 /* Your zone. */
 .sd-zonebox { padding: 12px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
 .sd-people { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.sd-people li { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid transparent; }
+.sd-people li { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1.5px solid transparent; }
 .sd-people li.tap { cursor: pointer; }
 .sd-people li.tap:active { transform: scale(0.99); }
 .sd-people li.leader { border-color: rgba(255, 210, 94, 0.55); background: rgba(255, 210, 94, 0.08); }
@@ -146,3 +148,100 @@ html[data-mode="divide"] .me { border-color: var(--line, rgba(220, 228, 255, 0.1
 html[data-mode="divide"] .sd :is(h2, h3), html[data-mode="divide"] .sd-overlay :is(h2, h3) { font-family: "Chakra Petch", "Outfit", system-ui, sans-serif; font-weight: 700; letter-spacing: 0.02em; }
 html[data-mode="divide"] .sd h2 { color: #fff; }
 html[data-mode="divide"] .sd .sd-win h2 { color: var(--fc); }
+
+/* ---------- The moments ---------- */
+/* A sweep across the whole screen: a round starting, time's up, the exchange, a crown. */
+.sd-curtain { position: fixed; z-index: 90; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 24px; text-align: center; pointer-events: none;
+  font-family: "Outfit", system-ui, sans-serif; color: #fff; animation: sdCurtain 2.6s ease-in-out both;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 4px), radial-gradient(circle at 50% 45%, rgba(180, 140, 255, 0.55), #07080c 72%); }
+.sd-curtain b { font: 700 46px/1 "Chakra Petch", sans-serif; letter-spacing: 0.06em; text-shadow: 0 0 30px rgba(180, 140, 255, 0.9); animation: sdGlitch 2.6s steps(1) both; }
+.sd-curtain p { margin: 0; font-size: 19px; font-weight: 700; max-width: 18em; }
+.sd-cicon { display: grid; place-items: center; width: 110px; height: 110px; border-radius: 50%; border: 3px solid #fff; font: 700 56px/1 "Chakra Petch", sans-serif;
+  box-shadow: 0 0 40px rgba(180, 140, 255, 0.8), inset 0 0 30px rgba(180, 140, 255, 0.5); animation: sdPop 0.6s cubic-bezier(.2, 1.6, .4, 1) both; }
+.sd-c-up { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 4px), radial-gradient(circle at 50% 45%, rgba(255, 90, 110, 0.6), #07080c 72%); }
+.sd-c-swap { animation-duration: 3.2s; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 4px), radial-gradient(circle at 50% 45%, rgba(255, 210, 94, 0.5), #07080c 72%); }
+.sd-c-swap .sd-cicon { animation: sdSpin 1.4s ease-in-out infinite; }
+.sd-c-crown { background: radial-gradient(circle at 50% 45%, rgba(255, 210, 94, 0.7), #07080c 72%); animation-duration: 3s; }
+.sd-c-crown .sd-cicon { border-color: #ffd25e; box-shadow: 0 0 60px rgba(255, 210, 94, 0.9); }
+@keyframes sdCurtain { 0% { opacity: 0; } 12%, 78% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sdPop { from { transform: scale(0.3); opacity: 0; } }
+@keyframes sdSpin { 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg); } }
+@keyframes sdGlitch { 0% { transform: translate(0); } 8% { transform: translate(-3px, 1px); clip-path: inset(10% 0 40% 0); } 12% { transform: translate(3px, -1px); clip-path: none; } 16% { transform: translate(0); } }
+/* The last ten seconds of a round, huge behind everything. */
+.sd-ten { position: fixed; z-index: 1; inset: 0; display: grid; place-items: center; pointer-events: none; font: 700 62vw/1 "Chakra Petch", sans-serif; color: rgba(255, 107, 122, 0.13); }
+.sd-ten.go { animation: sdTen 1s ease-out both; }
+@keyframes sdTen { from { transform: scale(1.25); color: rgba(255, 107, 122, 0.35); } }
+
+/* The lobby: a radar sweeping for players, the zones' names. */
+.sd-radar { position: relative; width: 120px; height: 120px; margin: 0 auto 10px; border-radius: 50%; border: 1.5px solid rgba(180, 140, 255, 0.5); overflow: hidden;
+  background: radial-gradient(circle, transparent 30%, rgba(180, 140, 255, 0.12) 31%, transparent 32%, transparent 62%, rgba(180, 140, 255, 0.12) 63%, transparent 64%), #10131b; }
+.sd-radar b { position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(180, 140, 255, 0.55), transparent 25%); animation: sdSweep 2.6s linear infinite; }
+.sd-radar i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #e9e1ff; box-shadow: 0 0 10px #b48cff; animation: sdBlip 2.6s linear infinite; }
+.sd-radar i:nth-child(1) { left: 30%; top: 28%; }
+.sd-radar i:nth-child(2) { left: 66%; top: 44%; animation-delay: 0.9s; }
+.sd-radar i:nth-child(3) { left: 40%; top: 70%; animation-delay: 1.7s; }
+@keyframes sdSweep { to { transform: rotate(360deg); } }
+@keyframes sdBlip { 0%, 100% { opacity: 0.2; } 10% { opacity: 1; } }
+.sd-zonesign { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sd-zonesign div { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--steel); background: #10131b; min-width: 0; }
+.sd-zonesign b { font: 700 30px/1 "Chakra Petch", sans-serif; }
+.sd-zonesign span { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The top bar: the zone's name, signal bars, round dots. */
+.sd-zone em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--steel); max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
+.sd-bars { display: flex; align-items: flex-end; gap: 3px; height: 14px; margin-bottom: 8px; }
+.sd-bars i { width: 4px; border-radius: 1px; background: var(--hi); animation: sdBar 1.6s ease-in-out infinite; }
+.sd-bars i:nth-child(1) { height: 30%; } .sd-bars i:nth-child(2) { height: 55%; animation-delay: 0.2s; } .sd-bars i:nth-child(3) { height: 80%; animation-delay: 0.4s; } .sd-bars i:nth-child(4) { height: 100%; animation-delay: 0.6s; }
+@keyframes sdBar { 50% { opacity: 0.35; } }
+.sd-dots { display: flex; gap: 6px; margin-top: 4px; }
+.sd-dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--soft); }
+.sd-dots i.now { background: var(--hi); border-color: var(--hi); box-shadow: 0 0 8px var(--hi); }
+.sd-dots i.done { background: var(--soft); }
+
+/* After an exchange: who left and who's coming. */
+.sd-swap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 14px; border-radius: 18px; border: 2px solid rgba(255, 210, 94, 0.6); background: rgba(255, 210, 94, 0.08); text-align: center; }
+.sd-swap small { display: block; font-size: 12px; color: var(--soft); text-transform: uppercase; letter-spacing: 0.1em; }
+.sd-swap b { font-size: 17px; }
+.sd-swap-arrows { font-size: 30px; color: #ffd25e; animation: sdSpin 2.4s ease-in-out infinite; }
+/* Votes filling up toward a majority. */
+.sd-votebar { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--w); background: var(--hi); box-shadow: 0 0 8px var(--hi); transition: width 0.4s; }
+.sd-lead.urgent { animation: sdUrgent 0.8s ease-in-out infinite alternate; }
+@keyframes sdUrgent { to { box-shadow: 0 0 30px rgba(255, 210, 94, 0.6); border-color: #ffd25e; } }
+
+/* The move screen: a huge zone letter. */
+.sd-move-big { position: relative; display: grid; place-items: center; width: 170px; height: 170px; border-radius: 34px; border: 4px solid #fff; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 4px), #12151e;
+  box-shadow: 0 0 50px rgba(180, 140, 255, 0.5); animation: sdPulseBox 1.4s ease-in-out infinite; }
+.sd-move-big b { font: 700 120px/1 "Chakra Petch", sans-serif; }
+.sd-move-big .sd-move-arrow { position: absolute; left: -64px; font-size: 48px; }
+.sd-move.first .sd-move-big .sd-move-arrow { left: auto; top: -40px; font-size: 40px; animation: sdDrop 1.2s ease-in-out infinite; }
+@keyframes sdPulseBox { 50% { box-shadow: 0 0 80px rgba(180, 140, 255, 0.8); } }
+@keyframes sdDrop { 50% { transform: translateY(8px); } }
+.sd-move-name { font-size: 22px; font-weight: 800; color: #fff !important; }
+html .sd .sd-sound { justify-self: center; min-height: 36px; padding: 6px 14px; font-size: 14px; border: 1px solid var(--line); background: transparent; color: var(--soft); box-shadow: none; }
+
+/* The card: Signal's rings broadcast, Static's name glitches. */
+.sd-face[data-faction="signal"] .sd-sign .w1, .sd-win[data-faction="signal"] .sd-sign .w1 { animation: sdRing 1.8s ease-out infinite; transform-origin: center; transform-box: fill-box; }
+.sd-face[data-faction="signal"] .sd-sign .w2, .sd-win[data-faction="signal"] .sd-sign .w2 { animation: sdRing 1.8s ease-out 0.4s infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes sdRing { from { opacity: 1; transform: scale(0.7); } to { opacity: 0.2; transform: scale(1.1); } }
+.sd-face[data-faction="static"] .sd-team, .sd-win[data-faction="static"] h2 { animation: sdJitter 2.2s steps(1) infinite; }
+@keyframes sdJitter { 0%, 100% { transform: none; text-shadow: none; } 4% { transform: translate(-2px, 1px); text-shadow: 2px 0 #3ea6ff, -2px 0 #ff2a6d; } 8% { transform: translate(2px, -1px); } 12% { transform: none; text-shadow: none; } 60% { transform: translate(1px, 0); text-shadow: -1px 0 #ff2a6d; } 63% { transform: none; text-shadow: none; } }
+.sd-reveal li.key { border-width: 0 0 0 6px; background: color-mix(in srgb, var(--fc) 16%, transparent); font-size: 18px; }
+
+/* The reveal, the same on every phone at the same moment. */
+.sd-cine { position: relative; min-height: 78vh; display: grid; align-content: center; gap: 16px; text-align: center; overflow: hidden; border-radius: 24px; padding: 20px; background: #07080c; }
+.sd-noise { position: absolute; inset: 0; opacity: 0.25; pointer-events: none; animation: sdNoise 0.25s steps(2) infinite;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 4px); }
+@keyframes sdNoise { 50% { transform: translateY(2px); opacity: 0.18; } }
+.sd-cine-top { margin: 0; font: 700 16px "Chakra Petch", sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: var(--soft); animation: sdPulse 1.2s ease-in-out infinite; }
+.sd-cline { position: relative; opacity: 0; transform: translateY(14px); transition: opacity 0.5s, transform 0.5s; }
+.sd-cline.in { opacity: 1; transform: none; }
+.sd-cline.q { font-size: 20px; font-weight: 700; color: var(--steel); }
+.sd-cline.a b { display: block; font: 700 40px/1.05 "Chakra Petch", sans-serif; }
+.sd-cline.a span { font-size: 18px; font-weight: 700; color: var(--soft); }
+.sd-cline.sig b { color: var(--signal); text-shadow: 0 0 30px rgba(62, 166, 255, 0.7); }
+.sd-cline.sta b { color: var(--static); text-shadow: 0 0 30px rgba(255, 138, 31, 0.7); }
+.sd-cline.w b { display: inline-block; font: 700 56px/1 "Chakra Petch", sans-serif; letter-spacing: 0.1em; padding: 6px 18px; border-radius: 14px; border: 3px solid #fff; }
+.sd-cine.together .sd-cline.w b { color: var(--static); border-color: var(--static); box-shadow: 0 0 50px rgba(255, 138, 31, 0.6); }
+.sd-cine.apart .sd-cline.w b { color: var(--signal); border-color: var(--signal); box-shadow: 0 0 50px rgba(62, 166, 255, 0.6); }
+.sd-cline.w.in b { animation: sdPop 0.6s cubic-bezier(.2, 1.6, .4, 1) both; }
+@media (prefers-reduced-motion: reduce) { .sd-curtain, .sd-curtain b, .sd-cicon, .sd-radar b, .sd-bars i, .sd-move-big, .sd-sign .w1, .sd-sign .w2, .sd-team, .sd-noise, .sd-ten.go, .sd-lead.urgent, .sd-swap-arrows { animation: none !important; } }

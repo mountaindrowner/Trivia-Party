@@ -6,7 +6,7 @@ import * as E from "../huddle/server/src/divide.js";
 let ok = 0, bad = 0;
 const check = (c, what) => { c ? ok++ : bad++; if (!c) console.log("  FAIL " + what); };
 const seeded = (seed) => () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-const NAMES = ["Ava", "Ben", "Cal", "Dee", "Eli", "Fay", "Gus", "Hal", "Ivy", "Jo", "Kai", "Lou", "Max", "Nia", "Oz", "Pia"];
+const NAMES = ["Ava", "Ben", "Cal", "Dee", "Eli", "Fay", "Gus", "Hal", "Ivy", "Jo", "Kai", "Lou", "Max", "Nia", "Oz", "Pia", "Quin", "Rex", "Sam", "Tia", "Uma"];
 const people = (n) => NAMES.slice(0, n).map((name, i) => ({ id: "p" + i, name, avatar: "tent", connected: true }));
 function lobby(n, opts = {}) {
   const s = E.create();
@@ -18,7 +18,7 @@ function lobby(n, opts = {}) {
 const count = (s, z) => s.order.filter((id) => s.zone[id] === z).length;
 
 // The deal: at every count, 1000 times, exactly the right cards, balanced zones, a leader in each.
-for (const n of [12, 13, 14, 15]) {
+for (const n of [6, 9, 12, 13, 14, 15, 20]) {
   let good = true, signalFirst = 0;
   for (let k = 0; k < 1000; k++) {
     const s = lobby(n), r = E.hostCommand(s, { type: "deal" }, { now: 0, rng: seeded(k * 7 + n) });
@@ -30,11 +30,11 @@ for (const n of [12, 13, 14, 15]) {
     if (s.role.p0 === "beacon") signalFirst++;
   }
   check(good, `${n} players: 1000 deals, each with 1 Beacon, 1 Jammer, equal sides, ${n % 2 ? "a" : "no"} Forecaster, zones ${Math.ceil(n / 2)}/${Math.floor(n / 2)}, a leader in each`);
-  check(signalFirst > 30 && signalFirst < 140, `${n} players: the first to join isn't always (or never) the Beacon (${signalFirst} of 1000)`);
+  check(signalFirst > 1000 / n * 0.5 && signalFirst < 1000 / n * 1.5, `${n} players: the first to join isn't always (or never) the Beacon (${signalFirst} of 1000)`);
 }
 {
-  const s = lobby(11); check(E.hostCommand(s, { type: "deal" }, { now: 0 }).error === "count", "11 players can't start");
-  const t = lobby(16); check(E.hostCommand(t, { type: "deal" }, { now: 0 }).error === "count", "16 players can't start");
+  const s = lobby(5); check(E.hostCommand(s, { type: "deal" }, { now: 0 }).error === "count", "5 players can't start");
+  const t = lobby(21); check(E.hostCommand(t, { type: "deal" }, { now: 0 }).error === "count", "21 players can't start");
   const u = E.create(); E.sync(u, people(12)); E.command(u, "p0", { type: "ready" }, { now: 0 });
   check(E.hostCommand(u, { type: "deal" }, { now: 0 }).error === "ready", "nobody starts until everyone is ready");
   const h = lobby(12, { hostPlays: true }); E.hostCommand(h, { type: "deal" }, { now: 0, rng: seeded(3) });
@@ -66,7 +66,7 @@ function play(n, seed, opts = {}) {
       opts.elected = s.leader.A === cand;
     }
     for (const z of ["A", "B"]) {
-      const lead = s.leader[z], pick = s.order.filter((id) => s.zone[id] === z && id !== lead).slice(0, E.ROUNDS[r].out);
+      const lead = s.leader[z], pick = s.order.filter((id) => s.zone[id] === z && id !== lead).slice(0, s.plan.out[r]);
       if (opts.lazyB && z === "B") continue; // B's leader never picks: the server does after the grace
       E.command(s, lead, { type: "select", ids: pick }, { now });
       E.command(s, lead, { type: "lock" }, { now });
@@ -74,7 +74,7 @@ function play(n, seed, opts = {}) {
     if (s.phase !== "round") return { s, error: "locking early ended the round" };
     const zonesBefore = { ...s.zone };
     views.push(...s.order.map((id) => E.playerView(s, id, now)));
-    E.tick(s, { now: now += E.ROUNDS[r].secs * 1000 });
+    E.tick(s, { now: now += s.plan.secs[r] * 1000 });
     if (opts.lazyB) E.tick(s, { now: now += E.GRACE_MS });
     const moved = s.order.filter((id) => s.zone[id] !== zonesBefore[id]);
     rounds.push(moved.length);
@@ -90,11 +90,12 @@ function play(n, seed, opts = {}) {
   }
   return { s, rounds, roleBefore, views };
 }
-for (const n of [12, 13, 14, 15]) {
+for (const n of [6, 12, 13, 14, 15, 20]) {
   const { s, rounds, roleBefore, error, views } = play(n, n * 31, { vote: true });
   const opts = {};
   check(!error, `${n} players: a whole game plays through ${error || ""}`);
-  check(JSON.stringify(rounds) === "[4,2,2]", `${n} players: the exchanges move 2, 1, 1 each way (${rounds})`);
+  const want = n <= 10 ? "[2,2,2]" : "[4,2,2]";
+  check(JSON.stringify(rounds) === want, `${n} players: the exchanges move ${n <= 10 ? "1, 1, 1" : "2, 1, 1"} each way (${rounds})`);
   check(JSON.stringify(roleBefore) === JSON.stringify(s.role), `${n} players: moving never changes anyone's card`);
   check(s.phase === "result", `${n} players: it ends on the result (${s.phase})`);
   const r = s.result, together = s.zone[r.beacon] === s.zone[r.jammer];
@@ -123,6 +124,26 @@ for (const n of [12, 13, 14, 15]) {
 {
   const { s } = play(13, 4, { noPredict: true });
   check(s.phase === "result" && s.result.forecaster.pick === null && s.result.forecaster.won === false, "a Forecaster who doesn't predict in time just doesn't win; the teams' result stands");
+}
+
+// The presets: the zones' names, the pace, the announcements.
+{
+  const s = lobby(12);
+  E.hostCommand(s, { type: "options", zones: { A: "  Youth <b>Room</b>!!  ", B: "Kitchen" }, pace: "long", voice: false }, { now: 0 });
+  check(s.opts.zones.A === "Youth bRoombb" || s.opts.zones.A === "Youth bRoomb", `zone names are kept plain ("${s.opts.zones.A}")`);
+  check(s.opts.pace === "long" && s.opts.voice === false, "the pace and the announcements are set");
+  check(!E.hostCommand(s, { type: "options", pace: "warp" }, { now: 0 }).ok || s.opts.pace === "long", "an unknown pace is ignored");
+  E.hostCommand(s, { type: "deal" }, { now: 0, rng: seeded(5) });
+  check(JSON.stringify(s.plan.secs) === "[240,180,120]", "the long pace: 4, 3, then 2 minutes");
+  check(!E.hostCommand(s, { type: "options", pace: "quick" }, { now: 0 }).ok, "presets are fixed once the cards are dealt");
+  const v = E.playerView(s, s.order[0], 0);
+  check(v.opts.zones.B === "Kitchen" && v.plan.secs[0] === 240, "every phone knows the zones' names and the times");
+  const l = lobby(8); check(E.playerView(l, "p0", 0).lobby.plan.out.join() === "1,1,1", "the lobby shows 1, 1, 1 moving for a small group");
+}
+{
+  const { s } = play(12, 21, {});
+  const any = s.order[0], v = E.playerView(s, any, 9e9);
+  check(s.revealAt && v.result.at === s.revealAt && E.hostView(s, 9e9).result.at === s.revealAt, "every phone gets the same reveal moment, to play it together");
 }
 
 // Illegal taps are refused by the server, not just hidden on screen.

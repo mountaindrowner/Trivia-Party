@@ -1,8 +1,8 @@
 /* Signal Divide: the game engine, run by the room server (relay.js) rather than by anyone's phone.
 
-   12 to 15 people, two physical zones (A and B), two secret teams. Signal protects the Beacon, Static has the Jammer.
-   Three timed rounds (3, 2, 1 minutes); at the end of each, each zone's leader sends 2, then 1, then 1 people to the
-   other zone. At the end: Beacon and Jammer in the same zone, Static wins; apart, Signal wins. At 13 or 15 players a
+   6 to 20 people (best with 12 to 15), two physical zones (A and B), two secret teams. Signal protects the Beacon,
+   Static has the Jammer. Three timed rounds (3, 2, 1 minutes, or the host's pick of pace); at the end of each, each
+   zone's leader sends 2, then 1, then 1 people to the other zone (1, 1, 1 with 10 or fewer). At the end: Beacon and Jammer in the same zone, Static wins; apart, Signal wins. At 13 or 15 players a
    neutral Forecaster predicts the winner before the reveal. Nobody is knocked out, and role cards never move: only
    people do.
 
@@ -22,8 +22,11 @@
    ctx = { now, rng? } (rng only in tests; otherwise crypto randomness). */
 
 export const HOST_ID = "@host";
-export const MIN_PLAYERS = 12, MAX_PLAYERS = 15;
-export const ROUNDS = [{ secs: 180, out: 2 }, { secs: 120, out: 1 }, { secs: 60, out: 1 }];
+export const MIN_PLAYERS = 6, MAX_PLAYERS = 20, BEST = [12, 15];
+/* The host's presets: how long each round's talk is (seconds), and who's sent at the end of each. */
+export const PACES = { quick: [120, 90, 60], standard: [180, 120, 60], long: [240, 180, 120] };
+export const outbound = (n) => (n <= 10 ? [1, 1, 1] : [2, 1, 1]);
+export const ROUNDS = PACES.standard.map((secs, i) => ({ secs, out: outbound(12)[i] })); // the classic 12-to-15 game
 export const GRACE_MS = 20000, PREDICT_MS = 20000, START_MS = 5000;
 export const ROLE_FACTION = { beacon: "signal", jammer: "static", signal: "signal", static: "static", forecaster: "neutral" };
 const ZONES = ["A", "B"];
@@ -45,8 +48,11 @@ function shuffle(list, rng) {
 /* ---------- State ---------- */
 /** opts.fast: every clock 30 times quicker, for local tests only (the DIVIDE_FAST variable, never set on the real site). */
 export function create(opts = {}) {
-  return { phase: "lobby", rev: 0, match: 0, host: { plays: false, name: "Host", avatar: "moon" }, roster: {}, log: [], fast: !!opts.fast, ...fresh() };
+  return { phase: "lobby", rev: 0, match: 0, host: { plays: false, name: "Host", avatar: "moon" }, roster: {}, log: [], fast: !!opts.fast,
+    opts: { zones: { A: "", B: "" }, pace: "standard", voice: true }, ...fresh() };
 }
+/** A zone's name the host typed ("Kitchen"), kept short and plain. */
+const cleanName = (x) => String(x || "").replace(/[^\p{L}\p{N} '&.,-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 18);
 const ms = (s, x) => (s.fast ? Math.round(x / 30) : x);
 /** Everything about one match, cleared for the next. */
 function fresh() {
@@ -54,13 +60,14 @@ function fresh() {
     order: [], role: {}, zone: {}, arrived: {}, leader: { A: null, B: null }, votes: { A: {}, B: {} }, offer: { A: null, B: null },
     sel: { A: [], B: [] }, locked: { A: false, B: false }, round: 0, final: false, deadline: null, graceUntil: null, startAt: null,
     paused: null, moves: [], prediction: null, result: null, auto: { A: false, B: false },
+    plan: { secs: PACES.standard.slice(), out: outbound(12) }, exchangeAt: null, revealAt: null,
   };
 }
 const log = (s, now, text) => { s.log.push({ at: now, text }); if (s.log.length > 30) s.log.splice(0, s.log.length - 30); };
 const inGame = (s) => ["arrival", "round", "lock", "moving", "predict"].includes(s.phase);
 const members = (s, z) => s.order.filter((id) => s.zone[id] === z);
 const nameOf = (s, id) => (s.roster[id] && s.roster[id].name) || "Someone";
-const need = (s) => ROUNDS[s.round].out;
+const need = (s) => s.plan.out[s.round];
 const majority = (n) => Math.floor(n / 2) + 1;
 const forecaster = (s) => s.order.find((id) => s.role[id] === "forecaster") || null;
 
@@ -94,6 +101,7 @@ function deal(s, ctx) {
   byCard.forEach((id, i) => { s.role[id] = cards[i]; });
   byZone.forEach((id, i) => { s.zone[id] = i < Math.ceil(n / 2) ? "A" : "B"; });
   s.order = ids;
+  s.plan = { secs: (PACES[s.opts.pace] || PACES.standard).slice(), out: outbound(n) };
   for (const z of ZONES) { const m = members(s, z); s.leader[z] = m[randInt(m.length, ctx.rng)]; }
   s.phase = "arrival"; s.match++;
   for (const id of ids) s.arrived[id] = false;
@@ -103,9 +111,10 @@ function deal(s, ctx) {
 /* ---------- The round: leaders, votes, picks ---------- */
 function startRound(s, ctx) {
   s.phase = "round"; s.startAt = null; s.graceUntil = null;
-  s.deadline = ctx.now + ms(s, ROUNDS[s.round].secs * 1000);
+  const secs = s.plan.secs[s.round];
+  s.deadline = ctx.now + ms(s, secs * 1000);
   s.offer = { A: null, B: null }; s.auto = { A: false, B: false };
-  log(s, ctx.now, `Round ${s.round + 1} started: ${ROUNDS[s.round].secs / 60} minute${ROUNDS[s.round].secs > 60 ? "s" : ""}, then ${ROUNDS[s.round].out} from each zone move.`);
+  log(s, ctx.now, `Round ${s.round + 1} started: ${secs % 60 ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${secs / 60} minute${secs > 60 ? "s" : ""}`}, then ${need(s)} from each zone move.`);
 }
 function setLeader(s, z, id, now, why) {
   if (s.leader[z] === id) return;
@@ -131,11 +140,12 @@ function exchange(s, ctx) {
   const moves = [...s.sel.A.map((id) => ({ id, from: "A", to: "B" })), ...s.sel.B.map((id) => ({ id, from: "B", to: "A" }))];
   for (const m of moves) s.zone[m.id] = m.to;
   s.moves = moves;
+  s.exchangeAt = ctx.now;
   for (const id of s.order) s.arrived[id] = !moves.some((m) => m.id === id);
   s.votes = { A: {}, B: {} }; s.sel = { A: [], B: [] }; s.locked = { A: false, B: false }; s.offer = { A: null, B: null };
   s.graceUntil = null; s.deadline = null;
   log(s, ctx.now, `Exchange ${s.round + 1}: ${moves.length / 2} moved each way.`);
-  s.final = s.round === ROUNDS.length - 1;
+  s.final = s.round === s.plan.secs.length - 1;
   if (!s.final) s.round++;
   s.phase = "moving";
   settled(s, ctx);
@@ -152,7 +162,7 @@ function finish(s, ctx) {
   reveal(s, ctx);
 }
 function reveal(s, ctx) {
-  s.phase = "result"; s.deadline = null;
+  s.phase = "result"; s.deadline = null; s.revealAt = ctx.now; // every phone plays the reveal from this moment, together
   const beacon = s.order.find((id) => s.role[id] === "beacon"), jammer = s.order.find((id) => s.role[id] === "jammer");
   const together = s.zone[beacon] === s.zone[jammer], winner = together ? "static" : "signal", f = forecaster(s);
   s.result = { winner, together, beacon, jammer, zone: { beacon: s.zone[beacon], jammer: s.zone[jammer] },
@@ -238,6 +248,15 @@ export function hostCommand(s, d, ctx) {
   if (!d || typeof d !== "object") return { ok: false, error: "bad" };
   const no = (error) => ({ ok: false, error });
   const t = d.type;
+  if (t === "options") {
+    // The presets, before the deal: the zones' names, the pace, and whether leaders' phones announce.
+    if (s.phase !== "lobby") return no("phase");
+    if (d.zones && typeof d.zones === "object") s.opts.zones = { A: cleanName(d.zones.A), B: cleanName(d.zones.B) };
+    if (PACES[d.pace]) s.opts.pace = d.pace;
+    if (typeof d.voice === "boolean") s.opts.voice = d.voice;
+    s.rev++;
+    return { ok: true };
+  }
   if (t === "play") {
     if (s.phase !== "lobby") return no("phase");
     s.host.plays = !!d.on;
@@ -352,9 +371,11 @@ function timer(s, now) {
   return null;
 }
 const person = (s, id) => ({ id, name: nameOf(s, id), avatar: (s.roster[id] || {}).avatar, connected: !!(s.roster[id] && s.roster[id].connected) });
+/** What the presets mean for this many players: the talk times and who's sent each round. */
+function planFor(s, n) { return { secs: (PACES[s.opts.pace] || PACES.standard).slice(), out: outbound(Math.max(MIN_PLAYERS, n)) }; }
 function lobbyView(s) {
   const list = Object.values(s.roster);
-  return { count: list.length, ready: list.filter((p) => p.ready).length, min: MIN_PLAYERS, max: MAX_PLAYERS,
+  return { count: list.length, ready: list.filter((p) => p.ready).length, min: MIN_PLAYERS, max: MAX_PLAYERS, best: BEST, plan: planFor(s, list.length),
     people: list.map((p) => ({ ...person(s, p.id), ready: p.ready, host: p.id === HOST_ID })) };
 }
 function resultView(s) {
@@ -364,7 +385,7 @@ function resultView(s) {
 }
 /** One player's screen: their own card and zone, and only their own zone's people, leader, votes and picks. */
 export function playerView(s, id, now) {
-  const base = { phase: s.phase, match: s.match, rev: s.rev, now, paused: !!s.paused, log: s.log.slice(-4).map((l) => l.text) };
+  const base = { phase: s.phase, match: s.match, rev: s.rev, now, paused: !!s.paused, log: s.log.slice(-4).map((l) => l.text), opts: s.opts };
   if (s.phase === "lobby") return { ...base, lobby: lobbyView(s), me: { id, ready: !!(s.roster[id] && s.roster[id].ready) } };
   if (!s.order.includes(id)) return { ...base, phase: s.phase === "result" ? "result" : "watch", result: s.phase === "result" ? resultView(s) : null };
   const z = s.zone[id], m = members(s, z), lead = s.leader[z];
@@ -373,7 +394,7 @@ export function playerView(s, id, now) {
   const view = {
     ...base,
     me: { id, zone: z, arrived: !!s.arrived[id], leader: lead === id, role: s.role[id] },
-    round: s.round + 1, rounds: ROUNDS.length, need: ROUNDS[s.round].out, final: s.final, timer: timer(s, now),
+    round: s.round + 1, rounds: s.plan.secs.length, need: need(s), final: s.final, timer: timer(s, now), plan: s.plan,
     sizes: { A: members(s, "A").length, B: members(s, "B").length },
     zone: {
       name: z, leader: lead ? person(s, lead) : null, majority: majority(m.length),
@@ -385,20 +406,23 @@ export function playerView(s, id, now) {
   };
   if (s.phase === "moving" || s.phase === "arrival") {
     const mine = s.moves.find((x) => x.id === id);
-    view.move = s.phase === "arrival" ? { first: true, to: z } : { moving: !!mine, from: mine ? mine.from : z, to: z,
-      coming: s.moves.filter((x) => x.to === z && x.id !== id).map((x) => nameOf(s, x.id)), waiting: s.order.filter((x) => !s.arrived[x]).length };
+    // After an exchange, who went where is public: everyone saw them walk.
+    view.move = s.phase === "arrival" ? { first: true, to: z } : { moving: !!mine, from: mine ? mine.from : z, to: z, at: s.exchangeAt,
+      coming: s.moves.filter((x) => x.to === z && x.id !== id).map((x) => nameOf(s, x.id)),
+      leaving: s.moves.filter((x) => x.from === z && x.id !== id).map((x) => nameOf(s, x.id)), waiting: s.order.filter((x) => !s.arrived[x]).length };
   }
   if (s.phase === "predict") view.predict = s.role[id] === "forecaster" ? { asked: true, pick: s.prediction } : { asked: false };
   if (s.phase === "result") {
     const r = s.result, f = s.role[id] === "forecaster";
     view.result = resultView(s);
+    view.result.at = s.revealAt;
     view.result.youWon = f ? r.forecaster.won : ROLE_FACTION[s.role[id]] === r.winner;
   }
   return view;
 }
 /** The host's console: head counts, arrivals, who leads and whether they've locked, and the controls. Never cards. */
 export function hostView(s, now) {
-  const base = { phase: s.phase, match: s.match, rev: s.rev, now, paused: !!s.paused, plays: s.host.plays, hostName: s.host.name, log: s.log.slice(-8).map((l) => l.text) };
+  const base = { phase: s.phase, match: s.match, rev: s.rev, now, paused: !!s.paused, plays: s.host.plays, hostName: s.host.name, log: s.log.slice(-8).map((l) => l.text), opts: s.opts };
   if (s.phase === "lobby") return { ...base, lobby: lobbyView(s) };
   const zones = {};
   for (const z of ZONES) {
@@ -406,7 +430,8 @@ export function hostView(s, now) {
     zones[z] = { count: m.length, leader: s.leader[z] ? person(s, s.leader[z]) : null, locked: s.locked[z],
       people: m.map((x) => ({ ...person(s, x), arrived: !!s.arrived[x], leader: x === s.leader[z] })) };
   }
-  return { ...base, round: s.round + 1, rounds: ROUNDS.length, need: ROUNDS[s.round].out, final: s.final, timer: timer(s, now), zones,
+  return { ...base, round: s.round + 1, rounds: s.plan.secs.length, need: need(s), final: s.final, timer: timer(s, now), zones, plan: s.plan,
+    moves: s.phase === "moving" ? s.moves.map((m) => ({ name: nameOf(s, m.id), from: m.from, to: m.to })) : [],
     waiting: s.order.filter((x) => !s.arrived[x]).map((x) => nameOf(s, x)), predicting: s.phase === "predict",
-    result: s.phase === "result" ? resultView(s) : null };
+    result: s.phase === "result" ? { ...resultView(s), at: s.revealAt } : null };
 }

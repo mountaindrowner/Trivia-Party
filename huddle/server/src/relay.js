@@ -25,8 +25,8 @@ export const GAMES = {
     avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
       "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "wolf", "guitar"] },
   // Lights Out, on the Bonfire site: one night of wolves at camp, run from the host's phone. No audience: everyone has a card.
-  // Signal Divide, on the Bonfire site: 12 to 15 people in two zones, run by the server itself (divide.js).
-  "signal-divide": { maxPlayers: 15, maxAudience: 0,
+  // Signal Divide, on the Bonfire site: 6 to 20 people (best 12 to 15) in two zones, run by the server itself (divide.js).
+  "signal-divide": { maxPlayers: 20, maxAudience: 0,
     avatars: ["tent", "moon", "star", "pine", "mountain", "canoe", "lantern", "bear", "raccoon", "deer", "hedgehog", "butterfly",
       "mushroom", "coffee", "dango", "compass", "map", "sparkles", "snail", "beaver", "fox", "owl", "guitar"] },
   "lights-out": { maxPlayers: 12, maxAudience: 0,

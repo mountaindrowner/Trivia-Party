@@ -1,17 +1,21 @@
 /* Signal Divide: a player's screen. One view for every player's phone (huddle/phone draws it for a "divide" screen)
    and for the host's own phone when the host plays (divide.js). The server (huddle/server/src/divide.js) sends each
-   phone only what it may know; this draws it.
+   phone only what it may know; this draws it, and makes the moments land.
 
-   Made for a crowd of people standing in a room:
-   - The normal screen is neutral: the zone letter, the clock, your zone's people. No team colours anywhere, so a
-     glance over your shoulder gives nothing away. Zone A/B is where you stand, never your team.
+   Made for two rooms full of people standing around:
+   - The everyday screen is neutral: the zone letter (and the name the host gave it), the clock, your zone's people.
+     No team colours anywhere, so a glance over your shoulder gives nothing away. Zone A/B is where you stand.
    - Your card shows only on purpose: hold "My card" to peek (let go and it's gone), or "Show team" / "Show card"
      to turn your phone toward someone you trust (8 seconds, or "Hide now"). Switching apps hides it.
-   - One clear sentence on top says what to do next. Moving between zones is a full screen you can't miss.
-   - The card overlays live outside the redrawn screen, so the server's updates never snap them shut mid-peek.
+   - The host's phone can only be heard in one zone, so every phone carries the moments itself: a sweep across the
+     screen and a sound when a round starts, the last ten seconds counted down huge, "TIME'S UP", the exchange (who's
+     leaving, who's coming), a crown when you become leader, and the reveal, played on every phone at the same
+     moment (the server stamps it). And each zone's leader's phone is that zone's announcer: it says the time, the
+     moves and the result out loud (the host can turn that off).
+   - Redraws never land under a finger, and an unchanged view isn't redrawn, so no tap is lost.
 
    SD_VIEW.render(root, view, kit, toast)   kit = { el, send(data) -> bool, buzz(ms|pattern), host (bool: drawn on
-   the host's phone) }   SD_VIEW.ROLES, SD_VIEW.FACTIONS: the cards' words, for the reveal. */
+   the host's phone) }   Also: ROLES, FACTIONS, ICONS, sign(el, faction), cinematic(el, result, at, offset). */
 window.SD_VIEW = (() => {
   "use strict";
   const ICONS = {
@@ -31,22 +35,119 @@ window.SD_VIEW = (() => {
     forecaster: { name: "Forecaster", faction: "neutral", text: "You're on no team. Watch, listen, and at the very end predict which team wins. You win if you're right." },
   };
   const ROLE_OF = (r) => ROLES[r] || ROLES.signal;
-  /* Each team's mark, drawn (not a font character, so it looks the same on every phone): Signal's broadcast rings,
-     Static's zigzag, the Forecaster's question mark. Always with the team's name too, never colour alone. */
+  /* Each team's mark, drawn (so it looks the same on every phone): Signal's broadcast rings, Static's zigzag, the
+     Forecaster's question mark. Always with the team's name too, never colour alone. */
   const SVG = {
-    signal: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="5" fill="currentColor"/><circle cx="24" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="3.5"/><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3.5" opacity=".6"/></svg>',
+    signal: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="5" fill="currentColor"/><circle class="w1" cx="24" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="3.5"/><circle class="w2" cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3.5" opacity=".6"/></svg>',
     static: '<svg viewBox="0 0 48 48" aria-hidden="true"><polyline points="3,30 11,14 19,34 27,12 35,32 45,16" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg>',
     neutral: '<svg viewBox="0 0 48 48" aria-hidden="true"><text x="24" y="36" text-anchor="middle" font-size="34" font-weight="700" font-family="system-ui, sans-serif" fill="currentColor">?</text><circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="3"/></svg>',
   };
   const sign = (el, faction, cls) => { const n = el("span", { class: "sd-sign " + (cls || ""), "data-faction": faction }); n.innerHTML = SVG[faction]; return n; };
   const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
   const face = (p) => ICONS[p.avatar] || "🙂";
+  const zoneLabel = (v, z) => (v.opts && v.opts.zones && v.opts.zones[z]) || "";
+  const zoneFull = (v, z) => (zoneLabel(v, z) ? `Zone ${z} (${zoneLabel(v, z)})` : `Zone ${z}`);
+  const list = (xs) => (xs.length < 2 ? xs.join("") : xs.slice(0, -1).join(", ") + " and " + xs[xs.length - 1]);
+  const NUM = ["zero", "one", "two", "three", "four"];
+  const timeWords = (secs) => (secs % 60 ? `${Math.floor(secs / 60) ? `${Math.floor(secs / 60)} and a half minutes` : `${secs} seconds`}` : `${NUM[secs / 60] || secs / 60} minute${secs > 60 ? "s" : ""}`);
 
-  /* ---------- The clock: counted from the server's deadline, so a sleeping phone catches up when it wakes ---------- */
-  let clockAt = null, clockLeft = 0, clockPaused = false, offset = 0;
+  /* ---------- Sound on every phone: short radio-ish tones, made on the spot (no files) ----------
+     iPhones only allow sound after a tap, so the first tap anywhere wakes it (joining is a tap). 🔈 turns it off. */
+  const sound = (() => {
+    let c = null, on = true;
+    try { on = localStorage.getItem("sd-sound") !== "off"; } catch (e) {}
+    const ctx = () => { try { c = c || new (window.AudioContext || window.webkitAudioContext)(); if (c.state !== "running") c.resume(); } catch (e) {} return c; };
+    addEventListener("pointerdown", () => { try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {} ctx(); }, true);
+    function beep(f, t, dur, vol, type, to) {
+      const a = ctx(); if (!a) return;
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(f, a.currentTime + t);
+      if (to) o.frequency.exponentialRampToValueAtTime(to, a.currentTime + t + dur);
+      g.gain.setValueAtTime(0.0001, a.currentTime + t); g.gain.exponentialRampToValueAtTime(vol, a.currentTime + t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + t + dur);
+      o.connect(g).connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + dur + 0.05);
+    }
+    function hiss(t, dur, vol) {
+      const a = ctx(); if (!a) return;
+      const n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+      s.buffer = b; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.7; g.gain.value = vol;
+      s.connect(f).connect(g).connect(a.destination); s.start(a.currentTime + t);
+    }
+    const CUES = {
+      start: () => { hiss(0, 0.25, 0.25); beep(660, 0.2, 0.12, 0.2); beep(880, 0.34, 0.12, 0.2); beep(1320, 0.48, 0.22, 0.22); },
+      tick: () => beep(1200, 0, 0.06, 0.18, "square"),
+      up: () => { beep(440, 0, 0.35, 0.25, "sawtooth", 220); hiss(0.05, 0.4, 0.2); },
+      move: () => { for (let i = 0; i < 3; i++) { beep(880, i * 0.32, 0.14, 0.25, "square"); beep(660, i * 0.32 + 0.15, 0.14, 0.25, "square"); } },
+      crown: () => { [523, 659, 784, 1047].forEach((f, i) => beep(f, i * 0.09, 0.25, 0.2, "triangle")); },
+      lock: () => { beep(300, 0, 0.08, 0.25, "square"); beep(600, 0.09, 0.12, 0.2, "square"); },
+      arrive: () => { beep(784, 0, 0.1, 0.18); beep(1047, 0.1, 0.18, 0.18); },
+      static: () => hiss(0, 0.6, 0.3),
+      reveal: () => { hiss(0, 0.2, 0.2); beep(220, 0.15, 0.6, 0.25, "triangle", 440); },
+      win: () => { [523, 659, 784, 1047, 1319].forEach((f, i) => beep(f, i * 0.1, 0.35, 0.2, "triangle")); },
+      lose: () => { beep(330, 0, 0.3, 0.2, "triangle", 300); beep(262, 0.3, 0.5, 0.2, "triangle", 220); },
+    };
+    return {
+      play(name) { if (on && CUES[name]) try { CUES[name](); } catch (e) {} },
+      get on() { return on; },
+      toggle() { on = !on; try { localStorage.setItem("sd-sound", on ? "on" : "off"); } catch (e) {} return on; },
+    };
+  })();
+
+  /* ---------- The announcer: each zone's leader's phone speaks for that zone ---------- */
+  const voice = (() => {
+    let v = null, woke = false;
+    const pick = () => { try { const all = speechSynthesis.getVoices().filter((x) => /^en(-|_|$)/i.test(x.lang)); v = all.find((x) => /natural|premium|enhanced/i.test(x.name)) || all.find((x) => /Google US English|Samantha|Daniel/.test(x.name)) || all[0] || null; } catch (e) {} };
+    if ("speechSynthesis" in window) { pick(); speechSynthesis.addEventListener("voiceschanged", pick); }
+    addEventListener("pointerdown", () => { if (!woke && "speechSynthesis" in window) { woke = true; try { speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {} } }, true);
+    return {
+      say(text, now) {
+        if (!("speechSynthesis" in window) || !sound.on) return;
+        try {
+          if (now) speechSynthesis.cancel();
+          for (const part of text.match(/[^.!?]+[.!?]*/g) || [text]) {
+            const u = new SpeechSynthesisUtterance(part.trim());
+            if (v) { u.voice = v; u.lang = v.lang; }
+            u.rate = v && /natural|premium|enhanced/i.test(v.name) ? 1 : 0.95;
+            speechSynthesis.speak(u);
+          }
+        } catch (e) {}
+      },
+    };
+  })();
+
+  /* ---------- The clock, and the moments it brings: counted from the server's deadline ---------- */
+  let clockAt = null, clockLeft = 0, clockPaused = false, clockKind = "", offset = 0, lastSec = -1, cur = null;
+  const big = document.createElement("div");
+  big.className = "sd-ten"; big.setAttribute("aria-hidden", "true");
   setInterval(() => {
-    for (const n of document.querySelectorAll(".sd-clock")) n.textContent = clockPaused ? mmss(clockLeft) : clockAt == null ? "" : mmss(clockAt - (Date.now() + offset));
-  }, 250);
+    const left = clockPaused ? clockLeft : clockAt == null ? null : clockAt - (Date.now() + offset);
+    for (const n of document.querySelectorAll(".sd-clock")) n.textContent = left == null ? "–" : mmss(left);
+    // The last ten seconds of a round: counted huge across the screen, a tick for each of the last five.
+    const sec = left == null ? -1 : Math.ceil(left / 1000);
+    const ten = clockKind === "round" && !clockPaused && sec > 0 && sec <= 10;
+    if (ten) { if (!big.isConnected) document.body.append(big); if (sec !== lastSec) { big.textContent = sec; big.classList.remove("go"); void big.offsetWidth; big.classList.add("go"); if (sec <= 5) sound.play("tick"); } }
+    else if (big.isConnected) big.remove();
+    // The leader's phone says the time as it runs down.
+    if (cur && cur.announce && clockKind === "round" && !clockPaused && sec !== lastSec) {
+      const total = cur.plan ? cur.plan.secs[cur.round - 1] : 0;
+      if (sec === 60 && total > 90) voice.say("One minute left.");
+      if (sec === 30) voice.say(`Thirty seconds. ${cur.leaderName}, pick ${NUM[cur.need]} to send to Zone ${cur.other}.`);
+      if (sec === 10) voice.say("Ten seconds!");
+    }
+    lastSec = sec;
+  }, 200);
+
+  /* ---------- A sweep across the screen when something happens (on the page itself, so a redraw can't stop it) ---------- */
+  /* (Two at once, like "cards dealt" and "you're the leader", play one after the other.) */
+  let curtainFree = 0;
+  function curtain(el, cls, icon, title, lines, ms = 2600) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) ms = 1400;
+    const n = el("div", { class: "sd-curtain " + cls, "aria-hidden": "true" }, el("div", { class: "sd-cicon" }, icon), el("b", {}, title), ...(lines || []).map((l) => el("p", {}, l)));
+    const start = Math.max(Date.now(), curtainFree);
+    curtainFree = start + ms - 300;
+    setTimeout(() => { document.body.append(n); setTimeout(() => n.remove(), ms); }, start - Date.now());
+  }
 
   /* ---------- The card: overlays on the page itself, hidden on any app switch ---------- */
   let overlay = null, hideTimer = 0, myRole = null;
@@ -82,7 +183,7 @@ window.SD_VIEW = (() => {
   /** Hold to peek: the card shows only while your finger is down. */
   function peekButton(kit) {
     const { el } = kit;
-    const b = el("button", { type: "button", class: "sd-peek", "aria-label": "My card: press and hold to see it" }, el("span", { class: "sd-peek-icon" }, "🂠"), el("span", {}, el("b", {}, "My card"), el("small", {}, "Hold to peek")));
+    const b = el("button", { type: "button", class: "sd-peek", "aria-label": "My card: press and hold to see it" }, el("span", { class: "sd-peek-icon" }), el("span", {}, el("b", {}, "My card"), el("small", {}, "Hold to peek")));
     const on = (e) => {
       e.preventDefault();
       if (overlay) return;
@@ -94,7 +195,7 @@ window.SD_VIEW = (() => {
     b.addEventListener("pointerdown", on);
     for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, hide);
     b.addEventListener("contextmenu", (e) => e.preventDefault());
-    b.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !overlay) { e.preventDefault(); overlay = kit.el("div", { class: "sd-overlay sd-peeking" }, cardFace(kit.el, myRole, "full")); document.body.append(overlay); } });
+    b.addEventListener("keydown", (e) => { if ((e.key === " " || e.key === "Enter") && !overlay) { e.preventDefault(); overlay = el("div", { class: "sd-overlay sd-peeking" }, cardFace(el, myRole, "full")); document.body.append(overlay); } });
     b.addEventListener("keyup", hide);
     return b;
   }
@@ -105,35 +206,70 @@ window.SD_VIEW = (() => {
       el("button", { type: "button", class: "sd-ghost", onclick: () => showOff(kit, "full") }, "Show card"));
   }
 
+  /* ---------- The moments: worked out from what changed between one view and the next ---------- */
+  let seen = { key: "", leader: null, move: null, locked: null, arrived: null, reveal: null };
+  function moments(v, kit) {
+    const { el } = kit, me = v.me || {}, z = me.zone, other = z === "A" ? "B" : "A";
+    const key = `${v.match}:${v.phase}:${v.round}`, fresh = key !== seen.key;
+    const announce = v.opts && v.opts.voice && me.leader;
+    cur = v.round ? { announce, plan: v.plan, round: v.round, need: v.need, other, leaderName: v.zone && v.zone.leader ? v.zone.leader.name : "Leader" } : null;
+    if (fresh && seen.key) {
+      if (v.phase === "arrival") {
+        curtain(el, "sd-c-deal", "📡", "CARDS DEALT", [`Go to ${zoneFull(v, z)}`, "Your card is secret until you choose to show it."]);
+        sound.play("start"); kit.buzz([100, 60, 100]);
+      }
+      if (v.phase === "round") {
+        const secs = v.plan.secs[v.round - 1];
+        curtain(el, "sd-c-round", `${v.round}`, `ROUND ${v.round}`, [`${mmss(secs * 1000)} to talk`, `Then ${v.need} from each zone move`]);
+        sound.play("start"); kit.buzz([80, 60, 80]);
+        if (announce) voice.say(`Round ${NUM[v.round]}. ${timeWords(secs)}. Zone ${z}, your leader is ${v.zone.leader.name}. At the end, ${NUM[v.need]} of you go to Zone ${other}. Talk it out.`, true);
+      }
+      if (v.phase === "lock") {
+        curtain(el, "sd-c-up", "⏱", "TIME'S UP", [me.leader ? (v.zone.locked ? "You're locked in." : `Lock in your ${v.need} now!`) : "Leaders are locking in..."]);
+        sound.play("up"); kit.buzz(me.leader ? [200, 100, 200, 100, 200] : [150]);
+        if (announce && !v.zone.locked) voice.say(`Time's up! ${v.zone.leader.name}, lock in who you're sending. Twenty seconds, or the server picks.`, true);
+      }
+      if (v.phase === "moving" && v.move) {
+        const m = v.move, out = m.moving ? [`You're going to ${zoneFull(v, z)}`] : [];
+        if (m.leaving && m.leaving.length) out.push(`Leaving: ${list(m.leaving)}`);
+        if (m.coming && m.coming.length) out.push(`Coming here: ${list(m.coming)}`);
+        curtain(el, "sd-c-swap", "⇄", v.final ? "FINAL EXCHANGE" : "EXCHANGE", out, 3200);
+        sound.play(m.moving ? "move" : "static"); kit.buzz(m.moving ? [300, 120, 300, 120, 300] : [100]);
+        if (announce) voice.say(`Exchange! ${m.leaving && m.leaving.length ? `${list(m.leaving)}, go to Zone ${other}.` : ""} ${m.coming && m.coming.length ? `${list(m.coming)} ${m.coming.length > 1 ? "are" : "is"} coming here.` : ""}${v.final ? " That's the last move." : ""}`, true);
+      }
+      if (v.phase === "predict") { sound.play("static"); kit.buzz([60, 40, 60]); }
+    }
+    // You were made leader (voted in, handed over, or chosen at the start).
+    if (seen.leader === false && me.leader && v.phase !== "lobby") {
+      curtain(el, "sd-c-crown", "👑", "YOU'RE THE LEADER", [`of ${zoneFull(v, z)}`, `At the end of the round, you pick who's sent away.`], 3000);
+      sound.play("crown"); kit.buzz([60, 40, 60, 40, 160]);
+    }
+    if (seen.locked === false && v.zone && v.zone.locked) sound.play("lock");
+    if (seen.arrived === false && me.arrived) sound.play("arrive");
+    seen = { key, leader: v.phase === "lobby" ? false : !!me.leader, locked: v.zone ? !!v.zone.locked : null, arrived: v.me ? !!me.arrived : null, reveal: seen.reveal };
+  }
+
   /* ---------- The screen ----------
-     It's redrawn whenever the server says anything changed (with 15 people voting, that's often). A redraw never
-     lands under a finger: while one is down, it waits until it lifts, so no tap is lost; and a view that hasn't
-     changed isn't redrawn at all. */
-  let lastPhase = "", lastMove = "", pressing = false, waiting = null, drawn = "";
+     Redrawn whenever the server says anything changed (with 15 people voting, that's often). A redraw never lands
+     under a finger: while one is down, it waits until it lifts. An unchanged view isn't redrawn at all. */
+  let pressing = false, waiting = null, drawn = "", lastArgs = null, cineTimer = 0;
   addEventListener("pointerdown", () => { pressing = true; }, true);
   const lift = () => { pressing = false; if (waiting) { const w = waiting; waiting = null; setTimeout(() => render(...w), 0); } };
   addEventListener("pointerup", lift, true);
   addEventListener("pointercancel", lift, true);
   function render(root, v, kit, toast) {
-    if (pressing && root.firstChild) { waiting = [root, v, kit, toast]; return; }
-    const same = JSON.stringify([v.rev, v.phase, v.me, v.zone, v.paused, v.timer && [v.timer.kind, v.timer.until, v.timer.paused], v.move, v.predict, v.result, v.lobby, toast, kit.host]);
+    lastArgs = [root, v, kit, toast];
+    if (pressing && root.firstChild) { waiting = lastArgs; return; }
+    offset = (v.now || Date.now()) - Date.now();
+    const cine = v.phase === "result" && v.result && v.result.at && Date.now() + offset < v.result.at + CINE_MS;
+    const same = JSON.stringify([v.rev, v.phase, v.me, v.zone, v.paused, v.timer && [v.timer.kind, v.timer.until, v.timer.paused], v.move, v.predict, v.result, v.lobby, toast, kit.host, cine, sound.on]);
     if (same === drawn && root.querySelector(".sd")) return;
     drawn = same;
     const { el } = kit;
-    offset = (v.now || Date.now()) - Date.now();
     myRole = v.me && v.me.role;
     const t = v.timer;
-    clockPaused = !!(t && t.paused); clockLeft = t ? t.left : 0; clockAt = t && !t.paused ? t.until : null;
-    // A buzz when something changes that you need to look up for.
-    const key = `${v.phase}:${v.round}:${v.match}`;
-    if (key !== lastPhase) {
-      lastPhase = key;
-      if (v.phase === "round") kit.buzz([80, 60, 80]);
-      if (v.phase === "lock" && v.me && v.me.leader) kit.buzz([200, 100, 200]);
-      if (v.phase === "result" || v.phase === "predict") kit.buzz([60, 40, 60, 40, 200]);
-    }
-    const moveKey = v.move && v.move.moving ? `${v.match}:${v.round}:${v.move.to}` : "";
-    if (moveKey && moveKey !== lastMove) { lastMove = moveKey; kit.buzz([300, 120, 300]); }
+    clockPaused = !!(t && t.paused); clockLeft = t ? t.left : 0; clockAt = t && !t.paused ? t.until : null; clockKind = t ? t.kind : "";
+    if (v.phase !== "lobby") moments(v, kit); else { seen.key = `${v.match}:lobby`; seen.leader = false; cur = null; }
     const parts = [];
     if (v.paused) parts.push(el("div", { class: "sd-paused" }, "⏸ The host paused the game"));
     if (toast) parts.push(el("div", { class: "sd-toast", role: "alert" }, TOASTS[toast] || "That didn't work. Try again."));
@@ -141,77 +277,87 @@ window.SD_VIEW = (() => {
     if (ph === "lobby") parts.push(...lobby(v, kit));
     else if (ph === "watch") parts.push(el("div", { class: "sd-big-msg" }, el("h2", {}, "A match is on"), el("p", {}, "You'll be dealt into the next one. Watch, and listen!")));
     else if (ph === "aborted") parts.push(el("div", { class: "sd-big-msg" }, el("h2", {}, "Match stopped"), el("p", {}, "The host stopped this match, so nobody wins it. Wait for the next one.")));
-    else if (ph === "result") parts.push(...result(v, kit));
-    else if ((ph === "arrival" || ph === "moving") && v.move && (v.move.first || v.move.moving) && !v.me.arrived) parts.push(...moveScreen(v, kit));
+    else if (ph === "result") {
+      if (cine) { parts.push(cinematic(el, v.result, v.result.at, offset, v)); clearTimeout(cineTimer); cineTimer = setTimeout(() => { drawn = ""; render(...lastArgs); }, Math.max(50, v.result.at + CINE_MS - (Date.now() + offset))); }
+      else parts.push(...result(v, kit));
+    } else if ((ph === "arrival" || ph === "moving") && v.move && (v.move.first || v.move.moving) && !v.me.arrived) parts.push(...moveScreen(v, kit));
     else parts.push(...play(v, kit));
-    if (v.log && v.log.length && ph !== "lobby") parts.push(el("ul", { class: "sd-log", "aria-label": "What's happened" }, ...v.log.slice(-3).map((l) => el("li", {}, l))));
-    const screen = el("div", { class: "sd sd-" + ph }, ...parts);
-    root.replaceChildren(screen);
+    if (v.log && v.log.length && ph !== "lobby" && !cine) parts.push(el("ul", { class: "sd-log", "aria-label": "What's happened" }, ...v.log.slice(-3).map((l) => el("li", {}, l))));
+    if (ph !== "lobby" && !cine) parts.push(el("button", { type: "button", class: "sd-sound", "aria-pressed": String(sound.on), onclick: () => { sound.toggle(); drawn = ""; render(...lastArgs); } }, sound.on ? "🔊 Sound on" : "🔈 Sound off"));
+    root.replaceChildren(el("div", { class: "sd sd-" + ph }, ...parts));
   }
   const TOASTS = { count: "Pick exactly the number you need first.", leader: "Only your zone's leader can do that.", phase: "Not right now.", zone: "They're not in your zone.", pick: "You can't pick that.", offer: "That offer is gone." };
 
   function lobby(v, kit) {
-    const { el, send } = kit, L = v.lobby, ready = v.me && v.me.ready;
+    const { el, send } = kit, L = v.lobby, ready = v.me && v.me.ready, zA = zoneLabel(v, "A"), zB = zoneLabel(v, "B");
+    const out = L.plan.out, secs = L.plan.secs;
     return [
-      el("div", { class: "sd-hero" }, el("div", { class: "sd-logo" }, "SIGNAL", el("span", {}, "DIVIDE")), el("p", { class: "sd-tag" }, "Two zones. Hidden teams. One last move.")),
-      el("p", { class: "sd-count" }, el("b", {}, `${L.count}`), ` joined · ${L.ready} ready · ${L.min}–${L.max} can play`),
+      el("div", { class: "sd-hero" }, el("div", { class: "sd-radar", "aria-hidden": "true" }, el("i"), el("i"), el("i"), el("b")),
+        el("div", { class: "sd-logo" }, "SIGNAL", el("span", {}, "DIVIDE")), el("p", { class: "sd-tag" }, "Two zones. Hidden teams. One last move.")),
+      el("p", { class: "sd-count" }, el("b", {}, `${L.count}`), ` joined · ${L.ready} ready`),
       kit.host ? el("p", { class: "sd-line" }, "You're playing too: you're ready. Deal from the Host tab.")
-        : el("button", { type: "button", class: "sd-main" + (ready ? " on" : ""), "aria-pressed": String(!!ready), onclick: () => { if (send({ type: "ready", on: !ready })) kit.buzz(30); } }, ready ? "✔ Ready! (tap to undo)" : "I'm ready"),
+        : el("button", { type: "button", class: "sd-main" + (ready ? " on" : ""), "aria-pressed": String(!!ready), onclick: () => { if (send({ type: "ready", on: !ready })) { kit.buzz(30); sound.play(ready ? "tick" : "arrive"); } } }, ready ? "✔ Ready! (tap to undo)" : "I'm ready"),
+      zA || zB ? el("div", { class: "sd-zonesign" }, el("div", {}, el("b", {}, "A"), el("span", {}, zA || "Zone A")), el("div", {}, el("b", {}, "B"), el("span", {}, zB || "Zone B"))) : null,
       el("ol", { class: "sd-how" },
         el("li", {}, el("b", {}, "Two secret teams. "), "Signal wants the Beacon and the Jammer to finish apart. Static wants them together."),
         el("li", {}, el("b", {}, "Your phone gives you a card and a zone. "), "Your zone (A or B) is where you stand, not your team."),
         el("li", {}, el("b", {}, "Talk to the people in your zone. "), "Show your team or your card to anyone you trust, or don't. Lying is part of the game."),
-        el("li", {}, el("b", {}, "Each zone has a leader. "), "After each round (3, 2, then 1 minutes) the leader sends 2, then 1, then 1 people to the other zone."),
+        el("li", {}, el("b", {}, "Each zone has a leader. "), `After each round (${secs.map((x) => mmss(x * 1000)).join(", ")}) the leader sends ${out[0]}, then ${out[1]}, then ${out[2]} to the other zone.`),
         el("li", {}, el("b", {}, "Your card never changes. "), "Only people move. At the end, where the Beacon and the Jammer stand decides it.")),
-      el("p", { class: "sd-fine" }, "Bluff about your card, never about anyone's real life. Stay in your zone, and no signals across."),
+      el("p", { class: "sd-fine" }, "Turn your sound on: your phone will tell you when to move. Bluff about your card, never about anyone's real life."),
       el("ul", { class: "sd-people" }, ...L.people.map((p) => el("li", { class: p.ready ? "ready" : "" }, el("span", { class: "sd-av" }, face(p)), el("span", { class: "sd-nm" }, p.name), el("span", { class: "sd-st" }, p.ready ? "✔" : "…")))),
     ];
   }
 
   function moveScreen(v, kit) {
-    const { el, send } = kit, m = v.move, z = v.me.zone;
-    return [el("div", { class: "sd-move" },
+    const { el, send } = kit, m = v.move, z = v.me.zone, name = zoneLabel(v, z);
+    return [el("div", { class: "sd-move" + (m.first ? " first" : "") },
       el("p", { class: "sd-move-top" }, m.first ? "Your zone" : "Move now"),
-      el("div", { class: "sd-move-arrow", "aria-hidden": "true" }, m.first ? "📍" : "➜"),
-      el("h2", {}, m.first ? "GO TO ZONE " : "MOVE TO ZONE ", el("span", { class: "sd-zl" }, z)),
+      el("div", { class: "sd-move-big" }, el("span", { class: "sd-move-arrow", "aria-hidden": "true" }, m.first ? "📍" : "➜"), el("b", {}, z)),
+      el("h2", {}, m.first ? "GO TO ZONE " + z : "MOVE TO ZONE " + z),
+      name ? el("p", { class: "sd-move-name" }, name) : null,
       el("p", {}, m.first ? "This is where you stand, not your team. Your card is secret until you choose to show it." : "Take your phone with you. Your card stays exactly the same."),
       el("button", { type: "button", class: "sd-main", onclick: () => { if (send({ type: "here" })) kit.buzz(40); } }, `I'm in Zone ${z}`))];
   }
 
   function header(v, el) {
-    const t = v.timer;
+    const t = v.timer, name = zoneLabel(v, v.me.zone);
     const label = !t ? "" : t.kind === "start" ? "Starts in" : t.kind === "grace" ? "Leaders lock in" : t.kind === "predict" ? "Prediction" : "Time left";
     return el("div", { class: "sd-top" },
-      el("div", { class: "sd-zone", "aria-label": `You're in Zone ${v.me.zone}` }, el("small", {}, "ZONE"), el("b", {}, v.me.zone)),
+      el("div", { class: "sd-zone", "aria-label": `You're in ${zoneFull(v, v.me.zone)}` }, el("small", {}, "ZONE"), el("b", {}, v.me.zone), name ? el("em", {}, name) : el("i", { class: "sd-bars", "aria-hidden": "true" }, el("i"), el("i"), el("i"), el("i"))),
       el("div", { class: "sd-round" }, el("small", {}, v.phase === "predict" || (v.phase === "moving" && v.final) ? "Final" : `Round ${v.round} of ${v.rounds}`),
-        el("b", { class: "sd-clock" + (t && t.kind === "round" && t.left < 30000 ? " low" : "") }, t ? (t.paused ? mmss(t.left) : mmss(t.until - (Date.now() + offset))) : "–"), el("small", {}, label)));
+        el("b", { class: "sd-clock" + (t && t.kind === "round" && t.left < 30000 ? " low" : "") }, t ? (t.paused ? mmss(t.left) : mmss(t.until - (Date.now() + offset))) : "–"), el("small", {}, label),
+        el("div", { class: "sd-dots", "aria-hidden": "true" }, ...Array.from({ length: v.rounds }, (_, i) => el("i", { class: i < v.round - 1 || (i === v.round - 1 && v.phase === "moving" && v.final) ? "done" : i === v.round - 1 ? "now" : "" })))));
   }
 
   /** The one sentence on top: what to do now. */
   function nextStep(v) {
-    const lead = v.zone.leader, me = v.me, need = v.need;
+    const lead = v.zone.leader, me = v.me, need = v.need, other = me.zone === "A" ? "B" : "A";
     if (v.phase === "arrival") return "Waiting for everyone to reach their zone. The round starts when they're all there.";
     if (v.phase === "moving") {
       if (v.final) return "The last moves are happening. Then the reveal.";
-      return v.move && v.move.coming && v.move.coming.length ? `Coming to Zone ${me.zone}: ${v.move.coming.join(", ")}. Round ${v.round} starts when they're here.` : `Round ${v.round} starts when everyone has moved.`;
+      return v.move && v.move.coming && v.move.coming.length ? `Coming to Zone ${me.zone}: ${list(v.move.coming)}. Round ${v.round} starts when they're here.` : `Round ${v.round} starts when everyone has moved.`;
     }
     if (v.phase === "predict") return "Waiting for the Forecaster's prediction...";
     if (v.phase === "lock") return me.leader ? (v.zone.locked ? "Locked! Waiting for the other leader." : `Time's up! Lock in ${need} to send, now.`) : `Time's up! ${lead ? lead.name : "The leader"} is locking in who moves.`;
-    if (me.leader) return v.zone.locked ? `You've locked in. They move when the time's up.` : `You lead Zone ${me.zone}. Before time's up, pick ${need} to send to the other zone.`;
-    return `Talk to Zone ${me.zone}. ${lead ? lead.name : "The leader"} leads, and picks ${need} to send away when time's up. Not happy? Vote for someone else.`;
+    if (me.leader) return v.zone.locked ? "You've locked in. They move when the time's up." : `You lead Zone ${me.zone}. Before time's up, pick ${need} to send to Zone ${other}.`;
+    return `Talk to Zone ${me.zone}. ${lead ? lead.name : "The leader"} leads, and sends ${need} to Zone ${other} when time's up. Not happy? Vote for someone else.`;
   }
 
   function play(v, kit) {
     const { el, send } = kit, me = v.me, Z = v.zone, live = v.phase === "round" || v.phase === "lock";
     const parts = [header(v, el), el("p", { class: "sd-next" }, nextStep(v)), cardBar(kit)];
-    // A leader's handover offer, for the one it's offered to.
     if (Z.offer && Z.offer.to.id === me.id) parts.push(el("div", { class: "sd-offer" }, el("p", {}, `${Z.offer.from.name} wants to make you Zone ${me.zone}'s leader.`),
       el("div", { class: "sd-row" }, el("button", { type: "button", class: "sd-main", onclick: () => send({ type: "accept" }) }, "Accept"), el("button", { type: "button", class: "sd-ghost", onclick: () => send({ type: "decline" }) }, "No thanks"))));
     if (v.phase === "predict" && v.predict && v.predict.asked) parts.push(predict(v, kit));
-    // The leader's picks.
+    // After an exchange (for those who stayed): who left, who's coming.
+    if (v.phase === "moving" && v.move && !v.move.moving) parts.push(el("div", { class: "sd-swap" },
+      el("div", {}, el("small", {}, `Left Zone ${me.zone}`), el("b", {}, v.move.leaving.length ? list(v.move.leaving) : "–")),
+      el("div", { class: "sd-swap-arrows", "aria-hidden": "true" }, "⇄"),
+      el("div", {}, el("small", {}, `Coming to Zone ${me.zone}`), el("b", {}, v.move.coming.length ? list(v.move.coming) : "–"))));
     if (me.leader && live) {
       const picks = Z.picks, full = picks.length === v.need;
-      parts.push(el("div", { class: "sd-lead" },
+      parts.push(el("div", { class: "sd-lead" + (v.phase === "lock" && !Z.locked ? " urgent" : "") },
         el("h3", {}, `👑 Send ${v.need} to Zone ${me.zone === "A" ? "B" : "A"}`),
         Z.locked ? el("p", { class: "sd-done" }, `✔ Locked in: ${Z.people.filter((p) => p.picked).map((p) => p.name).join(", ")}`) : el("div", { class: "sd-picks" }, ...Z.people.filter((p) => p.id !== me.id).map((p) => {
           const on = picks.includes(p.id);
@@ -227,7 +373,6 @@ window.SD_VIEW = (() => {
     } else if (live && Z.picks.length) {
       parts.push(el("p", { class: "sd-fine sd-center" }, `${Z.locked ? "Locked in" : "The leader is picking"}: ${Z.people.filter((p) => p.picked).map((p) => p.name).join(", ")}`));
     }
-    // Your zone's people: leader, votes, picks, and who's still on the way.
     const canVote = v.phase === "round" && !Z.locked;
     parts.push(el("div", { class: "sd-zonebox" },
       el("h3", {}, `Zone ${me.zone}: ${Z.people.length} here`, el("small", {}, canVote ? ` · tap a name to vote them leader (${Z.majority} votes needed)` : "")),
@@ -236,7 +381,8 @@ window.SD_VIEW = (() => {
         const row = el("li", { class: [p.leader ? "leader" : "", p.picked ? "picked" : "", mine ? "voted" : "", p.connected ? "" : "away"].join(" ") },
           el("span", { class: "sd-av" }, face(p)),
           el("span", { class: "sd-nm" }, p.name, p.id === me.id ? el("small", {}, " (you)") : null),
-          el("span", { class: "sd-st" }, p.leader ? "👑 leader" : "", p.picked ? " 📤 moving" : "", !p.arrived && (v.phase === "moving" || v.phase === "arrival") ? " 🚶 on the way" : "", p.votes && canVote ? ` · ${p.votes}🗳️` : ""));
+          el("span", { class: "sd-st" }, p.leader ? "👑 leader" : "", p.picked ? " 📤 moving" : "", !p.arrived && (v.phase === "moving" || v.phase === "arrival") ? " 🚶 on the way" : "", p.votes && canVote ? ` · ${p.votes}🗳️` : ""),
+          p.votes && canVote ? el("i", { class: "sd-votebar", style: `--w:${Math.min(100, (p.votes / Z.majority) * 100)}%` }) : null);
         if (canVote) {
           row.classList.add("tap");
           row.setAttribute("role", "button");
@@ -249,10 +395,9 @@ window.SD_VIEW = (() => {
       })),
       Z.myVote && canVote ? el("p", { class: "sd-fine" }, `You voted for ${(Z.people.find((p) => p.id === Z.myVote) || {}).name || "someone"}. Tap them again to take it back.`) : null,
       me.leader && canVote ? handover(v, kit) : null));
-    parts.push(el("p", { class: "sd-fine sd-center" }, `Zone A: ${v.sizes.A} · Zone B: ${v.sizes.B}`));
+    parts.push(el("p", { class: "sd-fine sd-center" }, `${zoneFull(v, "A")}: ${v.sizes.A} · ${zoneFull(v, "B")}: ${v.sizes.B}`));
     return parts;
   }
-  /** A leader can hand the job to someone in the zone (it takes when they accept). */
   function handover(v, kit) {
     const { el, send } = kit, Z = v.zone, me = v.me;
     if (Z.offer && Z.offer.from.id === me.id) return el("p", { class: "sd-fine" }, `You offered the leadership to ${Z.offer.to.name}. `, el("button", { type: "button", class: "sd-link", onclick: () => send({ type: "offer", to: null }) }, "Take it back"));
@@ -268,21 +413,52 @@ window.SD_VIEW = (() => {
         el("button", { type: "button", class: "sd-main sd-sta", onclick: () => send({ type: "predict", pick: "static" }) }, sign(el, "static", "mini"), " Static")));
   }
 
+  /* ---------- The reveal: played on every phone together, from the moment the server stamped ----------
+     0s static; 1.5s "The Beacon ended in..."; 3s its zone; 4.5s "The Jammer ended in..."; 6s its zone; 7.5s who won. */
+  const CINE_MS = 9000, played = new Set();
+  function cinematic(el, r, at, off, v) {
+    const t = Date.now() + off - at, z = (x) => (v ? zoneFull(v, x) : `Zone ${x}`);
+    // Each beat's sound plays once per reveal, however often the screen is redrawn meanwhile.
+    const beat = (ms, fn, once) => { if (t < ms) setTimeout(() => { if (once) { const k = at + ":" + ms; if (played.has(k)) return; played.add(k); } fn(); }, ms - t); };
+    const box = el("div", { class: "sd-cine" + (r.together ? " together" : " apart") });
+    const line = (ms, cls, ...kids) => { const n = el("div", { class: "sd-cline " + cls + (t >= ms ? " in" : "") }, ...kids); beat(ms, () => n.classList.add("in")); return n; };
+    box.append(
+      el("div", { class: "sd-noise", "aria-hidden": "true" }),
+      el("p", { class: "sd-cine-top" }, "The last broadcast..."),
+      line(1500, "q", sign(el, "signal", "mini"), "The Beacon ended in..."),
+      line(3000, "a sig", el("b", {}, z(r.zone.beacon)), el("span", {}, r.beacon.name)),
+      line(4500, "q", sign(el, "static", "mini"), "The Jammer ended in..."),
+      line(6000, "a sta", el("b", {}, z(r.zone.jammer)), el("span", {}, r.jammer.name)),
+      line(7400, "w", el("b", {}, r.together ? "TOGETHER" : "APART")));
+    beat(1, () => sound.play("static"), true);
+    beat(3000, () => sound.play("reveal"), true);
+    beat(6000, () => sound.play("reveal"), true);
+    beat(7400, () => sound.play(v && v.result && v.result.youWon != null ? (v.result.youWon ? "win" : "lose") : "win"), true);
+    // The zone's announcer reads it out too.
+    if (v && v.opts && v.opts.voice && v.me && v.me.leader && t < 1500 && !played.has(at + ":voice")) {
+      played.add(at + ":voice");
+      voice.say(`The last broadcast. The Beacon ended in Zone ${r.zone.beacon}. The Jammer ended in Zone ${r.zone.jammer}. ${r.together ? "Together. Static wins!" : "Apart. Signal wins!"}`, true);
+    }
+    return box;
+  }
+
   function result(v, kit) {
     const { el } = kit, r = v.result, W = FACTIONS[r.winner];
-    const why = r.together ? `The Beacon (${r.beacon.name}) and the Jammer (${r.jammer.name}) ended up together in Zone ${r.zone.beacon}.`
-      : `The Beacon (${r.beacon.name}) ended in Zone ${r.zone.beacon}, and the Jammer (${r.jammer.name}) in Zone ${r.zone.jammer}: apart.`;
+    const why = r.together ? `The Beacon (${r.beacon.name}) and the Jammer (${r.jammer.name}) ended up together in ${zoneFull(v, r.zone.beacon)}.`
+      : `The Beacon (${r.beacon.name}) ended in ${zoneFull(v, r.zone.beacon)}, and the Jammer (${r.jammer.name}) in ${zoneFull(v, r.zone.jammer)}: apart.`;
+    const rn = v.me ? ROLE_OF(v.me.role).name : "";
     const you = r.youWon == null ? null : el("div", { class: "sd-you " + (r.youWon ? "won" : "lost") }, el("b", {}, r.youWon ? "You win! 🎉" : "You lose"),
-      el("span", {}, v.me ? `You were ${ROLE_OF(v.me.role).name === "Forecaster" ? "the Forecaster" : `${/^[AEIOU]/.test(ROLE_OF(v.me.role).name) ? "an" : "a"} ${ROLE_OF(v.me.role).name}`}.` : ""));
-    const sorted = r.everyone.slice().sort((a, b) => (["beacon", "jammer", "forecaster"].indexOf(b.role) - ["beacon", "jammer", "forecaster"].indexOf(a.role)) || a.zone.localeCompare(b.zone));
+      el("span", {}, v.me ? `You were ${rn === "Forecaster" ? "the Forecaster" : `${/^[AEIOU]/.test(rn) ? "an" : "a"} ${rn}`}.` : ""));
+    const order = ["beacon", "jammer", "forecaster"];
+    const sorted = r.everyone.slice().sort((a, b) => ((order.indexOf(b.role) + 1 || 0) - (order.indexOf(a.role) + 1 || 0)) || a.zone.localeCompare(b.zone));
     return [
       el("div", { class: "sd-win", "data-faction": r.winner }, sign(el, r.winner), el("h2", {}, `${W.short} WINS`), el("p", {}, why)),
       you,
       r.forecaster ? el("p", { class: "sd-fine sd-center" }, `🔮 ${r.forecaster.name}, the Forecaster, ${r.forecaster.pick ? `predicted ${FACTIONS[r.forecaster.pick].name}: ${r.forecaster.won ? "right! They win too." : "wrong."}` : "didn't predict in time."}`) : null,
-      el("ul", { class: "sd-reveal" }, ...sorted.map((p, i) => el("li", { "data-faction": ROLE_OF(p.role).faction, style: `--i:${i}` },
+      el("ul", { class: "sd-reveal" }, ...sorted.map((p, i) => el("li", { "data-faction": ROLE_OF(p.role).faction, style: `--i:${i}`, class: p.role === "beacon" || p.role === "jammer" ? "key" : "" },
         el("span", { class: "sd-av" }, face(p)), el("span", { class: "sd-nm" }, p.name), el("span", { class: "sd-rl" }, sign(el, ROLE_OF(p.role).faction, "mini"), ROLE_OF(p.role).name), el("span", { class: "sd-zn" }, p.zone)))),
       el("p", { class: "sd-fine sd-center" }, kit.host ? "Rematch from the Host tab: new cards, new zones." : "The host can start a rematch: new cards, new zones."),
     ];
   }
-  return { render, ROLES, FACTIONS, ICONS, hide };
+  return { render, ROLES, FACTIONS, ICONS, hide, sign, cinematic, CINE_MS, sound };
 })();

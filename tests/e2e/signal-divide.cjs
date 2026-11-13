@@ -41,6 +41,14 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     await host.click('text=Create game');
     await host.waitForSelector('.hd-code', { timeout: 10000 });
     const code = (await host.textContent('.hd-code')).trim();
+    // The presets: name the zones (a quick pair, or typed), and a pace.
+    if (k % 2) await host.click('.hd-chip:has-text("Upstairs / Downstairs")');
+    else { await host.fill('.hd-zrow:has-text("A") input', 'Youth Room'); await host.fill('.hd-zrow:has-text("B") input', 'Kitchen'); await host.press('.hd-zrow:has-text("B") input', 'Tab'); }
+    await host.click(`.hd-chip:has-text("${k % 3 === 1 ? 'Quick' : 'Standard'}")`);
+    await sleep(500);
+    const opts = (await host.evaluate(() => SIGNAL_DIVIDE._state().view)).opts;
+    const zA = k % 2 ? 'Upstairs' : 'Youth Room';
+    check(opts.zones.A === zA && opts.pace === (k % 3 === 1 ? 'quick' : 'standard'), `the host sets the zones' names ("${opts.zones.A}" / "${opts.zones.B}") and the pace (${opts.pace})`);
     check(/^[A-Z]{4}$/.test(code), `the host's phone shows a QR code and the code (${code})`);
 
     // One real phone, from the QR link.
@@ -58,6 +66,7 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     await phone.click("text=I'm ready!");
     await phone.waitForSelector('.sd-lobby', { timeout: 8000 });
     await phone.click('.sd-lobby .sd-main');
+    check(((await phone.textContent('.sd-zonesign').catch(() => '')) || '').includes(zA), 'the phones show the zones\' names in the lobby');
 
     // The bots.
     const st = { errors: [], leaks: 0, roleChanged: 0, results: 0 };
@@ -125,13 +134,16 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
         if (pred) return await pred.click();
       } catch (e) {}
     };
-    let shots = 0, peeked = false, reconnected = false, last = '';
+    let shots = 0, peeked = false, reconnected = false, last = '', sawCurtain = false, sawTen = false, sawCine = false, sawName = false;
     const t0 = Date.now();
     while (Date.now() - t0 < 120000) {
       const s = await host.evaluate(() => SIGNAL_DIVIDE._state());
       if (!s.view) { await sleep(200); continue; }
       hostViews.push(JSON.stringify(s.view));
       if (s.view.phase === 'result') break;
+      sawCurtain = sawCurtain || !!(await phone.$('.sd-curtain'));
+      sawTen = sawTen || !!(await phone.$('.sd-ten'));
+      sawName = sawName || ((await phone.textContent('.sd-zone em, .sd-move-name').catch(() => '')) || '').length > 0;
       await actOn(phone);
       if (hostPlays) { if (s.tab !== 'me') await host.click('.hd-tabs button >> nth=0').catch(() => {}); await actOn(host); }
       const key = `${s.view.phase}:${s.view.round}`;
@@ -188,6 +200,11 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     }
     const end = await host.evaluate(() => SIGNAL_DIVIDE._state().view);
     check(end && end.phase === 'result', `the match reaches the result (${end && end.phase})`);
+    sawCine = !!(await phone.waitForSelector('.sd-cine', { timeout: 3000 }).catch(() => null));
+    if (k === 0) { await sleep(3500); await phone.screenshot({ path: `${OUT}/phone-98-reveal-playing.png` }); }
+    check(sawCurtain && sawCine, `the moments play on the phone: a sweep when things happen${sawTen ? ', the last ten seconds counted down' : ''}, and the reveal`);
+    check(sawName, 'the phone shows the zone\'s name (on the zone badge or the move screen)');
+    await phone.waitForSelector('.sd-win', { timeout: 12000 }).catch(() => {});
     for (let i = 0; i < 30 && st.results < bots.length; i++) await sleep(200);
     check(st.results === bots.length, `every phone sees the result (${st.results} of ${bots.length})`);
     check(!st.leaks, `no phone ever held another card before the result (${st.leaks} leaks)`);
@@ -195,8 +212,8 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     check(!st.roleChanged, 'nobody\'s card changed when they moved');
     const r = end.result, roles = r.everyone.map((p) => p.role), c = (x) => roles.filter((y) => y === x).length;
     check(roles.length === N && c('beacon') === 1 && c('jammer') === 1 && c('forecaster') === N % 2 && c('signal') === c('static'), `the deck for ${N}: 1 Beacon, 1 Jammer, equal teams, ${N % 2 ? '1 Forecaster' : 'no Forecaster'}`);
-    const zA = r.everyone.filter((p) => p.zone === 'A').length;
-    check(zA === Math.ceil(N / 2), `the zones are still ${Math.ceil(N / 2)}/${Math.floor(N / 2)} at the end`);
+    const inA = r.everyone.filter((p) => p.zone === 'A').length;
+    check(inA === Math.ceil(N / 2), `the zones are still ${Math.ceil(N / 2)}/${Math.floor(N / 2)} at the end`);
     const moves = bots.reduce((n, x) => n + (x.moves || 0), 0);
     check(moves > 0, `people moved between zones (${moves} bot moves)`);
     check(r.winner === (r.zone.beacon === r.zone.jammer ? 'static' : 'signal'), `the right team wins: ${r.winner} (Beacon in ${r.zone.beacon}, Jammer in ${r.zone.jammer})`);

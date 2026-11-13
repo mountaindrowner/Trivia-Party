@@ -156,7 +156,7 @@ end of the night, the wolf was Finn."), then the night step by step.
 
 ## Signal Divide: two zones, hidden teams (`divide/`)
 
-A third Bonfire mode, for **12 to 15 people** on their own phones, in two physical zones (two rooms, or two far-apart
+A third Bonfire mode, for **6 to 20 people** (best with 12 to 15) on their own phones, in two physical zones (two rooms, or two far-apart
 corners), with **no TV**. Built from the design package in `../docs/signal-divide/` (start with `00_START_HERE.md`).
 It's an original game inspired by the genre (two-room social deduction): its own names, story, rules text and look,
 not a copy of any published game's cards or art, and not licensed by anyone.
@@ -165,11 +165,32 @@ not a copy of any published game's cards or art, and not licensed by anyone.
 playing too" to get a card yourself), and everyone scans the QR code on your phone. When everyone has tapped
 **I'm ready**, tap **Lock & deal**. The lobby has a 45-second teaching script (it can read it out loud).
 
+**Set up the night** (in the lobby, before dealing):
+- **Name the zones** ("Youth Room" / "Kitchen", or a quick pair like Inside / Outside, Upstairs / Downstairs).
+  Every phone then says where to go: "MOVE TO ZONE B: Kitchen", and the zone badge and the reveal use the names.
+- **Pace:** Quick (2:00, 1:30, 1:00), Standard (3:00, 2:00, 1:00), Long (4:00, 3:00, 2:00).
+- **Announcer:** your phone can only be heard in one zone, so **each zone's leader's phone** says the round, the
+  time left (a minute, thirty seconds, ten), "time's up", who's leaving and who's coming, and the result, out loud
+  for that zone. Or Silent.
+- The teaching script picks up the zones' names and the times; the lobby shows what the presets mean for the
+  number of people there ("With 13: zones of 7 and 6, 2, then 1, then 1 sent... and one Forecaster").
+
+**The moments, on every phone** (so nobody has to be near the host): a full-screen sweep with a sound and a buzz
+when the cards are dealt, when a round starts ("ROUND 2 · 2:00 to talk"), at "TIME'S UP" and at the "EXCHANGE"
+(who's leaving, who's coming); the last ten seconds counted down huge behind the screen, with ticks; a crown and a
+fanfare when you become leader; a "MOVE TO ZONE B" screen that beeps and buzzes until you tap that you're there;
+and the reveal, played on every phone at the same moment (the server stamps it): static, "The Beacon ended in...",
+"Zone A", "The Jammer ended in...", "Zone A", "TOGETHER", then everyone's cards. Sounds are made on the phone (no
+files); 🔊 turns them off. The everyday screen: a radar in the lobby, signal bars and round dots on top, votes
+filling a bar toward a majority, Signal's rings broadcasting and Static's name glitching on a shown card.
+
 - **The story:** two secret teams. **Signal** (blue, broadcast rings) protects the **Beacon**; **Static** (orange,
   a zigzag) has the **Jammer**. At the end, Beacon and Jammer in the same zone: Static wins. Apart: Signal wins.
   At 13 or 15 players one person is the **Forecaster** (grey, no team), who predicts the winner before the reveal.
 - **The deck:** 12: Beacon + 5 Signal, Jammer + 5 Static (zones 6/6). 13: the same plus the Forecaster (7/6).
   14: Beacon + 6, Jammer + 6 (7/7). 15: plus the Forecaster (8/7). Cards and zones are dealt separately, at random.
+- **Small and big groups:** 6 to 10 players send 1 each time (1, 1, 1); 11 to 20 send 2, 1, 1. The deck scales
+  the same way (equal teams, a Forecaster when the number is odd).
 - **A match:** everyone goes to their zone and taps **I'm here**. Three rounds of talking (3, 2, then 1 minutes).
   Each zone has a leader (picked at random to start; anyone can be voted in by a strict majority of their zone, and
   a leader can hand the job over). At the end of each round, each leader sends **2, then 1, then 1** people to the
