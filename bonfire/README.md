@@ -132,6 +132,22 @@ nobody gets knocked out and sits bored, and a round takes about ten minutes. An 
   everyone's starting and ending card, the middle cards, and "what really happened" (the night, step by step,
   also read out). **Play again** deals new cards to the same people; wins are kept for the night.
 - If the host's page reloads, the round carries on. Someone who joins mid-round gets a card next round.
+
+**Made for personal phones in a circle of people:**
+- Nothing secret is ever face up: the card (and what you learned) shows only while your thumb is on it, and flips
+  back when you let go or switch apps. The deal says to tilt the phone toward you first.
+- At night every phone shows the same buttons, whatever the card: the players, the 3 middle cards and Skip. Only
+  the small line on top says what yours can do, so nobody can tell a role from across the circle, or from who's
+  tapping (everyone taps something, and morning waits at least 20 seconds).
+- Each stage buzzes the phone and sweeps in with its own full-screen curtain (lights out, sunrise, the vote, "look
+  up!"), so phones can go face down in laps while people talk.
+- The host's phone is the only one that talks; it keeps itself awake. Players' phones stay awake too, and rejoin
+  on their own if they lock or drop off the Wi-Fi.
+
+**Explained as it goes:** the lobby on every phone shows how it works in five steps; every card in play is a chip
+you can tap to read what it does at night and how it wins; each screen says what to do and what happens next; the
+voice explains each stage (and the vote rule); and the reveal says why that side won ("No wolf was voted out. By the
+end of the night, the wolf was Finn."), then the night step by step.
 - **Files:** `rules.js` (the rules, no page: tested by `tests/lights-out-rules.cjs`), `card.js` and `card.css` (the
   secret card, on the players' phones and the host's), `night.js`, `night.css`, `index.html` (the host's page).
   The room type is `lights-out` (12 players, no audience). `node tests/e2e/lights-out.cjs` plays two rounds with 12.

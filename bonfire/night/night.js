@@ -53,7 +53,8 @@ window.LIGHTS_OUT = (() => {
   };
   const seenFaces = new Set();
   const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
-  const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+  // Only once the page has been tapped (browsers refuse before that, and say so in the console).
+  const buzz = (ms) => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) {} };
   const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`;
 
   /* ---------- Sound: the campfire guitar (bonfire/music.js), crickets, a howl ---------- */
@@ -216,7 +217,7 @@ window.LIGHTS_OUT = (() => {
   const roleCard = (r) => { const x = R.ROLES[r]; return { icon: x.icon, name: x.name, team: x.team, teamName: R.TEAM_NAME[x.team], goal: x.goal, night: x.night }; };
   function deckList(n) {
     const d = R.deck(n, prefs.easy), out = [];
-    for (const r of d) { const have = out.find((x) => x.key === r); if (have) have.n++; else out.push({ key: r, icon: R.ROLES[r].icon, name: R.ROLES[r].name, team: R.ROLES[r].team, n: 1 }); }
+    for (const r of d) { const have = out.find((x) => x.key === r); if (have) have.n++; else out.push({ key: r, icon: R.ROLES[r].icon, name: R.ROLES[r].name, team: R.ROLES[r].team, goal: R.ROLES[r].goal, night: R.ROLES[r].night, n: 1 }); }
     return out;
   }
   const waitScreen = (title, text) => ({ screen: "secret", stage: "wait", title, text });
@@ -270,7 +271,15 @@ window.LIGHTS_OUT = (() => {
     if (phase === "lobby" || phase === "title") return lobbyWait();
     return waitScreen("A round is going 🌙", "You'll get a card in the next round. Watch, and try to work out who the wolves are!");
   }
-  const lobbyWait = () => waitScreen("You're in! 🌙", "Wait for the host to deal the cards. When you get yours, keep it to yourself.");
+  /** How it works, in five short steps: on every phone in the lobby, and on the host's. */
+  const HOW_STEPS = [
+    ["🃏", "Everyone gets a secret card. Most of you are campers, but a few of you are wolves."],
+    ["🌙", "At night, some cards have a job, like peeking at a card or swapping two. Everyone taps something, so nobody can tell who's busy."],
+    ["☀️", "In the morning, talk it out. Say what you are... or lie, if you're a wolf!"],
+    ["🗳️", "Then everyone votes. Vote out a wolf, and the camp wins. Miss, and the wolves win."],
+    ["🔀", "The twist: cards get swapped in the night. You're whatever card you end up with, even if you don't know it!"],
+  ];
+  const lobbyWait = () => ({ ...waitScreen("You're in! 🌙", "The host will deal the cards when everyone's here. Meanwhile, here's how it works:"), how: HOW_STEPS });
 
   /* ---------- Inputs from phones (and from the host's own card) ---------- */
   function input(id, d) {
@@ -358,8 +367,9 @@ window.LIGHTS_OUT = (() => {
         el("span", { class: "face" }, ICONS[p.avatar] || "🌙"), el("span", { class: "nm" }, p.name, p.id === HOST ? el("small", {}, " (you)") : null),
         G.wins[p.id] ? el("span", { class: "wins" }, `🏆 ${G.wins[p.id]}`) : null,
         p.id === HOST ? null : el("button", { class: "x", "aria-label": `Remove ${p.name}`, onclick: () => { if (confirm(`Remove ${p.name} from the game?`)) hostSend({ t: "kick", id: p.id }); } }, "✕")))),
-      n >= MIN ? el("div", { class: "lo" }, el("div", { class: "lo-deck" }, el("small", {}, `The cards for ${n} (3 go in the middle)`),
-        el("div", {}, ...deckList(n).map((d) => el("span", { class: "lo-chip", "data-team": d.team === "wolf" ? "wolf" : d.team === "self" ? "self" : "camp" }, `${d.icon} ${d.name}${d.n > 1 ? " ×" + d.n : ""}`))))) : null,
+      el("div", { class: "lo" }, LO_CARD.deck(el, deckList(Math.max(MIN, n)), `The cards for ${Math.max(MIN, n)} players (3 go face down in the middle). Tap one to see what it does:`)),
+      el("details", { class: "howbox" }, el("summary", {}, "📖 How to play (everyone's phone shows this too)"),
+        el("ol", { class: "lo lo-how" }, ...HOW_STEPS.map((h) => el("li", {}, el("span", {}, h[0]), el("p", {}, h[1]))))),
       el("div", { class: "settings" },
         el("div", { class: "row" }, el("span", {}, "Talk time"), opt("3 min", 180, prefs.talk, (v) => { prefs.talk = v; }), opt("5 min", 300, prefs.talk, (v) => { prefs.talk = v; }), opt("7 min", 420, prefs.talk, (v) => { prefs.talk = v; })),
         el("div", { class: "row" }, el("span", {}, "Cards"), opt("Full", false, prefs.easy, (v) => { prefs.easy = v; }), opt("Easy", true, prefs.easy, (v) => { prefs.easy = v; })),
@@ -406,18 +416,20 @@ window.LIGHTS_OUT = (() => {
     // Nobody waits forever for someone who wandered off.
     wait(150000, t).then((ok) => { if (ok && phase === "deal") toNight(); });
   }
-  const dealScreen = (id) => ({ screen: "secret", stage: "deal", round: G.round, title: "Your card 🌙", text: "Hold your thumb on the card to peek. Don't let anyone see!",
+  const dealScreen = (id) => ({ screen: "secret", stage: "deal", round: G.round, title: "Your card 🌙", text: "Tilt your phone toward you, then hold your thumb on the card to peek. Let go, and it flips back.",
     card: roleCard(G.start[id]), deck: G.deck, button: "Got it", ready: !!G.ready[id] });
   /** What a role does tonight, on its phone. Everyone taps something, so nobody can tell who has a job. */
   function nightAction(id) {
     const r = G.start[id], others = G.ids.filter((x) => x !== id).map((x) => ({ id: x, name: nameOf(x), face: faceOf(x) }));
     const wolves = G.ids.filter((x) => G.start[x] === "wolf");
-    const hunch = { kind: "hunch", prompt: "Tap who you think a wolf is. It's just a hunch: nobody else sees it.", skip: "No idea yet", players: others };
-    if (r === "wolf" && wolves.length === 1) return { kind: "center", prompt: "You're the only wolf! Tap a card in the middle to peek at it.", skip: "Don't peek", players: others };
-    if (r === "counselor") return { kind: "counselor", prompt: "Shine your flashlight: tap one player to see their card, or two cards in the middle.", skip: "Don't look", players: others };
-    if (r === "sneak") return { kind: "player", prompt: "Tap someone to swap cards with. You'll see your new card in the morning.", skip: "Don't swap", players: others };
-    if (r === "prankster") return { kind: "two", prompt: "Tap two players to swap their cards.", skip: "No prank tonight", players: others };
-    if (r === "sleepwalker") return { kind: "center", prompt: "Sleepwalk! Tap a card in the middle to swap with yours. You won't see it.", players: others };
+    // Same buttons and the same Skip for everyone; only this line differs (keep them about the same length).
+    const job = (kind, prompt) => ({ kind, prompt, skip: "Skip", players: others });
+    const hunch = job("hunch", "No job tonight. Tap who you think a wolf is (or a middle card). It's just a hunch: nobody sees it.");
+    if (r === "wolf" && wolves.length === 1) return job("center", "You're the only wolf. Tap a middle card to peek at it: then you know a card you can safely claim.");
+    if (r === "counselor") return job("counselor", "Shine your flashlight: tap one player to see their card, or tap two middle cards.");
+    if (r === "sneak") return job("player", "Tap a player to swap cards with. In the morning you'll see your new card: that's you now.");
+    if (r === "prankster") return job("two", "Tap two players to swap their cards. They won't know, and you won't see them.");
+    if (r === "sleepwalker") return job("center", "Tap a middle card to swap yours with it, without looking. (Skip, and you'll swap with one at random.)");
     return hunch;
   }
   async function toNight() {
@@ -428,7 +440,7 @@ window.LIGHTS_OUT = (() => {
     moodFor("night"); save(); drawPhase();
     sounds.howl();
     nightClock(t);
-    await voice.say("Lights out, camp. Everybody, keep your phone close. If your card has a job tonight, do it now. If it doesn't, tap who you think a wolf is. Nobody will see it.");
+    await voice.say("Lights out, camp. Hold your phone close, so nobody can see it. If your card has a job tonight, do it now. If it doesn't, tap who you think a wolf is. Everybody taps something, so nobody can tell who's busy. When everyone's done, morning comes.");
   }
   /** The night on a phone. What the wolves, the Raccoon and the Bunkmates know from the start is on the back of their card. */
   function nightScreen(id) {
@@ -449,13 +461,13 @@ window.LIGHTS_OUT = (() => {
     if (phase !== "night") return;
     const t = step(); phase = "day"; voice.quiet();
     G.night = R.resolve({ start: G.start, center: G.center }, G.actions, names());
-    G.deadline = Date.now() + prefs.talk * 1000;
+    G.deadline = Date.now() + prefs.talk * 1000; G.dayTotal = prefs.talk * 1000;
     for (const id of G.ids) put(id, dayScreen(id));
     sounds.birds(); moodFor("day"); music.duck(true); save(); drawPhase();
-    await voice.say(`Good morning, camp! What you learned last night is on the back of your card. You've got ${Math.round(prefs.talk / 60)} minutes to find the wolves. Say anything you want: the truth... or not.`);
+    await voice.say(`Good morning, camp! Hold your card to see what you learned last night. You've got ${Math.round(prefs.talk / 60)} minutes to find the wolves. Say anything you want: the truth... or not. And remember: your card might have been swapped while you slept.`);
     dayClock(t);
   }
-  const dayScreen = (id) => ({ screen: "secret", stage: "day", round: G.round, title: "Good morning! ☀️", text: "Talk it out: who's a wolf? Hold your card to see what you learned.",
+  const dayScreen = (id) => ({ screen: "secret", stage: "day", round: G.round, title: "Good morning! ☀️", text: "Talk it out! Say what you are (or lie). Ask questions. Who's a wolf? Hold your card to see what you learned last night.",
     seconds: Math.max(1, Math.round((G.deadline - Date.now()) / 1000)), card: roleCard(G.start[id]), lines: G.night.learned[id] || [], deck: G.deck });
   function dayClock(t) {
     let said60 = G.deadline - Date.now() < 60000, said10 = G.deadline - Date.now() < 10000;
@@ -464,13 +476,15 @@ window.LIGHTS_OUT = (() => {
       const left = G.deadline - Date.now();
       const clock = document.querySelector(".clock b");
       if (clock) clock.textContent = mmss(Math.ceil(left / 1000));
+      const ring = document.querySelector(".ring");
+      if (ring) { ring.style.setProperty("--p", Math.max(0, left) / Math.max(left, G.dayTotal || prefs.talk * 1000)); ring.classList.toggle("low", left < 60000); }
       if (!said60 && left < 60000) { said60 = true; voice.say("One minute left!"); }
       if (!said10 && left < 10000) { said10 = true; voice.say("Ten seconds!"); sfx("tick"); }
       if (left <= 0) toVote();
     });
   }
   function moreTime() {
-    G.deadline += 60000; save();
+    G.deadline += 60000; G.dayTotal = (G.dayTotal || prefs.talk * 1000) + 60000; save();
     for (const id of G.ids) put(id, dayScreen(id));
     voice.say("One more minute!");
     step(); dayClock(token); drawPhase();
@@ -483,12 +497,12 @@ window.LIGHTS_OUT = (() => {
     moodFor("vote"); music.duck(false); save(); drawPhase();
     sfx("go");
     voteClock(t);
-    await voice.say("Time's up! Everybody, vote now. Tap the person you think is a wolf.");
+    await voice.say("Time's up! Everybody, vote now. Tap the person you think is a wolf. Whoever gets the most votes is out. But if nobody gets more than one vote, nobody's out.");
   }
   function voteScreen(id) {
     const action = { kind: "vote", prompt: "Who's a wolf? Tap your vote.", players: G.ids.filter((x) => x !== id).map((x) => ({ id: x, name: nameOf(x), face: faceOf(x) })) };
     if (G.votes[id]) Object.assign(action, { done: true, doneText: `✔ You voted for ${nameOf(G.votes[id])}. Wait for everyone...` });
-    return { screen: "secret", stage: "vote", round: G.round, title: "Vote! 🗳️", text: "Hold your card to check it. Then tap who you think is a wolf.",
+    return { screen: "secret", stage: "vote", round: G.round, title: "Vote! 🗳️", text: "Tap who you think is a wolf. You can't change it, so be sure!",
       seconds: Math.max(1, Math.round((G.deadline - Date.now()) / 1000)), card: roleCard(G.start[id]), lines: G.night.learned[id] || [], action };
   }
   function voteClock(t) { every(1000, () => { if (t !== token) return; drawPhase(); if (Date.now() >= G.deadline) toReveal(); }); }
@@ -496,10 +510,10 @@ window.LIGHTS_OUT = (() => {
     if (phase !== "vote") return;
     const t = step(); phase = "reveal"; voice.quiet();
     const nm = names(), v = R.tally(G.votes, G.ids), o = R.outcome(G.night.final, v.out, nm);
-    G.result = { count: v.count, out: v.out, winners: o.winners, headline: o.headline, kind: o.kind };
+    G.result = { count: v.count, out: v.out, winners: o.winners, headline: o.headline, why: o.why, kind: o.kind };
     for (const id of o.winners) G.wins[id] = (G.wins[id] || 0) + 1;
     G.rounds++;
-    for (const id of G.ids) put(id, waitScreen("The votes are in... 🥁", "Listen up!"));
+    for (const id of G.ids) put(id, { ...waitScreen("The votes are in... 🥁", "Look up and listen! The host's phone is about to reveal who's out."), stage: "reveal-wait" });
     moodFor("reveal"); save();
     G.revealStep = 0; drawPhase();
     const article = (id) => (/^[AEIOU]/.test(R.ROLES[G.night.final[id]].name) ? "an" : "a");
@@ -511,8 +525,13 @@ window.LIGHTS_OUT = (() => {
     if (t !== token) return;
     G.revealStep = 1; drawPhase();
     for (const id of v.out) {
-      sfx("reveal");
-      await voice.say(`${nameOf(id)} was... ${article(id)} ${R.ROLES[G.night.final[id]].name}!`);
+      await voice.say(`${nameOf(id)} was...`);
+      if (t !== token) return;
+      // The card flips over on the host's phone as the name is said.
+      const c = document.querySelector(`.outcards [data-id="${CSS.escape(id)}"]`);
+      if (c) c.classList.add("peek");
+      sfx("reveal"); buzz(40);
+      await voice.say(`${article(id)} ${R.ROLES[G.night.final[id]].name}!`);
       if (t !== token) return;
     }
     G.revealStep = 2; drawPhase();
@@ -521,27 +540,50 @@ window.LIGHTS_OUT = (() => {
     for (const id of G.ids) put(id, revealScreen(id));
     await voice.say(o.headline);
     if (t !== token) return;
+    await voice.say(o.why);
+    if (t !== token) return;
     await voice.say("Here's what really happened last night. " + G.night.story.join(" "));
   }
   /** Everyone's view of the reveal (the host's page shows the same, without "you"). */
   function revealData(id) {
     const nm = names(), res = G.result, team = (r) => R.ROLES[r].team;
-    const ppl = G.ids.map((x) => ({ name: nm[x], face: faceOf(x), start: { ...roleCard(G.start[x]) }, end: { ...roleCard(G.night.final[x]) }, votes: res.count[x], out: res.out.includes(x), won: res.winners.includes(x) }))
+    const ppl = G.ids.map((x) => ({ name: nm[x], face: faceOf(x), start: { ...roleCard(G.start[x]) }, end: { ...roleCard(G.night.final[x]) }, votes: res.count[x], out: res.out.includes(x), won: res.winners.includes(x), moved: (G.night.touched || []).includes(x) }))
       .sort((a, b) => b.out - a.out || b.votes - a.votes);
     const hunches = Object.values(G.night.hunch || {}), most = hunches.length ? Object.entries(hunches.reduce((m, x) => ((m[x] = (m[x] || 0) + 1), m), {})).sort((a, b) => b[1] - a[1])[0] : null;
     const story = G.night.story.slice();
     if (most && most[1] >= 2) story.push(`Most of the hunches last night pointed at ${nm[most[0]]} (${most[1]}).`);
     const you = id && G.ids.includes(id) ? {
       won: res.winners.includes(id),
-      line: G.start[id] === G.night.final[id] ? `You were ${R.card(G.start[id])} all night.` : `You started as ${R.card(G.start[id])} and ended the night as ${R.card(G.night.final[id])}.`
+      line: G.start[id] === G.night.final[id] ? ((G.night.touched || []).includes(id) ? `Your card was swapped away and came back: you ended as ${R.card(G.start[id])}, just as you started.` : `You were ${R.card(G.start[id])} all night.`) : `You started as ${R.card(G.start[id])} and ended the night as ${R.card(G.night.final[id])}.`
         + (team(G.night.final[id]) !== team(G.start[id]) ? " You switched sides!" : ""),
     } : null;
-    return { headline: res.headline, you, people: ppl, center: G.night.center.map((r) => ({ icon: R.ROLES[r].icon, name: R.ROLES[r].name })), story,
+    return { headline: res.headline, why: res.why, you, people: ppl, center: G.night.center.map((r) => ({ icon: R.ROLES[r].icon, name: R.ROLES[r].name })), story,
       outLine: res.out.length ? `Voted out: ${res.out.map((x) => `${nm[x]} (${R.card(G.night.final[x])})`).join(", ")}` : "Nobody was voted out." };
   }
   const revealScreen = (id) => ({ screen: "secret", stage: "reveal", round: G.round, reveal: revealData(id) });
 
   /* ---------- What this page shows during a round ---------- */
+  /** The votes, as bars: most first. */
+  function voteBars() {
+    const c = G.result.count, top = Math.max(1, ...Object.values(c));
+    const rows = G.ids.filter((id) => c[id]).sort((a, b) => c[b] - c[a]);
+    return el("ul", { class: "bars" }, ...rows.map((id, i) => el("li", { style: `--w:${(c[id] / top) * 100}%;--i:${i}`, class: G.result.out.includes(id) ? "top" : "" },
+      el("span", { class: "nm" }, `${faceOf(id)} ${nameOf(id)}`), el("i"), el("b", {}, c[id]))));
+  }
+  /** A voted-out player's card, face down, ready to flip over when the host says what it was. */
+  function faceDown(id) {
+    const r = R.ROLES[G.night.final[id]], tm = r.team === "wolf" ? "wolf" : r.team === "self" ? "self" : "camp";
+    return el("div", { class: "lo lo-flipcard" }, el("div", { class: "lo-card", "data-id": id }, el("div", { class: "lo-flip" },
+      el("div", { class: "lo-back" }, el("i", { class: "lo-sheen" }), el("div", { class: "lo-moon" }, "🌙")),
+      el("div", { class: "lo-front", "data-team": tm }, el("div", { class: "lo-icon" }, r.icon), el("div", { class: "lo-name" }, r.name), el("span", { class: "lo-team" }, R.TEAM_NAME[r.team])))));
+  }
+  /** The morning clock: a ring that empties as the time runs out. */
+  function clockRing() {
+    const left = Math.max(0, G.deadline - Date.now()), total = Math.max(left, G.dayTotal || prefs.talk * 1000);
+    const ring = el("div", { class: "ring clock", style: `--p:${left / total}` }, el("b", {}, mmss(Math.ceil(left / 1000))));
+    ring.insertAdjacentHTML("afterbegin", '<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="45"/><circle class="left" cx="50" cy="50" r="45" pathLength="100"/></svg>');
+    return ring;
+  }
   const kit = () => ({ el, send: mine.send, buzz, face: "🌙", name: prefs.name });
   function drawMine() {
     const box = document.querySelector(".mine");
@@ -563,7 +605,14 @@ window.LIGHTS_OUT = (() => {
       el("div", { class: "sky", "aria-hidden": "true" }, el("i", { class: phase === "day" ? "sun" : "moon" })),
       el("h1", {}, { deal: "The deal", night: "Night", day: "Morning", vote: "The vote", reveal: "The reveal" }[phase]),
       status ? el("p", { class: "status" }, status) : null,
-      phase === "day" || phase === "vote" || phase === "night" ? el("p", { class: "clock" }, el("b", {}, mmss(Math.ceil((G.deadline - Date.now()) / 1000)))) : null);
+      phase === "day" ? clockRing() : phase === "vote" || phase === "night" ? el("p", { class: "clock" }, el("b", {}, mmss(Math.ceil((G.deadline - Date.now()) / 1000)))) : null,
+      el("p", { class: "what" }, {
+        deal: "Everyone's peeking at their card. When they've all tapped Got it, the night begins.",
+        night: "Everyone's doing their part in secret. Morning comes when they're all done.",
+        day: "Talk it out! Who's a wolf? When the time's up, everyone votes.",
+        vote: "Everyone's voting on their phone.",
+        reveal: "",
+      }[phase]));
     const controls = el("div", { class: "controls" },
       phase === "deal" ? el("button", { class: "ghost", onclick: () => toNight() }, "Everyone's ready: lights out") : null,
       phase === "day" ? el("button", { class: "ghost", onclick: () => moreTime() }, "+1 minute") : null,
@@ -572,16 +621,17 @@ window.LIGHTS_OUT = (() => {
     if (phase === "reveal") {
       const outs = G.result.out;
       show(head,
-        G.revealStep < 2 ? el("div", { class: "suspense" },
-          el("p", { class: "drum" }, G.revealStep === 0 ? "🥁" : outs.length ? "🔦" : "🤷"),
-          G.revealStep >= 1 ? el("p", { class: "outname" }, outs.length ? outs.map(nameOf).join(" & ") : "Nobody is out") : el("p", { class: "outname soft" }, "The votes are in...")) : null,
+        G.revealStep === 0 ? el("div", { class: "suspense" }, el("p", { class: "drum" }, "🥁"), el("p", { class: "outname soft" }, "The votes are in..."), voteBars()) : null,
+        G.revealStep === 1 ? el("div", { class: "suspense" },
+          outs.length ? el("div", { class: "outcards" }, ...outs.map((id) => el("div", { class: "outcard" }, faceDown(id), el("p", { class: "outname" }, nameOf(id)))))
+            : el("div", {}, el("p", { class: "drum" }, "🤷"), el("p", { class: "outname" }, "Nobody is out")), voteBars()) : null,
         G.revealStep >= 2 ? LO_CARD.view(revealScreen(prefs.play ? HOST : null), kit()) : null,
         G.revealStep >= 2 ? el("div", { class: "controls" },
           el("button", { class: "big-btn", onclick: () => startRound() }, "Play again"),
           el("button", { class: "ghost", onclick: () => lobby() }, "Back to the lobby (let more people in)")) : null);
       return;
     }
-    show(head, controls, prefs.play && shown[HOST] ? el("div", { class: "mine" }) : el("p", { class: "watch" }, phase === "night" ? "Everyone's doing their part in secret..." : phase === "day" ? "Let them talk! You're the host tonight." : ""));
+    show(head, controls, prefs.play && shown[HOST] ? el("div", { class: "mine" }) : null);
     drawMine();
   }
 

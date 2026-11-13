@@ -49,7 +49,7 @@ const R = globalThis.LIGHTS_OUT_RULES;
   await phone.waitForSelector('.avatars');
   await phone.click('.avatars button:nth-child(4)');
   await phone.click("text=I'm ready!");
-  await phone.waitForSelector('text=Wait for the host', { timeout: 8000 });
+  await phone.waitForSelector('.lo-how', { timeout: 8000 });
   await phone.screenshot({ path: `${OUT}/phone-01-joined.png` });
 
   // The bots: they peek, do their part at night (a random but real choice), and vote.
@@ -103,9 +103,13 @@ const R = globalThis.LIGHTS_OUT_RULES;
     const root = scope ? `${scope} ` : '';
     if (await page.$(`${root}.lo-ready:not([disabled])`)) return page.click(`${root}.lo-ready`);
     if (!(await page.$(`${root}.lo-act`)) || (await page.$(`${root}.lo-done`))) return;
+    // Every night screen has players and middle cards: tap a player, and if this card wants something else, follow the hint.
     const people = await page.$$(`${root}.lo-people .lo-pick`), mid = await page.$$(`${root}.lo-middle .lo-pick`);
-    if (people.length) { await people[0].click(); await page.waitForTimeout(150); if (!(await page.$(`${root}.lo-done`))) { await people[1].click(); await page.waitForTimeout(500); } }
-    else if (mid.length) await mid[1].click();
+    const done = async () => { await page.waitForTimeout(500); return !!(await page.$(`${root}.lo-done`)); };
+    await people[0].click();
+    if (await done()) return;
+    if (await page.$(`${root}.lo-note.warn`)) { await mid[1].click(); return; }
+    await people[1].click();
   }
   const roundOf = async () => host.evaluate(() => LIGHTS_OUT._state());
 
@@ -123,11 +127,24 @@ const R = globalThis.LIGHTS_OUT_RULES;
     await phone.mouse.up();
     const hidden = await phone.$eval('.lo-card', (c) => !c.classList.contains('peek'));
     check(peeked && hidden, `round ${n}: holding the card shows it, letting go hides it`);
-    if (n === 1) { await phone.screenshot({ path: `${OUT}/phone-03-deal.png`, fullPage: true }); await host.screenshot({ path: `${OUT}/host-02-deal.png`, fullPage: true }); }
+    if (n === 1) {
+      // Every card in play can be tapped to read what it does.
+      await phone.click('.lo-chip >> nth=1');
+      const info = (await phone.textContent('.lo-info').catch(() => '')) || '';
+      check(/At night:/.test(info) && /To win:/.test(info), `tapping a card in play explains it ("${info.slice(0, 50)}...")`);
+      await phone.screenshot({ path: `${OUT}/phone-03-deal.png`, fullPage: true }); await host.screenshot({ path: `${OUT}/host-02-deal.png`, fullPage: true });
+    }
     await act(phone); await act(host, '.mine');
     await host.waitForFunction(() => LIGHTS_OUT._state().phase === 'night', null, { timeout: 90000 }).catch(() => {});
     check((await roundOf()).phase === 'night', `round ${n}: once everyone taps Got it (and the rules have been read, the first time), it's night`);
     await phone.waitForSelector('.lo-night', { timeout: 8000 });
+    if (n === 1) {
+      // At night every phone shows the same buttons, whatever the card: players, the 3 middle cards, Skip.
+      const same = await phone.evaluate(() => !!document.querySelector('.lo-people') && document.querySelectorAll('.lo-middle button').length === 3 && !!document.querySelector('.lo-skip'));
+      check(same, 'at night the phone shows the same buttons for every card (players, 3 middle cards, Skip)');
+      await phone.waitForTimeout(2700);
+      await phone.screenshot({ path: `${OUT}/phone-04a-night-choices.png`, fullPage: true });
+    }
     await act(phone); await act(host, '.mine');
     if (n === 1) { await phone.waitForTimeout(600); await phone.screenshot({ path: `${OUT}/phone-04-night.png`, fullPage: true }); await host.screenshot({ path: `${OUT}/host-03-night.png`, fullPage: true }); }
     const nightAt = Date.now();

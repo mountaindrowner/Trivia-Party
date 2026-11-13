@@ -47,8 +47,20 @@
 
 /* The cards in play, as little chips. */
 .lo-deck small { display: block; font-size: 13px; color: #aeb8e6; margin-bottom: 6px; }
-.lo-deck div { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.lo-chip { font-size: 14px; font-weight: 700; padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--tc); background: color-mix(in srgb, var(--tc) 14%, transparent); }
+.lo-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.lo .lo-chip { font: 700 14px/1.2 "Outfit", system-ui, sans-serif; padding: 6px 11px; border-radius: 99px; border: 1.5px solid var(--tc); color: #eef1ff;
+  background: color-mix(in srgb, var(--tc) 14%, transparent); box-shadow: none; min-height: 0; width: auto; cursor: pointer; transition: transform 0.15s, background 0.2s; }
+.lo .lo-chip[aria-expanded="true"] { background: var(--tc); color: #0a0f2c; transform: translateY(-2px); }
+.lo-info { margin-top: 10px; padding: 12px 14px; border-radius: 16px; text-align: left; font-size: 15px; line-height: 1.35; border: 1.5px solid var(--tc);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tc) 18%, #0b0f2a), #0b0f2a); animation: loIn 0.3s ease-out both; }
+.lo-info[data-team="camp"] { --tc: var(--camp); }
+.lo-info[data-team="wolf"] { --tc: var(--wolf); }
+.lo-info[data-team="self"] { --tc: var(--self); }
+.lo-info b { display: flex; justify-content: space-between; gap: 8px; font-size: 18px; color: var(--tc); }
+.lo-info b span { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #aeb8e6; align-self: center; }
+.lo-info p { margin: 6px 0 0; }
+.lo-info i { font-style: normal; font-weight: 800; color: var(--moon); }
+@keyframes loIn { from { opacity: 0; transform: translateY(-6px); } }
 
 /* The night's job, or the vote. */
 .lo-act { display: grid; gap: 10px; padding: 14px; border-radius: 20px; background: rgba(10, 15, 44, 0.55); border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
@@ -58,10 +70,17 @@
   border-radius: 14px; border: 2px solid rgba(230, 235, 255, 0.25); background: rgba(255, 255, 255, 0.07); color: #fff; box-shadow: none; }
 .lo .lo-people button[aria-pressed="true"], .lo .lo-middle button[aria-pressed="true"] { background: var(--moon); color: #0a0f2c; border-color: var(--moon); box-shadow: 0 0 22px rgba(230, 235, 255, 0.6); }
 .lo-face { font-size: 24px; }
+.lo-midlabel { margin-bottom: -4px; font-size: 13px; color: #aeb8e6; }
 .lo-middle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .lo .lo-middle button { flex-direction: column; justify-content: center; text-align: center; min-height: 88px; }
-.lo-mini { font-size: 30px; }
-.lo-note { margin: 0; min-height: 1em; font-size: 14px; color: #aeb8e6; }
+/* A middle card: a little face-down card. */
+.lo-mini { display: block; width: 34px; height: 46px; border-radius: 6px; border: 1.5px solid rgba(230, 235, 255, 0.5);
+  background: radial-gradient(circle at 50% 40%, rgba(230, 235, 255, 0.5) 3px, transparent 4px), radial-gradient(rgba(255, 255, 255, 0.6) 0.8px, transparent 1.2px) 0 0 / 8px 9px, linear-gradient(160deg, #2a3480, #0a0f2c); }
+.lo .lo-middle button[aria-pressed="true"] .lo-mini { border-color: #0a0f2c; transform: rotate(-6deg) scale(1.08); transition: transform 0.2s; }
+.lo-pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lo-note { margin: 0; min-height: 1em; font-size: 14px; line-height: 1.35; color: #aeb8e6; }
+.lo-note.warn { color: #ffb0ba; animation: loShake 0.35s; }
+@keyframes loShake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .lo-done { margin: 0; font-size: 18px; font-weight: 800; color: var(--camp); }
 .lo .lo-skip { font-size: 16px; }
 .lo .lo-ready { font-size: 22px; }
@@ -75,7 +94,7 @@
 .lo-big { font-family: "Shrikhand", Georgia, serif; font-size: 34px; line-height: 1.1; }
 .lo-you p, .lo-outline { margin: 4px 0 0; font-size: 16px; line-height: 1.3; }
 .lo-all { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
-.lo-all li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); border-left: 4px solid var(--tc); }
+.lo-all li { animation: loIn 0.4s ease-out both; animation-delay: calc(var(--i, 0) * 0.07s); display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); border-left: 4px solid var(--tc); }
 .lo-all li.out { background: color-mix(in srgb, var(--tc) 22%, transparent); }
 .lo-all li.won .lo-who b::after { content: " 🏆"; }
 .lo-who { display: grid; flex: 1; line-height: 1.2; }
@@ -84,8 +103,33 @@
 .lo-mid { margin: 0; font-size: 14px; color: #c9d1f5; }
 .lo-story { text-align: left; padding: 12px 14px; border-radius: 16px; background: rgba(10, 15, 44, 0.55); border: 1px solid var(--line); font-size: 15px; line-height: 1.35; }
 .lo-story b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--moon); }
-.lo-story p { margin: 6px 0 0; }
-@media (prefers-reduced-motion: reduce) { .lo-flip { transition: none; } .lo-moon { animation: none; } }
+.lo-story ol { margin: 6px 0 0; padding-left: 20px; }
+.lo-story li { margin-top: 6px; }
+.lo-why { margin: -4px 0 0; font-size: 17px; line-height: 1.35; color: #e2e6ff; }
+
+/* How it works, as numbered steps. */
+.lo-how { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; text-align: left; counter-reset: step; }
+.lo-how li { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 16px; background: rgba(10, 15, 44, 0.55); border: 1px solid var(--line);
+  animation: loIn 0.45s ease-out both; animation-delay: calc(0.2s + var(--i, 0) * 0.12s); }
+.lo-how li span { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; font-size: 22px; background: rgba(230, 235, 255, 0.1); }
+.lo-how li p { margin: 0; font-size: 15px; line-height: 1.35; }
+
+/* The card back catches the light now and then. */
+.lo-sheen { position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.16) 50%, transparent 60%); animation: loSheen 5s ease-in-out infinite; pointer-events: none; }
+@keyframes loSheen { 0%, 60% { transform: translateX(-60%); } 100% { transform: translateX(60%); } }
+
+/* A curtain sweeps over the phone when the stage changes: night falls, the sun comes up, the vote. */
+.lo.lo-curtain { position: fixed; z-index: 50; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; pointer-events: none; animation: loCurtain 2.5s ease-in-out both; }
+.lo-curtain span { font-size: 96px; line-height: 1; animation: loRise 2.5s ease-out both; }
+.lo-curtain b { font: 400 38px/1 "Shrikhand", Georgia, serif; color: #fff; text-shadow: 0 0 30px rgba(200, 210, 255, 0.8); }
+.lo-curtain-night { background: radial-gradient(circle at 50% 42%, rgba(60, 70, 140, 0.6), #02030b 70%); }
+.lo-curtain-day { background: radial-gradient(circle at 50% 70%, #ffd27a, #ff9a5e 35%, #4b3a7a 80%); }
+.lo-curtain-day b { color: #2a1206; text-shadow: 0 0 20px rgba(255, 240, 200, 0.9); }
+.lo-curtain-vote { background: radial-gradient(circle at 50% 45%, rgba(120, 90, 200, 0.9), #0a0f2c 75%); }
+.lo-curtain-reveal-wait { background: radial-gradient(circle at 50% 45%, rgba(255, 77, 97, 0.55), #0a0f2c 75%); }
+@keyframes loCurtain { 0% { opacity: 0; } 18%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes loRise { from { transform: translateY(40px) scale(0.7); opacity: 0; } 30% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lo-flip { transition: none; } .lo-moon, .lo-sheen, .lo-how li, .lo-all li { animation: none; } }
 
 /* The phone page in a Lights Out room: moonlight instead of firelight, fireflies instead of embers. */
 html[data-mode="night"] body {
@@ -93,12 +137,17 @@ html[data-mode="night"] body {
     radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1.5px) 23px 30px / 61px 47px, linear-gradient(#05081c, #0d1440 60%, #10172e) fixed;
 }
 html[data-mode="night"] h1 { color: #e6ebff; text-shadow: 0 0 24px rgba(160, 180, 255, 0.8), 3px 3px 0 #05081c; }
+/* Pines along the bottom of the phone, black against the sky. */
+html[data-mode="night"] body::after { content: ""; position: fixed; left: 0; right: 0; bottom: 0; height: 90px; z-index: 0; pointer-events: none;
+  background: conic-gradient(from 150deg at 50% 0, transparent, #03050f 1deg 59deg, transparent 60deg) 0 100% / 40px 90px repeat-x,
+    conic-gradient(from 155deg at 50% 0, transparent, #070b20 1deg 49deg, transparent 50deg) 18px 100% / 30px 64px repeat-x; }
+html[data-mode="night"] main { padding-bottom: 60px; }
 html[data-mode="night"]:root body::before {
   background: radial-gradient(2px 2px at 12% 100%, #d8ff7a, transparent), radial-gradient(1.5px 1.5px at 38% 100%, #b8f06a, transparent),
     radial-gradient(2px 2px at 63% 100%, #eaff9a, transparent), radial-gradient(1.5px 1.5px at 86% 100%, #c6f77a, transparent);
   background-size: 100% 60%;
 }
-html[data-mode="night"] button:not(.ghost, .lo-pick) { background: linear-gradient(#eef1ff, #a9b6ff); color: #0a0f2c; box-shadow: 0 5px 0 #4b57a8, 0 10px 24px rgba(140, 160, 255, 0.35); }
+html[data-mode="night"] button:not(.ghost, .lo-pick, .lo-chip) { background: linear-gradient(#eef1ff, #a9b6ff); color: #0a0f2c; box-shadow: 0 5px 0 #4b57a8, 0 10px 24px rgba(140, 160, 255, 0.35); }
 /* Your name on top, small: the card is what matters. */
 html[data-mode="night"] .me { border-color: rgba(230, 235, 255, 0.35); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 14px; border-radius: 18px; }
 html[data-mode="night"] .me .face { font-size: 30px; }

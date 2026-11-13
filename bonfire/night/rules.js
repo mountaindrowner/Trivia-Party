@@ -45,7 +45,8 @@
   /* The order the night's jobs happen in. Everyone taps at the same time; this is the order they're carried out. */
   const ORDER = ["wolf", "raccoon", "bunkmate", "counselor", "sneak", "prankster", "sleepwalker", "owl"];
   const TEAM_NAME = { camp: "The camp", wolf: "The wolves", self: "On your own" };
-  const CENTER = ["Left", "Middle", "Right"];
+  const CENTER = ["1", "2", "3"];
+  const midCard = (i) => `middle card ${CENTER[i]}`;
 
   /** The cards for n players: n + 3 (three lie face down in the middle). The full deck adds a role or two per player
       count; the easy one keeps to wolves, a Counselor, a Prankster and campers (good for a first game). */
@@ -83,11 +84,12 @@
 
   /** Carry out the night. `actions` = { id: { players: [ids], center: [0..2] } } (what each phone tapped; anything
       missing or wrong is ignored, except the Sleepwalker, who always swaps). `names` = { id: name }.
-      Returns { final: { id: role }, center: [roles], learned: { id: [lines] }, story: [lines], hunch: { id: id } }. */
+      Returns { final: { id: role }, center: [roles], learned: { id: [lines] }, story: [lines], hunch: { id: id },
+      touched: [ids whose card was moved at some point] }. */
   function resolve(game, actions, names, rnd = Math.random) {
     const ids = Object.keys(game.start);
     const now = Object.assign({}, game.start), mid = game.center.slice();
-    const learned = {}, story = [], hunch = {};
+    const learned = {}, story = [], hunch = {}, touched = new Set(); // touched: whose card was moved at some point
     const tell = (id, line) => { (learned[id] = learned[id] || []).push(line); };
     const name = (id) => names[id] || "Someone";
     const who = (role) => ids.filter((id) => game.start[id] === role);
@@ -104,7 +106,7 @@
       if (others.length) tell(id, others.length === 1 ? `The other wolf is ${others[0]}.` : `The other wolves are ${list(others)}.`);
       else {
         const c = okCenter(id, 1);
-        if (c) { tell(id, `You're the only wolf. You peeked at the ${CENTER[c[0]].toLowerCase()} card in the middle: ${card(mid[c[0]])}.`); story.push(`${name(id)}, the only wolf, peeked at the ${CENTER[c[0]].toLowerCase()} middle card (${card(mid[c[0]])}).`); }
+        if (c) { tell(id, `You're the only wolf. You peeked at ${midCard(c[0])}: ${card(mid[c[0]])}.`); story.push(`${name(id)}, the only wolf, peeked at ${midCard(c[0])} (${card(mid[c[0]])}).`); }
         else tell(id, "You're the only wolf. You didn't peek at the middle.");
       }
     }
@@ -130,6 +132,7 @@
       if (!p) { tell(id, "You didn't swap. You're still the Sneak, on the camp's side."); continue; }
       const t = p[0];
       [now[id], now[t]] = [now[t], now[id]];
+      touched.add(id); touched.add(t);
       const team = ROLES[now[id]].team;
       tell(id, `You swapped cards with ${name(t)}. You're now: ${card(now[id])}.` + (team === "wolf" ? " You're on the wolves' side now!" : team === "self" ? " Now you want to get voted out!" : ""));
       story.push(`${name(id)}, the Sneak, swapped cards with ${name(t)}, and became ${card(now[id])}.`);
@@ -138,14 +141,16 @@
       const p = okPlayers(id, 2);
       if (!p) { tell(id, "You didn't pull a prank."); continue; }
       [now[p[0]], now[p[1]]] = [now[p[1]], now[p[0]]];
+      touched.add(p[0]); touched.add(p[1]);
       tell(id, `You swapped ${name(p[0])}'s and ${name(p[1])}'s cards.`);
       story.push(`${name(id)}, the Prankster, swapped ${name(p[0])}'s and ${name(p[1])}'s cards.`);
     }
     for (const id of who("sleepwalker")) {
       const c = okCenter(id, 1) || [Math.floor(rnd() * 3)];
       [now[id], mid[c[0]]] = [mid[c[0]], now[id]];
-      tell(id, `You sleepwalked and swapped your card with the ${CENTER[c[0]].toLowerCase()} card in the middle. You don't know what you are now!`);
-      story.push(`${name(id)}, the Sleepwalker, swapped with the ${CENTER[c[0]].toLowerCase()} middle card, and became ${card(now[id])}.`);
+      touched.add(id);
+      tell(id, `You sleepwalked and swapped your card with ${midCard(c[0])}. You don't know what you are now!`);
+      story.push(`${name(id)}, the Sleepwalker, swapped with ${midCard(c[0])}, and became ${card(now[id])}.`);
     }
     for (const id of who("owl")) {
       tell(id, now[id] === "owl" ? "You checked your card at the end of the night: still 🦉 Night Owl." : `You checked your card at the end of the night. It changed! You're now: ${card(now[id])}.`);
@@ -157,7 +162,7 @@
       if (r === "homesick") tell(id, "You just want to go home. Get yourself voted out!");
     }
     if (!story.length) story.push("Nobody did anything at all. A very quiet night.");
-    return { final: now, center: mid, learned, story, hunch };
+    return { final: now, center: mid, learned, story, hunch, touched: [...touched] };
   }
 
   /** The vote: `votes` = { voter: target }. Whoever gets the most votes is out (all of them, on a tie), but only if
@@ -196,7 +201,14 @@
     else if (kind === "wolf") headline = "The wolves win! 🐺";
     else if (kind === "homesick") headline = `${list(homesickOut.map(name))} got to go home! 🏠`;
     else headline = `There were no wolves! You voted out ${list(out.map(name))} for nothing. 😬`;
-    return { winners, camp, wolves, homesick: homesickOut, kind, headline };
+    // Why, in one plain sentence: the thing people argue about afterwards.
+    const wolfNames = list(wolvesHere.map(name)), outWolves = out.filter((id) => final[id] === "wolf").map(name);
+    let why;
+    if (!wolvesHere.length) why = out.length ? "All the wolf cards were in the middle, so nobody should have been voted out." : "All the wolf cards were in the middle, and nobody was voted out.";
+    else if (wolfOut) why = `${list(outWolves)} ${outWolves.length > 1 ? "were wolves" : "was a wolf"} by the end of the night, so the camp wins.`;
+    else if (homesickOut.length) why = `${list(homesickOut.map(name))} ended up Homesick and got voted out: a win for Homesick alone. (The ${wolvesHere.length > 1 ? "wolves were" : "wolf was"} ${wolfNames}.)`;
+    else why = `No wolf was voted out. By the end of the night, the ${wolvesHere.length > 1 ? "wolves were" : "wolf was"} ${wolfNames}.`;
+    return { winners, camp, wolves, homesick: homesickOut, kind, headline, why };
   }
 
   const api = { ROLES, ORDER, TEAM_NAME, CENTER, deck, deal, resolve, tally, outcome, card, list, shuffle };

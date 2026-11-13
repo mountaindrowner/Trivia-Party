@@ -53,6 +53,8 @@ const game = (start, center) => ({ start, center });
   check(o.kind === 'camp' && eq(o.winners.sort(), ['a', 'e']), 'a wolf out: the camp wins (not the Raccoon or Homesick)');
   o = R.outcome(f, ['a'], names);
   check(o.kind === 'wolf' && eq(o.winners.sort(), ['b', 'c']), 'a camper out: the wolves and the Raccoon win');
+  check(/No wolf was voted out\. .*the wolf was Ben\./.test(o.why), `the reveal says why: "${o.why}"`);
+  check(/Ben was a wolf/.test(R.outcome(f, ['b'], names).why), 'and why the camp won');
   o = R.outcome(f, [], names);
   check(o.kind === 'wolf', 'nobody out with a wolf around: the wolves win');
   o = R.outcome(f, ['d'], names);

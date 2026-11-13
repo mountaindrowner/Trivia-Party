@@ -94,6 +94,38 @@ input[type="checkbox"] { width: 24px; height: 24px; accent-color: #a9b6ff; }
 .clock { margin: 0; }
 .clock b { font: 400 64px/1 "Shrikhand", Georgia, serif; color: #fff; text-shadow: 0 0 24px rgba(200, 210, 255, 0.6); font-variant-numeric: tabular-nums; }
 .phase.night .clock b, .phase.vote .clock b { font-size: 30px; color: var(--soft); }
+.what { margin: 6px 0 0; max-width: 30em; color: var(--soft); font-size: 15px; line-height: 1.35; }
+/* The morning clock: a ring that empties, red in the last minute. */
+.ring { position: relative; width: 190px; height: 190px; display: grid; place-items: center; margin: 4px 0; }
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 6; }
+.ring .track { stroke: rgba(230, 235, 255, 0.12); }
+.ring::before { content: ""; position: absolute; inset: 10px; border-radius: 50%; box-shadow: 0 0 40px rgba(255, 200, 100, 0.25), inset 0 0 30px rgba(255, 200, 100, 0.12); transition: box-shadow 0.5s; }
+.ring .left { stroke: #ffd27a; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: calc(100 - var(--p) * 100); transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+.ring.low .left { stroke: var(--wolf); }
+.ring.low::before { box-shadow: 0 0 50px rgba(255, 77, 97, 0.45), inset 0 0 30px rgba(255, 77, 97, 0.2); }
+.ring.low b { animation: thump 0.5s ease-in-out infinite alternate; }
+.ring b { font: 400 50px/1 "Shrikhand", Georgia, serif; color: #fff; font-variant-numeric: tabular-nums; }
+/* The votes, as bars. */
+.bars { list-style: none; margin: 10px 0 0; padding: 0; width: 100%; display: grid; gap: 6px; }
+.bars li { display: grid; grid-template-columns: 9em 1fr 2em; align-items: center; gap: 8px; font-size: 15px; }
+.bars .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.bars i { height: 14px; border-radius: 99px; background: linear-gradient(90deg, #8ea2ff, var(--moon)); width: var(--w); animation: grow 0.9s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(0.3s + var(--i) * 0.12s); transform-origin: left; }
+.bars li.top i { background: linear-gradient(90deg, #ff8a5e, var(--wolf)); box-shadow: 0 0 14px rgba(255, 77, 97, 0.6); }
+.bars b { text-align: right; }
+@keyframes grow { from { transform: scaleX(0); } }
+/* The voted-out cards, face down, flipping over as the host says what they were. */
+.outcards { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.outcard { display: grid; justify-items: center; gap: 6px; }
+.outcard .outname { font-size: 26px; }
+.lo-flipcard .lo-card { width: 150px; }
+.lo-flipcard .lo-card .lo-flip { transition-duration: 0.9s; }
+.lo-flipcard .lo-icon { font-size: 48px; }
+.lo-flipcard .lo-name { font-size: 24px; }
+.lo-flipcard .lo-moon { font-size: 44px; }
+.howbox { padding: 12px 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.05); }
+.howbox summary { cursor: pointer; font-weight: 800; }
+.howbox .lo-how { margin-top: 10px; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .controls .big-btn { flex: 1 1 100%; }
 .mine { padding-top: 6px; border-top: 1px dashed rgba(230, 235, 255, 0.2); }

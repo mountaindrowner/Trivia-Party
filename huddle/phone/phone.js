@@ -42,7 +42,8 @@
     return n;
   };
   const show = (...nodes) => { app.replaceChildren(...nodes.filter(Boolean)); app.firstElementChild && app.firstElementChild.classList.add("pop"); };
-  const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+  // Only once the page has been tapped (browsers refuse before that, and say so in the console).
+  const buzz = (ms) => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) {} };
   const store = {
     get() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { return null; } },
     set(v) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(v)); } catch (e) {} },
