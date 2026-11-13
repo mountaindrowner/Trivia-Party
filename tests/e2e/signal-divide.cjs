@@ -22,8 +22,8 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
   let ok = 0, bad = 0;
   const check = (c, what) => { c ? ok++ : bad++; console.log((c ? '  ok   ' : '  FAIL ') + what); };
   const phoneCtx = () => b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  const NAMES = ['Ava', 'Ben', 'Cal', 'Dee', 'Ezra', 'Finn', 'Gabe', 'Hope', 'Ivy', 'Jude', 'Kai', 'Liam', 'Mia', 'Noah', 'Owen'];
-  const AV = ['tent', 'pine', 'bear', 'deer', 'fox', 'owl', 'canoe', 'lantern', 'snail', 'beaver', 'moon', 'star', 'map', 'coffee', 'guitar'];
+  const NAMES = ['Ava', 'Ben', 'Cal', 'Dee', 'Ezra', 'Finn', 'Gabe', 'Hope', 'Ivy', 'Jude', 'Kai', 'Liam', 'Mia', 'Noah', 'Owen', 'Pip', 'Quinn', 'Rae', 'Sid', 'Tess'];
+  const AV = ['tent', 'pine', 'bear', 'deer', 'fox', 'owl', 'canoe', 'lantern', 'snail', 'beaver', 'moon', 'star', 'map', 'coffee', 'guitar', 'mountain', 'compass', 'dango', 'hedgehog', 'butterfly'];
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   for (const [k, N] of COUNTS.entries()) {
