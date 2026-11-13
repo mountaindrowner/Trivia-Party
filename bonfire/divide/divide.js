@@ -168,9 +168,11 @@ window.SIGNAL_DIVIDE = (() => {
   const PACE_SECS = { quick: [120, 90, 60], standard: [180, 120, 60], long: [240, 180, 120] };
   function setup(v) {
     const o = v.opts, n = v.lobby.count, plan = v.lobby.plan;
+    // Both boxes are sent together, as they read now (so typing one, then the other, keeps both).
+    const boxes = {};
     const zone = (z) => {
-      const box = el("input", { class: "hd-zin", maxlength: 18, placeholder: z === "A" ? "e.g. Youth Room" : "e.g. Kitchen", value: o.zones[z], "aria-label": `Zone ${z}'s name` });
-      box.addEventListener("change", () => cmd({ type: "options", zones: { ...o.zones, [z]: box.value } }));
+      const box = boxes[z] = el("input", { class: "hd-zin", maxlength: 18, placeholder: z === "A" ? "e.g. Youth Room" : "e.g. Kitchen", value: o.zones[z], "aria-label": `Zone ${z}'s name` });
+      box.addEventListener("change", () => cmd({ type: "options", zones: { A: boxes.A.value, B: boxes.B.value } }));
       return el("label", { class: "hd-zrow" }, el("b", {}, z), box);
     };
     const chip = (label, on, fn) => el("button", { class: "hd-chip", "aria-pressed": String(!!on), onclick: fn }, label);
@@ -201,7 +203,7 @@ window.SIGNAL_DIVIDE = (() => {
       el("div", { class: "hd-counts" }, el("b", {}, `${n}`), el("span", {}, `joined · ${L.ready} ready`), el("small", {}, why)),
       el("ul", { class: "hd-people" }, ...L.people.map((p) => el("li", { class: (p.ready ? "ready " : "") + (p.connected ? "" : "away") },
         el("span", { class: "hd-av" }, face(p)), el("span", { class: "hd-nm" }, p.name, p.host ? el("small", {}, " (you)") : null),
-        el("span", { class: "hd-st" }, p.ready ? "✔ ready" : "…"),
+        el("span", { class: "hd-st", "aria-label": p.ready ? "ready" : "not ready yet" }, p.ready ? "✔" : "…"),
         p.host ? null : el("button", { class: "hd-x", "aria-label": `Remove ${p.name}`, onclick: () => { if (confirm(`Remove ${p.name}?`)) { try { ws.send(JSON.stringify({ t: "kick", id: p.id })); } catch (e) {} } } }, "✕")))),
       el("label", { class: "hd-check" }, play, ` I'm playing too${prefs.name ? ` (as ${prefs.name})` : ""}`),
       setup(view),

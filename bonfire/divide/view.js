@@ -230,9 +230,16 @@ window.SD_VIEW = (() => {
         if (announce && !v.zone.locked) voice.say(`Time's up! ${v.zone.leader.name}, lock in who you're sending. Twenty seconds, or the server picks.`, true);
       }
       if (v.phase === "moving" && v.move) {
-        const m = v.move, out = m.moving ? [`You're going to ${zoneFull(v, z)}`] : [];
-        if (m.leaving && m.leaving.length) out.push(`Leaving: ${list(m.leaving)}`);
-        if (m.coming && m.coming.length) out.push(`Coming here: ${list(m.coming)}`);
+        // Who goes where, said from where you'll be standing.
+        const m = v.move, out = [];
+        if (m.moving) {
+          out.push(`You're going to ${zoneFull(v, z)}`);
+          if (m.coming && m.coming.length) out.push(`Also coming to ${z}: ${list(m.coming)}`);
+          if (m.leaving && m.leaving.length) out.push(`Swapping places with ${list(m.leaving)}`);
+        } else {
+          if (m.leaving && m.leaving.length) out.push(`Leaving ${z}: ${list(m.leaving)}`);
+          if (m.coming && m.coming.length) out.push(`Coming to ${z}: ${list(m.coming)}`);
+        }
         curtain(el, "sd-c-swap", "⇄", v.final ? "FINAL EXCHANGE" : "EXCHANGE", out, 3200);
         sound.play(m.moving ? "move" : "static"); kit.buzz(m.moving ? [300, 120, 300, 120, 300] : [100]);
         if (announce) voice.say(`Exchange! ${m.leaving && m.leaving.length ? `${list(m.leaving)}, go to Zone ${other}.` : ""} ${m.coming && m.coming.length ? `${list(m.coming)} ${m.coming.length > 1 ? "are" : "is"} coming here.` : ""}${v.final ? " That's the last move." : ""}`, true);

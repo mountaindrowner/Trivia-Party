@@ -142,7 +142,7 @@ html .sd .sd-sta { background: var(--static); box-shadow: 0 4px 0 #9a4a08; }
 html[data-mode="divide"] body { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px), radial-gradient(circle at 50% -10%, #2a2142, #0b0d12 60%) fixed; }
 html[data-mode="divide"]:root body::before { display: none; }
 html[data-mode="divide"] h1 { color: #fff; text-shadow: 0 0 24px rgba(180, 140, 255, 0.7); font-family: "Chakra Petch", sans-serif; }
-html[data-mode="divide"] button:not(.sd-ghost, .sd-pick, .sd-peek, .sd-link, .ghost) { background: linear-gradient(#e9e1ff, #b48cff); color: #0b0d12; box-shadow: 0 4px 0 #6b4bb8; }
+html[data-mode="divide"] button:not(.sd-ghost, .sd-pick, .sd-peek, .sd-link, .sd-sound, .ghost) { background: linear-gradient(#e9e1ff, #b48cff); color: #0b0d12; box-shadow: 0 4px 0 #6b4bb8; }
 html[data-mode="divide"] .me { border-color: var(--line, rgba(220, 228, 255, 0.14)); background: #141821; }
 /* On the phone page the Bonfire headings (Shrikhand) would win: this game keeps its own type. */
 html[data-mode="divide"] .sd :is(h2, h3), html[data-mode="divide"] .sd-overlay :is(h2, h3) { font-family: "Chakra Petch", "Outfit", system-ui, sans-serif; font-weight: 700; letter-spacing: 0.02em; }
