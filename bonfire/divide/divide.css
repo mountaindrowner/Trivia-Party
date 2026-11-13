@@ -34,7 +34,6 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--hi); }
 .hd-tag { margin: 0; font-size: 20px; font-weight: 800; }
 .hd-sub { margin: 0; color: var(--soft); }
 .hd-check { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; }
-.hd-field { display: grid; gap: 6px; text-align: left; font-size: 14px; color: var(--soft); }
 .hd-back { color: var(--soft); font-size: 15px; }
 
 /* Lobby. */
@@ -69,9 +68,6 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--hi); }
 /* Setting up the night. */
 .hd-setup { border-color: rgba(180, 140, 255, 0.45); }
 .hd-lab { margin: 14px 0 6px !important; font-size: 13px !important; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--soft) !important; }
-.hd-zrow { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.hd-zrow b { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; border: 2px solid var(--steel); font: 700 22px "Chakra Petch", sans-serif; }
-.hd-zin { font-size: 16px; padding: 10px 12px; }
 .hd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .hd-chip { min-height: 36px; padding: 6px 12px; font-size: 14px; border-radius: 99px; border: 1.5px solid var(--line); background: rgba(255, 255, 255, 0.05); color: #eef1f8; }
 .hd-chip[aria-pressed="true"] { background: var(--hi); border-color: var(--hi); color: #0b0d12; }
@@ -80,9 +76,9 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--hi); }
 .hd-moves p { margin: 4px 0 0; }
 
 /* Console. */
-.hd-tabs { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; border-radius: 16px; background: rgba(11, 13, 18, 0.9); border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.hd-tabs button { border: 0; background: transparent; color: var(--soft); }
-.hd-tabs button[aria-selected="true"] { background: var(--hi); color: #0b0d12; }
+
+
+
 .hd-body { display: grid; gap: 14px; }
 .hd-status { display: grid; justify-items: center; gap: 2px; padding: 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); text-align: center; }
 .hd-status.paused { border-color: var(--warn); }
@@ -95,7 +91,8 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--hi); }
 .hd-zone .ok { color: var(--ok); }
 .hd-zone .warn { color: var(--warn); }
 .hd-zl { font-size: 48px; font-weight: 700; line-height: 1; }
-.hd-zl small { display: block; margin-top: 2px; font: 800 13px "Outfit", sans-serif; color: var(--steel); }
+.hd-zl small { display: block; font: 800 11px "Outfit", sans-serif; letter-spacing: 0.25em; color: var(--soft); }
+.hd-link { min-height: 0; padding: 2px 8px; margin-left: 4px; font-size: 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--soft); }
 .hd-zc { color: var(--soft); }
 .hd-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .hd-controls button { flex: 1 1 40%; }

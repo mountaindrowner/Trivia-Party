@@ -9,7 +9,7 @@ things about people they didn't know before.
   click **Light the fire**. Everyone else goes to `bonfire.thecrossroads.workers.dev` on their phone, or scans the
   QR code, and types the 4-letter code.
 - **Two more modes on this site:** **Lights Out** (`/night`, one night of wolves at camp, 3 to 12) and **Signal
-  Divide** (`/divide`, two zones and hidden teams, 12 to 15), both run from the host's phone with no TV. Below.
+  Divide** (`/divide`, two rooms and hidden teams, 6 to 20), both run from the host's phone with no TV. Below.
 - **Same bones as Spark Wars and Holy Huddle:** the room server and the phone page are in `../huddle/` (the
   `bonfire` room type allows 40 players and 20 in the audience).
 - **Files:** `core.js` (the room, the questions while joining, the host's voice, the show and the Campfire Report),
@@ -154,59 +154,61 @@ end of the night, the wolf was Finn."), then the night step by step.
   secret card, on the players' phones and the host's), `night.js`, `night.css`, `index.html` (the host's page).
   The room type is `lights-out` (12 players, no audience). `node tests/e2e/lights-out.cjs` plays two rounds with 12.
 
-## Signal Divide: two zones, hidden teams (`divide/`)
+## Signal Divide: two rooms, hidden teams (`divide/`)
 
-A third Bonfire mode, for **6 to 20 people** (best with 12 to 15) on their own phones, in two physical zones (two rooms, or two far-apart
-corners), with **no TV**. Built from the design package in `../docs/signal-divide/` (start with `00_START_HERE.md`).
+A third Bonfire mode, for **6 to 20 people** (best with 12 to 15) on their own phones, in **Room A and Room B** (two
+rooms, or two far-apart corners), with **no TV**. Built from the design package in `../docs/signal-divide/` (start with `00_START_HERE.md`).
 It's an original game inspired by the genre (two-room social deduction): its own names, story, rules text and look,
 not a copy of any published game's cards or art, and not licensed by anyone.
 
-**To play:** open `https://bonfire.thecrossroads.workers.dev/divide` on your phone, tap **Create game** (tick "I'm
-playing too" to get a card yourself), and everyone scans the QR code on your phone. When everyone has tapped
+**To play:** open `https://bonfire.thecrossroads.workers.dev/divide` on your phone, tap **Create game**, and everyone
+scans the QR code on your phone. When everyone has tapped
 **I'm ready**, tap **Lock & deal**. The lobby has a 45-second teaching script (it can read it out loud).
 
-**Set up the night** (in the lobby, before dealing):
-- **Name the zones** ("Youth Room" / "Kitchen", or a quick pair like Inside / Outside, Upstairs / Downstairs).
-  Every phone then says where to go: "MOVE TO ZONE B: Kitchen", and the zone badge and the reveal use the names.
+**Set up the night** (in the lobby, before dealing). Your phone only hosts: it stays out of the game.
 - **Pace:** Quick (2:00, 1:30, 1:00), Standard (3:00, 2:00, 1:00), Long (4:00, 3:00, 2:00).
-- **Announcer:** your phone can only be heard in one zone, so **each zone's leader's phone** says the round, the
-  time left (a minute, thirty seconds, ten), "time's up", who's leaving and who's coming, and the result, out loud
-  for that zone. Or Silent.
-- The teaching script picks up the zones' names and the times; the lobby shows what the presets mean for the
-  number of people there ("With 13: zones of 7 and 6, 2, then 1, then 1 sent... and one Forecaster").
+- **Announcers:** your phone can only be heard in one room, so the game picks **one player's phone in each room**
+  (someone connected, at random). It buzzes (and keeps buzzing) with "You're Room A's announcer: turn your volume all
+  the way up"; their tap ("My volume's up!") is also what lets a phone talk at all. From then on it reads out, for
+  that room: the round and its time, a minute left, thirty seconds (and who has to pick), ten seconds, "time's up",
+  who's leaving and who's coming, and the result. If that person moves to the other room or their phone drops off,
+  someone else in the room is asked. "My phone can't" passes it on; your console shows each room's announcer (and
+  whether their volume is up), with **pick another**. Or turn the announcers off (Silent).
+- The teaching script picks up the times; the lobby shows what the presets mean for the number of people there
+  ("With 13: rooms of 7 and 6, 2, then 1, then 1 sent... and one Forecaster").
 
 **The moments, on every phone** (so nobody has to be near the host): a full-screen sweep with a sound and a buzz
 when the cards are dealt, when a round starts ("ROUND 2 · 2:00 to talk"), at "TIME'S UP" and at the "EXCHANGE"
 (who's leaving, who's coming); the last ten seconds counted down huge behind the screen, with ticks; a crown and a
-fanfare when you become leader; a "MOVE TO ZONE B" screen that beeps and buzzes until you tap that you're there;
+fanfare when you become leader; a "MOVE TO ROOM B" screen that beeps and buzzes until you tap that you're there;
 and the reveal, played on every phone at the same moment (the server stamps it): static, "The Beacon ended in...",
-"Zone A", "The Jammer ended in...", "Zone A", "TOGETHER", then everyone's cards. Sounds are made on the phone (no
+"Room A", "The Jammer ended in...", "Room A", "TOGETHER", then everyone's cards. Sounds are made on the phone (no
 files); 🔊 turns them off. The everyday screen: a radar in the lobby, signal bars and round dots on top, votes
 filling a bar toward a majority, Signal's rings broadcasting and Static's name glitching on a shown card.
 
 - **The story:** two secret teams. **Signal** (blue, broadcast rings) protects the **Beacon**; **Static** (orange,
-  a zigzag) has the **Jammer**. At the end, Beacon and Jammer in the same zone: Static wins. Apart: Signal wins.
+  a zigzag) has the **Jammer**. At the end, Beacon and Jammer in the same room: Static wins. Apart: Signal wins.
   At 13 or 15 players one person is the **Forecaster** (grey, no team), who predicts the winner before the reveal.
-- **The deck:** 12: Beacon + 5 Signal, Jammer + 5 Static (zones 6/6). 13: the same plus the Forecaster (7/6).
-  14: Beacon + 6, Jammer + 6 (7/7). 15: plus the Forecaster (8/7). Cards and zones are dealt separately, at random.
+- **The deck:** 12: Beacon + 5 Signal, Jammer + 5 Static (rooms 6/6). 13: the same plus the Forecaster (7/6).
+  14: Beacon + 6, Jammer + 6 (7/7). 15: plus the Forecaster (8/7). Cards and rooms are dealt separately, at random.
 - **Small and big groups:** 6 to 10 players send 1 each time (1, 1, 1); 11 to 20 send 2, 1, 1. The deck scales
   the same way (equal teams, a Forecaster when the number is odd).
-- **A match:** everyone goes to their zone and taps **I'm here**. Three rounds of talking (3, 2, then 1 minutes).
-  Each zone has a leader (picked at random to start; anyone can be voted in by a strict majority of their zone, and
+- **A match:** everyone goes to their room and taps **I'm here**. Three rounds of talking (3, 2, then 1 minutes).
+  Each room has a leader (picked at random to start; anyone can be voted in by a strict majority of their room, and
   a leader can hand the job over). At the end of each round, each leader sends **2, then 1, then 1** people to the
-  other zone; both zones' picks are swapped at the same moment, and nobody moves until the time's up. A leader can't
+  other room; both rooms' picks are swapped at the same moment, and nobody moves until the time's up. A leader can't
   send themselves. A leader who doesn't lock in gets 20 more seconds, then the server picks at random (and says so).
-  Movers tap **I'm in Zone B**; the next round starts 5 seconds after everyone has arrived.
+  Movers tap **I'm in Room B**; the next round starts 5 seconds after everyone has arrived.
 - **Your card** never changes, and never shows unless you mean it to: **hold "My card"** to peek (let go, it's gone),
   or **Show team** / **Show card** to turn your phone to someone you trust (8 seconds, or **Hide now**). Switching
-  apps hides it. The everyday screen has no team colours at all, and Zone A/B is where you stand, never your team.
-- **The host's phone** shows the QR code, then a console: the clock, head counts, who leads each zone and whether
+  apps hides it. The everyday screen has no team colours at all, and Room A/B is where you stand, never your team.
+- **The host's phone** shows the QR code, then a console: the clock, head counts, who leads each room and whether
   they've locked in, who's still walking, **Pause/Resume**, **Start the round now** (if someone forgot to tap),
-  **Stop match**, and, while paused, corrections (move someone to the zone they're really in, or set a leader),
+  **Stop match**, and, while paused, corrections (move someone to the room they're really in, or set a leader),
   logged for everyone. A host who plays gets a **My game** tab: their own screen, exactly like everyone's.
-- **The server runs it** (`huddle/server/src/divide.js`), not anyone's phone: the cards, the zones, the clock, the
-  votes, the picks, the exchanges and the result. Each phone only ever receives its own card and its own zone's
-  people, leader, votes and picks (the other zone learns only *whether* its leader has locked in). The host's
+- **The server runs it** (`huddle/server/src/divide.js`), not anyone's phone: the cards, the rooms, the clock, the
+  votes, the picks, the exchanges and the result. Each phone only ever receives its own card and its own room's
+  people, leader, votes and picks (the other room learns only *whether* its leader has locked in). The host's
   console never receives a card, even when the host plays. A phone that drops rejoins as itself; nobody is redealt.
   The clock keeps running if the host's phone sleeps. **🔑 Recovery link** lets the host take the console over from
   another phone.

@@ -27,8 +27,7 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   for (const [k, N] of COUNTS.entries()) {
-    const hostPlays = N % 2 === 1; // the host plays at 13 and 15, only hosts at 12 and 14
-    console.log(`\n--- ${N} players (the host ${hostPlays ? 'plays too' : 'only hosts'})`);
+    console.log(`\n--- ${N} players`);
     const host = await (await phoneCtx()).newPage();
     host.on('pageerror', (e) => errs.push('host: ' + e.message));
     host.on('console', (m) => { if (m.type() === 'error' || /Content Security Policy/.test(m.text())) errs.push('host console: ' + m.text()); });
@@ -36,19 +35,15 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     await host.goto(BASE + '/divide');
     await host.evaluate(() => localStorage.clear());
     await host.reload();
-    if (hostPlays) { await host.check('.hd-check input'); await host.fill('.hd-field input', 'Rae'); }
     if (k === 0) await host.screenshot({ path: `${OUT}/host-00-title.png` });
     await host.click('text=Create game');
     await host.waitForSelector('.hd-code', { timeout: 10000 });
     const code = (await host.textContent('.hd-code')).trim();
-    // The presets: name the zones (a quick pair, or typed), and a pace.
-    if (k % 2) await host.click('.hd-chip:has-text("Upstairs / Downstairs")');
-    else { await host.fill('.hd-zrow:has-text("A") input', 'Youth Room'); await host.fill('.hd-zrow:has-text("B") input', 'Kitchen'); await host.press('.hd-zrow:has-text("B") input', 'Tab'); }
+    // The presets: a pace, and the announcers (on).
     await host.click(`.hd-chip:has-text("${k % 3 === 1 ? 'Quick' : 'Standard'}")`);
     await sleep(500);
     const opts = (await host.evaluate(() => SIGNAL_DIVIDE._state().view)).opts;
-    const zA = k % 2 ? 'Upstairs' : 'Youth Room';
-    check(opts.zones.A === zA && opts.pace === (k % 3 === 1 ? 'quick' : 'standard'), `the host sets the zones' names ("${opts.zones.A}" / "${opts.zones.B}") and the pace (${opts.pace})`);
+    check(opts.pace === (k % 3 === 1 ? 'quick' : 'standard') && opts.voice === true, `the host sets the pace (${opts.pace}), with an announcer phone in each room`);
     check(/^[A-Z]{4}$/.test(code), `the host's phone shows a QR code and the code (${code})`);
 
     // One real phone, from the QR link.
@@ -66,12 +61,11 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     await phone.click("text=I'm ready!");
     await phone.waitForSelector('.sd-lobby', { timeout: 8000 });
     await phone.click('.sd-lobby .sd-main');
-    check(((await phone.textContent('.sd-zonesign').catch(() => '')) || '').includes(zA), 'the phones show the zones\' names in the lobby');
 
     // The bots.
     const st = { errors: [], leaks: 0, roleChanged: 0, results: 0 };
     const bots = [];
-    const nBots = N - 1 - (hostPlays ? 1 : 0);
+    const nBots = N - 1;
     for (let i = 0; i < nBots; i++) {
       const bot = { name: NAMES[i], views: [] };
       await new Promise((resolve) => { const open = () => {
@@ -79,6 +73,9 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
         bot.ws = ws; bot.reopen = open;
         ws.onclose = () => { if (ws === bot.ws && bot.id && !bot.done) setTimeout(open, 300); };
         const sendIn = (data) => { try { ws.send(JSON.stringify({ t: 'input', data })); } catch (e) {} };
+        // Like a person: each thing once (not again on every update while the server catches up).
+        bot.did = bot.did || new Set();
+        const once = (key, data) => { if (bot.did.has(key)) return; bot.did.add(key); sendIn(data); };
         ws.onmessage = (e) => {
           const m = JSON.parse(e.data);
           if (m.t === 'hello') return ws.send(JSON.stringify(bot.id ? { t: 'rejoin', id: bot.id, key: bot.key } : { t: 'join', name: NAMES[i], avatar: AV[i] }));
@@ -91,14 +88,18 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
           if (v.phase !== 'result' && ((j.match(/"role"/g) || []).length > 1 || j.includes('"everyone"'))) st.leaks++;
           if (v.me && v.me.role) { if (bot.role && bot.role !== v.me.role) st.roleChanged++; bot.role = v.me.role; }
           if (v.me && v.me.zone && v.phase !== 'result') { if (bot.zone && bot.zone !== v.me.zone) bot.moves = (bot.moves || 0) + 1; bot.zone = v.me.zone; }
-          if (v.phase === 'lobby' && !v.me.ready) sendIn({ type: 'ready' });
-          if ((v.phase === 'arrival' || v.phase === 'moving') && v.move && (v.move.first || v.move.moving) && !v.me.arrived) setTimeout(() => sendIn({ type: 'here' }), 100 + Math.random() * 300);
+          if (v.phase === 'lobby' && !v.me.ready) once(`ready:${v.match}`, { type: 'ready' });
+          if (v.me && v.me.announcer && !v.me.annOk && !bot.did.has(`ann:${v.match}:${v.me.zone}`)) { st.asked = (st.asked || 0) + 1; once(`ann:${v.match}:${v.me.zone}`, { type: 'announce-ok' }); }
+          if ((v.phase === 'arrival' || v.phase === 'moving') && v.move && (v.move.first || v.move.moving) && !v.me.arrived && !bot.did.has(`here:${v.match}:${v.phase}:${v.move.at || 0}`)) {
+            bot.did.add(`here:${v.match}:${v.phase}:${v.move.at || 0}`);
+            setTimeout(() => sendIn({ type: 'here' }), 100 + Math.random() * 300);
+          }
           if ((v.phase === 'round' || v.phase === 'lock') && v.me.leader && !v.zone.locked && !bot.lazy) {
             const pick = v.zone.people.filter((p) => p.id !== v.me.id).slice(0, v.need).map((p) => p.id);
-            if (v.zone.picks.length !== v.need) sendIn({ type: 'select', ids: pick });
-            else sendIn({ type: 'lock' });
+            if (v.zone.picks.length !== v.need) once(`select:${v.match}:${v.round}:${v.zone.leader.id}`, { type: 'select', ids: pick });
+            else once(`lock:${v.match}:${v.round}`, { type: 'lock' });
           }
-          if (v.phase === 'predict' && v.predict && v.predict.asked && !v.predict.pick) sendIn({ type: 'predict', pick: Math.random() < 0.5 ? 'signal' : 'static' });
+          if (v.phase === 'predict' && v.predict && v.predict.asked && !v.predict.pick) once(`predict:${v.match}`, { type: 'predict', pick: Math.random() < 0.5 ? 'signal' : 'static' });
           if (v.phase === 'result' && !bot.sawResult) { bot.sawResult = true; st.results++; bot.result = v.result; }
         };
       }; open(); });
@@ -134,7 +135,7 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
         if (pred) return await pred.click();
       } catch (e) {}
     };
-    let shots = 0, peeked = false, reconnected = false, last = '', sawCurtain = false, sawTen = false, sawCine = false, sawName = false;
+    let shots = 0, peeked = false, reconnected = false, last = '', sawCurtain = false, sawTen = false, sawCine = false, phoneAsked = false;
     const t0 = Date.now();
     while (Date.now() - t0 < 120000) {
       const s = await host.evaluate(() => SIGNAL_DIVIDE._state());
@@ -143,9 +144,9 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
       if (s.view.phase === 'result') break;
       sawCurtain = sawCurtain || !!(await phone.$('.sd-curtain'));
       sawTen = sawTen || !!(await phone.$('.sd-ten'));
-      sawName = sawName || ((await phone.textContent('.sd-zone em, .sd-move-name').catch(() => '')) || '').length > 0;
+      // If the real phone is picked as its room's announcer, it's asked to turn its volume up; it says yes.
+      if (await phone.$('.sd-ask')) { phoneAsked = true; if (k === 0) await phone.screenshot({ path: `${OUT}/phone-announcer.png` }); await phone.click('.sd-ask .sd-main').catch(() => {}); }
       await actOn(phone);
-      if (hostPlays) { if (s.tab !== 'me') await host.click('.hd-tabs button >> nth=0').catch(() => {}); await actOn(host); }
       const key = `${s.view.phase}:${s.view.round}`;
       if (key !== last && k === 0 && shots < 8) {
         last = key; shots++;
@@ -171,7 +172,6 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
         check(/SIGNAL|STATIC|NO TEAM/.test(team) && !(await phone.$('.sd-overlay')), '"Show team" shows only the team, and "Hide now" hides it');
       }
       if (process.env.SMOKE && peeked) {
-        await host.click('.hd-tabs button >> nth=1').catch(() => {});
         await host.click('text=Stop match');
         await host.waitForFunction(() => SIGNAL_DIVIDE._state().view.phase === 'aborted', null, { timeout: 5000 }).catch(() => {});
         check((await host.evaluate(() => SIGNAL_DIVIDE._state().view.phase)) === 'aborted', 'the host can stop a match (no winner, no cards shown)');
@@ -203,7 +203,8 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     sawCine = !!(await phone.waitForSelector('.sd-cine', { timeout: 3000 }).catch(() => null));
     if (k === 0) { await sleep(3500); await phone.screenshot({ path: `${OUT}/phone-98-reveal-playing.png` }); }
     check(sawCurtain && sawCine, `the moments play on the phone: a sweep when things happen${sawTen ? ', the last ten seconds counted down' : ''}, and the reveal`);
-    check(sawName, 'the phone shows the zone\'s name (on the zone badge or the move screen)');
+    const hv = hostViews.map((j) => JSON.parse(j)).filter((x) => x.zones);
+    check(hv.some((x) => x.zones.A.announcer && x.zones.B.announcer && x.zones.A.announcer.ok && x.zones.B.announcer.ok), `each room got an announcer phone, which said its volume was up (asked ${st.asked || 0} bots${phoneAsked ? ' and the real phone' : ''})`);
     await phone.waitForSelector('.sd-win', { timeout: 12000 }).catch(() => {});
     for (let i = 0; i < 30 && st.results < bots.length; i++) await sleep(200);
     check(st.results === bots.length, `every phone sees the result (${st.results} of ${bots.length})`);
@@ -218,12 +219,11 @@ if (process.env.HTTPS_PROXY && !(process.argv[2] || '').includes('127.0.0.1')) {
     check(moves > 0, `people moved between zones (${moves} bot moves)`);
     check(r.winner === (r.zone.beacon === r.zone.jammer ? 'static' : 'signal'), `the right team wins: ${r.winner} (Beacon in ${r.zone.beacon}, Jammer in ${r.zone.jammer})`);
     if (k === 0) { await sleep(800); await phone.screenshot({ path: `${OUT}/phone-99-result.png`, fullPage: true }); await host.screenshot({ path: `${OUT}/host-99-result.png`, fullPage: true }); }
-    await host.click('.hd-tabs button >> nth=1').catch(() => {});
     await host.click('text=Rematch').catch(() => {});
     await host.waitForFunction(() => SIGNAL_DIVIDE._state().view.phase === 'lobby', null, { timeout: 5000 }).catch(() => {});
     const again = await host.evaluate(() => SIGNAL_DIVIDE._state().view);
     check(again.phase === 'lobby' && again.lobby.count === N, 'rematch: back to the lobby with everyone still in');
-    console.log(`       errors: ${st.errors.join(',') || 'none'}`);
+    check(!st.errors.length, `no phone was refused or throttled (${st.errors.join(',') || 'none'})`);
     for (const bot of bots) { bot.done = true; try { bot.ws.close(); } catch (e) {} }
     try { await host.evaluate(() => localStorage.clear()); } catch (e) {}
     await host.context().close(); await phone.context().close();

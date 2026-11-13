@@ -98,6 +98,7 @@ for (const n of [6, 12, 13, 14, 15, 20]) {
   check(JSON.stringify(rounds) === want, `${n} players: the exchanges move ${n <= 10 ? "1, 1, 1" : "2, 1, 1"} each way (${rounds})`);
   check(JSON.stringify(roleBefore) === JSON.stringify(s.role), `${n} players: moving never changes anyone's card`);
   check(s.phase === "result", `${n} players: it ends on the result (${s.phase})`);
+  check(s.zone[s.announcer.A] === "A" && s.zone[s.announcer.B] === "B", `${n} players: after all the moves, each room's announcer is still in that room`);
   const r = s.result, together = s.zone[r.beacon] === s.zone[r.jammer];
   check(r.winner === (together ? "static" : "signal"), `${n} players: Beacon and Jammer ${together ? "together: Static" : "apart: Signal"} wins`);
   check(n % 2 ? r.forecaster && r.forecaster.pick === "signal" && r.forecaster.won === (r.winner === "signal") : !r.forecaster, `${n} players: ${n % 2 ? "the Forecaster's prediction is scored on its own" : "no Forecaster, no prediction"}`);
@@ -126,19 +127,36 @@ for (const n of [6, 12, 13, 14, 15, 20]) {
   check(s.phase === "result" && s.result.forecaster.pick === null && s.result.forecaster.won === false, "a Forecaster who doesn't predict in time just doesn't win; the teams' result stands");
 }
 
-// The presets: the zones' names, the pace, the announcements.
+// The presets: the pace and the announcers.
 {
   const s = lobby(12);
-  E.hostCommand(s, { type: "options", zones: { A: "  Youth <b>Room</b>!!  ", B: "Kitchen" }, pace: "long", voice: false }, { now: 0 });
-  check(s.opts.zones.A === "Youth bRoombb" || s.opts.zones.A === "Youth bRoomb", `zone names are kept plain ("${s.opts.zones.A}")`);
-  check(s.opts.pace === "long" && s.opts.voice === false, "the pace and the announcements are set");
-  check(!E.hostCommand(s, { type: "options", pace: "warp" }, { now: 0 }).ok || s.opts.pace === "long", "an unknown pace is ignored");
+  E.hostCommand(s, { type: "options", pace: "long", voice: false }, { now: 0 });
+  check(s.opts.pace === "long" && s.opts.voice === false, "the pace and the announcers are set");
+  E.hostCommand(s, { type: "options", pace: "warp" }, { now: 0 });
+  check(s.opts.pace === "long", "an unknown pace is ignored");
   E.hostCommand(s, { type: "deal" }, { now: 0, rng: seeded(5) });
   check(JSON.stringify(s.plan.secs) === "[240,180,120]", "the long pace: 4, 3, then 2 minutes");
   check(!E.hostCommand(s, { type: "options", pace: "quick" }, { now: 0 }).ok, "presets are fixed once the cards are dealt");
-  const v = E.playerView(s, s.order[0], 0);
-  check(v.opts.zones.B === "Kitchen" && v.plan.secs[0] === 240, "every phone knows the zones' names and the times");
+  check(E.playerView(s, s.order[0], 0).plan.secs[0] === 240, "every phone knows the times");
+  check(s.order.every((id) => !E.playerView(s, id, 0).me.announcer), "announcers off: no phone is asked to announce");
   const l = lobby(8); check(E.playerView(l, "p0", 0).lobby.plan.out.join() === "1,1,1", "the lobby shows 1, 1, 1 moving for a small group");
+}
+// One announcer phone in each room: picked at the deal, kept while they stay, replaced when they move or drop off.
+{
+  const s = lobby(12), rng = seeded(8);
+  E.hostCommand(s, { type: "deal" }, { now: 0, rng });
+  const ann = (z) => s.order.filter((id) => E.playerView(s, id, 0).me.announcer && s.zone[id] === z);
+  check(ann("A").length === 1 && ann("B").length === 1, "one phone in each room is the announcer");
+  const a = ann("A")[0];
+  check(!E.playerView(s, a, 0).me.annOk && E.command(s, a, { type: "announce-ok" }, { now: 0 }).ok && E.playerView(s, a, 0).me.annOk, "the announcer taps \"Volume's up\" and it's remembered");
+  check(!E.command(s, s.order.find((id) => id !== a && id !== ann("B")[0]), { type: "announce-ok" }, { now: 0 }).ok, "only an announcer can say so");
+  E.sync(s, people(12).map((p) => (p.id === a ? { ...p, connected: false } : p)));
+  check(s.announcer.A !== a && s.zone[s.announcer.A] === "A", "an announcer whose phone drops off is replaced by someone in the same room");
+  const b = s.announcer.B;
+  E.hostCommand(s, { type: "announcer", zone: "B" }, { now: 1, rng });
+  check(s.announcer.B !== b && s.zone[s.announcer.B] === "B" && /announcer/.test(s.log.at(-1).text), "the host can ask for a different announcer (logged)");
+  const hv = E.hostView(s, 1);
+  check(hv.zones.A.announcer && hv.zones.B.announcer && !/"role"/.test(JSON.stringify(hv)), "the host's console shows each room's announcer (and still no cards)");
 }
 {
   const { s } = play(12, 21, {});

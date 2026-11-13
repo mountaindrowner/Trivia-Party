@@ -10,7 +10,7 @@ It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to ans
 | | Trivia Holy Party (this game) | Spark Wars (`spark/`) | Bonfire Ice Breaker (`bonfire/`) |
 | --- | --- | --- | --- |
 | For | Kids and families | The middle school youth group | Young adults getting to know each other |
-| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams | Up to 40 phones; or **Lights Out** (wolves, 3–12) or **Signal Divide** (two zones, 12–15), run from one phone |
+| Players | 1–4 on one device, or up to 8 phones in **Holy Huddle** | Up to 30 phones, in teams | Up to 40 phones; or **Lights Out** (wolves, 3–12) or **Signal Divide** (two rooms, 6–20), run from one phone |
 | Where | `index.html`, itch.io, `holyhuddle.thecrossroads.workers.dev/tv` | `sparkwars.thecrossroads.workers.dev/tv` | `bonfire.thecrossroads.workers.dev/tv`; `/night` (Lights Out), `/divide` (Signal Divide) |
 
 The shared bones are in `huddle/`: the room server (one code, deployed once per game), the phone page (one code,

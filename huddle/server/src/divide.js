@@ -1,14 +1,14 @@
 /* Signal Divide: the game engine, run by the room server (relay.js) rather than by anyone's phone.
 
-   6 to 20 people (best with 12 to 15), two physical zones (A and B), two secret teams. Signal protects the Beacon,
+   6 to 20 people (best with 12 to 15), two physical rooms (A and B), two secret teams. Signal protects the Beacon,
    Static has the Jammer. Three timed rounds (3, 2, 1 minutes, or the host's pick of pace); at the end of each, each
-   zone's leader sends 2, then 1, then 1 people to the other zone (1, 1, 1 with 10 or fewer). At the end: Beacon and Jammer in the same zone, Static wins; apart, Signal wins. At 13 or 15 players a
+   room's leader sends 2, then 1, then 1 people to the other room (1, 1, 1 with 10 or fewer). At the end: Beacon and Jammer in the same room, Static wins; apart, Signal wins. At 13 or 15 players a
    neutral Forecaster predicts the winner before the reveal. Nobody is knocked out, and role cards never move: only
    people do.
 
-   The server owns everything secret: the cards, the zones, the clock, the votes, the exchanges and the result. Every
+   The server owns everything secret: the cards, the rooms, the clock, the votes, the exchanges and the result. Every
    phone (the host's too) only ever gets its own view: its own card, its own zone's people, leader, votes and picks,
-   and whether the other zone's leader has locked in. The other zone's picks and everyone's cards stay on the server
+   and whether the other room's leader has locked in. The other room's picks and everyone's cards stay on the server
    until the reveal. The host's console sees head counts, arrivals and controls, never cards.
 
    Pure functions over a plain state object (stored by the room), so the rules can be tested without a server:
@@ -49,10 +49,8 @@ function shuffle(list, rng) {
 /** opts.fast: every clock 30 times quicker, for local tests only (the DIVIDE_FAST variable, never set on the real site). */
 export function create(opts = {}) {
   return { phase: "lobby", rev: 0, match: 0, host: { plays: false, name: "Host", avatar: "moon" }, roster: {}, log: [], fast: !!opts.fast,
-    opts: { zones: { A: "", B: "" }, pace: "standard", voice: true }, ...fresh() };
+    opts: { pace: "standard", voice: true }, ...fresh() };
 }
-/** A zone's name the host typed ("Kitchen"), kept short and plain. */
-const cleanName = (x) => String(x || "").replace(/[^\p{L}\p{N} '&.,-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 18);
 const ms = (s, x) => (s.fast ? Math.round(x / 30) : x);
 /** Everything about one match, cleared for the next. */
 function fresh() {
@@ -61,6 +59,7 @@ function fresh() {
     sel: { A: [], B: [] }, locked: { A: false, B: false }, round: 0, final: false, deadline: null, graceUntil: null, startAt: null,
     paused: null, moves: [], prediction: null, result: null, auto: { A: false, B: false },
     plan: { secs: PACES.standard.slice(), out: outbound(12) }, exchangeAt: null, revealAt: null,
+    announcer: { A: null, B: null }, annOk: {},
   };
 }
 const log = (s, now, text) => { s.log.push({ at: now, text }); if (s.log.length > 30) s.log.splice(0, s.log.length - 30); };
@@ -70,6 +69,23 @@ const nameOf = (s, id) => (s.roster[id] && s.roster[id].name) || "Someone";
 const need = (s) => s.plan.out[s.round];
 const majority = (n) => Math.floor(n / 2) + 1;
 const forecaster = (s) => s.order.find((id) => s.role[id] === "forecaster") || null;
+
+/* ---------- The announcers ----------
+   The host's phone can only be heard in one room, so one phone in each room reads out the time and the moves. The
+   server picks it (someone connected, at random), keeps it while that person stays in the room, and picks again if
+   they move or drop off. The phone buzzes and asks its owner to turn the volume up; their tap ("Volume's up") is
+   also what lets a phone start talking. The host can ask for a different one. */
+function pickAnnouncer(s, z, rng, not) {
+  const m = members(s, z).filter((id) => id !== not), on = m.filter((id) => s.roster[id] && s.roster[id].connected);
+  const pool = on.length ? on : m;
+  s.announcer[z] = pool.length ? pool[randInt(pool.length, rng)] : null;
+}
+function checkAnnouncers(s, rng) {
+  for (const z of ZONES) {
+    const a = s.announcer[z];
+    if (!a || s.zone[a] !== z || !(s.roster[a] && s.roster[a].connected)) pickAnnouncer(s, z, rng);
+  }
+}
 
 /** The room's people: [{ id, name, avatar, connected }] (phones), plus the host when they play. Before the deal they
     are the lobby; after it, the people dealt in stay in the game whatever happens to their connection. */
@@ -84,6 +100,7 @@ export function sync(s, players) {
     for (const p of want) if (s.roster[p.id]) Object.assign(s.roster[p.id], { name: p.name, avatar: p.avatar, connected: p.connected !== false });
     // Someone dealt in who has gone from the room entirely stays in the game, shown as away.
     for (const id of Object.keys(s.roster)) if (!want.some((p) => p.id === id)) s.roster[id].connected = false;
+    if (inGame(s)) checkAnnouncers(s); // an announcer whose phone dropped off is replaced
   }
   s.rev++;
 }
@@ -103,6 +120,7 @@ function deal(s, ctx) {
   s.order = ids;
   s.plan = { secs: (PACES[s.opts.pace] || PACES.standard).slice(), out: outbound(n) };
   for (const z of ZONES) { const m = members(s, z); s.leader[z] = m[randInt(m.length, ctx.rng)]; }
+  checkAnnouncers(s, ctx.rng);
   s.phase = "arrival"; s.match++;
   for (const id of ids) s.arrived[id] = false;
   log(s, ctx.now, `Match ${s.match}: cards dealt to ${n} players.`);
@@ -114,20 +132,20 @@ function startRound(s, ctx) {
   const secs = s.plan.secs[s.round];
   s.deadline = ctx.now + ms(s, secs * 1000);
   s.offer = { A: null, B: null }; s.auto = { A: false, B: false };
-  log(s, ctx.now, `Round ${s.round + 1} started: ${secs % 60 ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${secs / 60} minute${secs > 60 ? "s" : ""}`}, then ${need(s)} from each zone move.`);
+  log(s, ctx.now, `Round ${s.round + 1} started: ${secs % 60 ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${secs / 60} minute${secs > 60 ? "s" : ""}`}, then ${need(s)} from each room move.`);
 }
 function setLeader(s, z, id, now, why) {
   if (s.leader[z] === id) return;
   s.leader[z] = id; s.votes[z] = {}; s.offer[z] = null;
   if (!s.locked[z]) s.sel[z] = []; // a new leader makes their own picks
-  log(s, now, `${nameOf(s, id)} is now Zone ${z}'s leader${why ? ` (${why})` : ""}.`);
+  log(s, now, `${nameOf(s, id)} is now Room ${z}'s leader${why ? ` (${why})` : ""}.`);
 }
 function enterLock(s, ctx) {
   s.phase = "lock"; s.deadline = null; s.offer = { A: null, B: null };
   if (s.locked.A && s.locked.B) return exchange(s, ctx);
   s.graceUntil = ctx.now + ms(s, GRACE_MS);
 }
-/** Both zones' picks, swapped in one go. A leader who didn't lock in time has the rest picked at random (and everyone
+/** Both rooms' picks, swapped in one go. A leader who didn't lock in time has the rest picked at random (and everyone
     is told). */
 function exchange(s, ctx) {
   for (const z of ZONES) {
@@ -135,13 +153,14 @@ function exchange(s, ctx) {
     const pool = members(s, z).filter((id) => id !== s.leader[z] && !s.sel[z].includes(id));
     while (s.sel[z].length < need(s) && pool.length) s.sel[z].push(pool.splice(randInt(pool.length, ctx.rng), 1)[0]);
     s.locked[z] = true; s.auto[z] = true;
-    log(s, ctx.now, `Zone ${z}'s leader didn't lock in time, so the server finished the picks at random.`);
+    log(s, ctx.now, `Room ${z}'s leader didn't lock in time, so the server finished the picks at random.`);
   }
   const moves = [...s.sel.A.map((id) => ({ id, from: "A", to: "B" })), ...s.sel.B.map((id) => ({ id, from: "B", to: "A" }))];
   for (const m of moves) s.zone[m.id] = m.to;
   s.moves = moves;
   s.exchangeAt = ctx.now;
   for (const id of s.order) s.arrived[id] = !moves.some((m) => m.id === id);
+  checkAnnouncers(s, ctx.rng);
   s.votes = { A: {}, B: {} }; s.sel = { A: [], B: [] }; s.locked = { A: false, B: false }; s.offer = { A: null, B: null };
   s.graceUntil = null; s.deadline = null;
   log(s, ctx.now, `Exchange ${s.round + 1}: ${moves.length / 2} moved each way.`);
@@ -182,6 +201,21 @@ export function command(s, id, d, ctx) {
   }
   if (!s.order.includes(id)) return no("not-playing");
   const z = s.zone[id];
+  if (d.type === "announce-ok") {
+    // "Volume's up": this phone may speak now.
+    if (s.announcer[z] !== id) return no("phase");
+    s.annOk[id] = true;
+    s.rev++;
+    return { ok: true };
+  }
+  if (d.type === "announce-no") {
+    // "Not mine" (no speaker, or no volume): someone else in the room is asked instead.
+    if (s.announcer[z] !== id) return no("phase");
+    pickAnnouncer(s, z, ctx.rng, id);
+    log(s, ctx.now, `${nameOf(s, s.announcer[z])}'s phone is now Room ${z}'s announcer.`);
+    s.rev++;
+    return { ok: true };
+  }
   if (d.type === "here") {
     if (!["arrival", "moving"].includes(s.phase) || s.arrived[id]) return no("phase");
     s.arrived[id] = true;
@@ -227,7 +261,7 @@ export function command(s, id, d, ctx) {
     if (!["round", "lock"].includes(s.phase) || s.leader[z] !== id || s.locked[z]) return no("leader");
     if (s.sel[z].length !== need(s)) return no("count");
     s.locked[z] = true; s.offer[z] = null;
-    log(s, ctx.now, `Zone ${z}'s leader locked in their picks.`);
+    log(s, ctx.now, `Room ${z}'s leader locked in their picks.`);
     if (s.phase === "lock" && s.locked.A && s.locked.B && !s.paused) exchange(s, ctx);
     s.rev++;
     return { ok: true };
@@ -249,9 +283,8 @@ export function hostCommand(s, d, ctx) {
   const no = (error) => ({ ok: false, error });
   const t = d.type;
   if (t === "options") {
-    // The presets, before the deal: the zones' names, the pace, and whether leaders' phones announce.
+    // The presets, before the deal: the pace, and whether a phone in each room announces.
     if (s.phase !== "lobby") return no("phase");
-    if (d.zones && typeof d.zones === "object") s.opts.zones = { A: cleanName(d.zones.A), B: cleanName(d.zones.B) };
     if (PACES[d.pace]) s.opts.pace = d.pace;
     if (typeof d.voice === "boolean") s.opts.voice = d.voice;
     s.rev++;
@@ -314,7 +347,15 @@ export function hostCommand(s, d, ctx) {
     for (const z of ZONES) { s.sel[z] = s.sel[z].filter((x) => x !== d.id); delete s.votes[z][d.id]; for (const k of Object.keys(s.votes[z])) if (s.votes[z][k] === d.id) delete s.votes[z][k]; }
     if (s.leader[from] === d.id) { const m = members(s, from); s.leader[from] = m.length ? m[randInt(m.length, ctx.rng)] : null; s.locked[from] = false; s.sel[from] = []; }
     s.arrived[d.id] = true;
-    log(s, ctx.now, `Host correction: ${nameOf(s, d.id)} is in Zone ${d.zone}.`);
+    log(s, ctx.now, `Host correction: ${nameOf(s, d.id)} is in Room ${d.zone}.`);
+    s.rev++;
+    return { ok: true };
+  }
+  if (t === "announcer") {
+    // "That phone's too quiet": pick someone else in that room to announce.
+    if (!inGame(s) || !ZONES.includes(d.zone)) return no("phase");
+    pickAnnouncer(s, d.zone, ctx.rng, s.announcer[d.zone]);
+    log(s, ctx.now, `${nameOf(s, s.announcer[d.zone])}'s phone is now Room ${d.zone}'s announcer.`);
     s.rev++;
     return { ok: true };
   }
@@ -332,7 +373,7 @@ export function hostCommand(s, d, ctx) {
     return { ok: true };
   }
   if (t === "rematch") {
-    // Back to the lobby: the same people, new cards and zones once the host deals again.
+    // Back to the lobby: the same people, new cards and rooms once the host deals again.
     if (!["result", "aborted"].includes(s.phase)) return no("phase");
     Object.assign(s, fresh());
     s.phase = "lobby";
@@ -393,7 +434,7 @@ export function playerView(s, id, now) {
   for (const c of Object.values(s.votes[z])) tally[c] = (tally[c] || 0) + 1;
   const view = {
     ...base,
-    me: { id, zone: z, arrived: !!s.arrived[id], leader: lead === id, role: s.role[id] },
+    me: { id, zone: z, arrived: !!s.arrived[id], leader: lead === id, role: s.role[id], announcer: s.announcer[z] === id && s.opts.voice, annOk: !!s.annOk[id] },
     round: s.round + 1, rounds: s.plan.secs.length, need: need(s), final: s.final, timer: timer(s, now), plan: s.plan,
     sizes: { A: members(s, "A").length, B: members(s, "B").length },
     zone: {
@@ -428,6 +469,7 @@ export function hostView(s, now) {
   for (const z of ZONES) {
     const m = members(s, z);
     zones[z] = { count: m.length, leader: s.leader[z] ? person(s, s.leader[z]) : null, locked: s.locked[z],
+      announcer: s.opts.voice && s.announcer[z] ? { ...person(s, s.announcer[z]), ok: !!s.annOk[s.announcer[z]] } : null,
       people: m.map((x) => ({ ...person(s, x), arrived: !!s.arrived[x], leader: x === s.leader[z] })) };
   }
   return { ...base, round: s.round + 1, rounds: s.plan.secs.length, need: need(s), final: s.final, timer: timer(s, now), zones, plan: s.plan,

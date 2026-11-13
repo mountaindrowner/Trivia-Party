@@ -1,7 +1,7 @@
 /* Signal Divide: a player's screen (view.js), on the players' phones and the host's. A dark broadcast room: graphite,
    faint scan lines, steel and a violet glow for the everyday screen. Team colours (Signal blue, Static orange, the
    Forecaster's grey) appear only on a card you chose to show, and at the reveal. Chakra Petch for the big type. */
-.sd, .sd-overlay, .sd-curtain, .sd-ten { --bg: #0b0d12; --panel: #141821; --line: rgba(220, 228, 255, 0.14); --steel: #cfd6e6; --soft: #8e97ad; --hi: #b48cff;
+.sd, .sd-overlay, .sd-curtain, .sd-ten, .sd-ask { --bg: #0b0d12; --panel: #141821; --line: rgba(220, 228, 255, 0.14); --steel: #cfd6e6; --soft: #8e97ad; --hi: #b48cff;
   --signal: #3ea6ff; --static: #ff8a1f; --neutral: #b8bcc8; --ok: #59e3a4;
   font-family: "Outfit", system-ui, sans-serif; color: #eef1f8; }
 .sd { display: grid; gap: 14px; text-align: left; }
@@ -145,7 +145,7 @@ html[data-mode="divide"] h1 { color: #fff; text-shadow: 0 0 24px rgba(180, 140, 
 html[data-mode="divide"] button:not(.sd-ghost, .sd-pick, .sd-peek, .sd-link, .sd-sound, .ghost) { background: linear-gradient(#e9e1ff, #b48cff); color: #0b0d12; box-shadow: 0 4px 0 #6b4bb8; }
 html[data-mode="divide"] .me { border-color: var(--line, rgba(220, 228, 255, 0.14)); background: #141821; }
 /* On the phone page the Bonfire headings (Shrikhand) would win: this game keeps its own type. */
-html[data-mode="divide"] .sd :is(h2, h3), html[data-mode="divide"] .sd-overlay :is(h2, h3) { font-family: "Chakra Petch", "Outfit", system-ui, sans-serif; font-weight: 700; letter-spacing: 0.02em; }
+html[data-mode="divide"] .sd :is(h2, h3), html[data-mode="divide"] :is(.sd-overlay, .sd-ask) :is(h2, h3) { font-family: "Chakra Petch", "Outfit", system-ui, sans-serif; font-weight: 700; letter-spacing: 0.02em; }
 html[data-mode="divide"] .sd h2 { color: #fff; }
 html[data-mode="divide"] .sd .sd-win h2 { color: var(--fc); }
 
@@ -182,13 +182,8 @@ html[data-mode="divide"] .sd .sd-win h2 { color: var(--fc); }
 .sd-radar i:nth-child(3) { left: 40%; top: 70%; animation-delay: 1.7s; }
 @keyframes sdSweep { to { transform: rotate(360deg); } }
 @keyframes sdBlip { 0%, 100% { opacity: 0.2; } 10% { opacity: 1; } }
-.sd-zonesign { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.sd-zonesign div { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--steel); background: #10131b; min-width: 0; }
-.sd-zonesign b { font: 700 30px/1 "Chakra Petch", sans-serif; }
-.sd-zonesign span { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* The top bar: the zone's name, signal bars, round dots. */
-.sd-zone em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--steel); max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
 .sd-bars { display: flex; align-items: flex-end; gap: 3px; height: 14px; margin-bottom: 8px; }
 .sd-bars i { width: 4px; border-radius: 1px; background: var(--hi); animation: sdBar 1.6s ease-in-out infinite; }
 .sd-bars i:nth-child(1) { height: 30%; } .sd-bars i:nth-child(2) { height: 55%; animation-delay: 0.2s; } .sd-bars i:nth-child(3) { height: 80%; animation-delay: 0.4s; } .sd-bars i:nth-child(4) { height: 100%; animation-delay: 0.6s; }
@@ -216,7 +211,6 @@ html[data-mode="divide"] .sd .sd-win h2 { color: var(--fc); }
 .sd-move.first .sd-move-big .sd-move-arrow { left: auto; top: -40px; font-size: 40px; animation: sdDrop 1.2s ease-in-out infinite; }
 @keyframes sdPulseBox { 50% { box-shadow: 0 0 80px rgba(180, 140, 255, 0.8); } }
 @keyframes sdDrop { 50% { transform: translateY(8px); } }
-.sd-move-name { font-size: 22px; font-weight: 800; color: #fff !important; }
 html .sd .sd-sound { justify-self: center; min-height: 36px; padding: 6px 14px; font-size: 14px; border: 1px solid var(--line); background: transparent; color: var(--soft); box-shadow: none; }
 
 /* The card: Signal's rings broadcast, Static's name glitches. */
@@ -245,3 +239,16 @@ html .sd .sd-sound { justify-self: center; min-height: 36px; padding: 6px 14px; 
 .sd-cine.apart .sd-cline.w b { color: var(--signal); border-color: var(--signal); box-shadow: 0 0 50px rgba(62, 166, 255, 0.6); }
 .sd-cline.w.in b { animation: sdPop 0.6s cubic-bezier(.2, 1.6, .4, 1) both; }
 @media (prefers-reduced-motion: reduce) { .sd-curtain, .sd-curtain b, .sd-cicon, .sd-radar b, .sd-bars i, .sd-move-big, .sd-sign .w1, .sd-sign .w2, .sd-team, .sd-noise, .sd-ten.go, .sd-lead.urgent, .sd-swap-arrows { animation: none !important; } }
+
+/* The announcer's prompt: on top of everything until it's answered. */
+.sd-ask { position: fixed; z-index: 95; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; color: #fff;
+  font-family: "Outfit", system-ui, sans-serif; background: radial-gradient(circle at 50% 35%, rgba(255, 210, 94, 0.45), #07080c 70%), #07080c; animation: sdIn 0.3s ease-out both; }
+.sd-ask h2 { margin: 0; font: 700 30px/1.1 "Chakra Petch", sans-serif; }
+.sd-ask p { margin: 0; max-width: 22em; font-size: 17px; line-height: 1.4; }
+.sd-ask-icon { font-size: 80px; animation: sdShout 0.9s ease-in-out infinite alternate; }
+@keyframes sdShout { from { transform: rotate(-8deg) scale(0.95); } to { transform: rotate(8deg) scale(1.08); } }
+.sd-ask-big { padding: 10px 16px; border-radius: 14px; border: 2px solid #ffd25e; background: rgba(255, 210, 94, 0.15); font-weight: 800; font-size: 20px !important; }
+html .sd-ask button { width: min(100%, 340px); font: 700 19px "Outfit", sans-serif; border-radius: 14px; min-height: 52px; cursor: pointer; }
+html .sd-ask .sd-main { border: 0; color: #0b0d12; background: linear-gradient(#fff3c4, #ffd25e); box-shadow: 0 4px 0 #a07a12; }
+html .sd-ask .sd-ghost { border: 1.5px solid rgba(255, 255, 255, 0.25); background: transparent; color: #eef1f8; font-size: 15px; min-height: 40px; }
+@media (prefers-reduced-motion: reduce) { .sd-ask-icon { animation: none; } }
