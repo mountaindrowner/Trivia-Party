@@ -285,7 +285,7 @@ const dawnLine = () => {
 function onNight(day) {
   const cfg = G.night;
   music(G.sabbath ? 'sabbath' : day === 24 ? 'boss' : cfg.storm ? 'storm' : cfg.frights ? 'frights' : 'night');
-  if (G.sabbath) { GM.endFeast(); ui().banner('Night ' + day, 'A quiet night. Even the wolves rest.'); return; }
+  if (G.sabbath) { GM.endFeast(); G.tableOut = false; ui().banner('Night ' + day, 'A quiet night. Even the wolves rest.'); return; }
   ui().banner('Night ' + day, cfg.storm ? 'A storm is rolling in.' : cfg.cold ? 'A cold night. Blankets help.' : 'Keep them close to the light.');
   if (cfg.cold) once('cold', () => scene('c5_cold'));
   (NIGHT[day] || (() => {}))();

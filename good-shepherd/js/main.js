@@ -11,6 +11,8 @@ const cv = $('game'), ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 const dark = NN.U.mk(SW, SH), dctx = dark.getContext('2d');
 NN.debug = /debug/.test(location.hash) || !!window.__nnDebug;
+// If the synth failed to load, play on in silence rather than break.
+if (!NN.audio) NN.audio = { init() {}, track() {}, toggleMute() { return true; }, muted: true, paused: false, ctx: null };
 
 // ---------------------------------------------------------------- helpers shared with ui.js
 NN.GAME_MODS = s => {

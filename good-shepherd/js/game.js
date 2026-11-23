@@ -31,8 +31,8 @@ const JOBS = {
   guard: { name: 'Guard', mod: 'collar', likes: [], desc: 'Chases wolves off the fold at night.' },
 };
 const BUILD = {
-  feeder: { name: 'Feeder', w: 2, h: 1, cost: { timber: 4 }, ch: 1, desc: 'Feeds 8 sheep a day from your hay.' },
-  trough: { name: 'Trough', w: 2, h: 1, cost: { timber: 3 }, ch: 1, desc: 'Waters 8 sheep a day from your water.' },
+  feeder: { name: 'Feeder', w: 2, h: 1, cost: { timber: 4 }, ch: 1, desc: 'Feeds 10 sheep a day. Put it near the fold.' },
+  trough: { name: 'Trough', w: 2, h: 1, cost: { timber: 3 }, ch: 1, desc: 'Waters 10 sheep a day. Put it near the fold.' },
   lean: { name: 'Shelter', w: 4, h: 2, cost: { timber: 6, stone: 2 }, ch: 1, desc: 'Room for 8 more sheep to sleep. Cramped sheep don\'t rest.' },
   workshop: { name: 'Workshop', w: 3, h: 2, cost: { timber: 6 }, ch: 1, jobs: { gatherer: 2 }, desc: 'Two Gatherers bring in timber and stone.' },
   hayBarn: { name: 'Hay Barn', w: 4, h: 3, cost: { timber: 10, stone: 2 }, ch: 1, jobs: { hauler: 2 }, desc: 'Two Hay Haulers bring in hay.' },
@@ -165,8 +165,8 @@ GM.canPlace = (type, tx, ty) => {
 GM.count = type => G.buildings.filter(b => b.type === type).length;
 GM.capacity = () => ({
   beds: 12 + 8 * GM.count('lean'),
-  food: 8 * G.buildings.filter(b => b.type === 'feeder' && near(b, W.FOLD, 260)).length,
-  drink: 8 * G.buildings.filter(b => b.type === 'trough' && near(b, W.FOLD, 260)).length,
+  food: 10 * G.buildings.filter(b => b.type === 'feeder' && near(b, W.FOLD, 300)).length,
+  drink: 10 * G.buildings.filter(b => b.type === 'trough' && near(b, W.FOLD, 300)).length,
 });
 const near = (b, F, d) => Math.hypot(b.fx - (F.x + F.w / 2), b.fy - (F.y + F.h / 2)) < d;
 
@@ -837,8 +837,8 @@ function dawnTally() {
     if (!s.job) { s.workT = 0; continue; }
     const share = Math.min(1, s.workT / (dayLen * 0.45));
     switch (s.job.type) {
-      case 'hauler': add('hay', 5 * share * boost); break;
-      case 'wrangler': add('water', (s.job.key.includes('@pond') ? 6 : 10) * share * boost); break;
+      case 'hauler': add('hay', 7 * share * boost); break;
+      case 'wrangler': add('water', (s.job.key.includes('@pond') ? 8 : 12) * share * boost); break;
       case 'gardener': add('herbs', 3 * share * boost); break;
       case 'gatherer': add('timber', 3 * share * boost); add('stone', 1.4 * share * boost); break;
       case 'knitter': { const n = Math.min(Math.floor(G.res.wool / 2), Math.round(1.5 * share * boost)); if (n > 0) { G.res.wool -= n * 2; add('blanket', n); } break; }
@@ -850,10 +850,12 @@ function dawnTally() {
   const home = G.sheep.filter(s => ['home', 'nap', 'feast'].includes(s.state) || (s.state === 'follow' && !s.owner));
   const cap = GM.capacity();
   shuffle(home);
-  let food = Math.min(G.res.hay, cap.food), drink = Math.min(G.res.water, cap.drink);
+  // sheep graze the meadow too, so the stores cover half a portion each
+  let food = Math.min(Math.floor(G.res.hay * 2), cap.food), drink = Math.min(Math.floor(G.res.water * 2), cap.drink);
+  let ate = 0, drank = 0;
   home.forEach((s, i) => {
-    s.fed = food > 0; if (s.fed) { food--; G.res.hay--; rep.fed++; } else rep.hungry++;
-    s.watered = drink > 0; if (s.watered) { drink--; G.res.water--; rep.watered++; } else rep.thirsty++;
+    s.fed = food > 0; if (s.fed) { food--; ate++; rep.fed++; } else rep.hungry++;
+    s.watered = drink > 0; if (s.watered) { drink--; drank++; rep.watered++; } else rep.thirsty++;
     const bed = i < cap.beds;
     if (!bed) rep.cramped++;
     s.energy = Math.min(1, s.energy + (bed ? 0.8 : 0.35));
@@ -864,6 +866,7 @@ function dawnTally() {
     s.joy = clamp(s.joy + dj, 0, 1);
     if (s.joy > 0.75) rep.happy++;
   });
+  G.res.hay = Math.max(0, G.res.hay - Math.ceil(ate / 2)); G.res.water = Math.max(0, G.res.water - Math.ceil(drank / 2));
   // happy sheep leave hearts by the fire
   for (let i = 0; i < Math.min(12, Math.floor(rep.happy / 3)); i++) dropHearts(W.FIRE.x + rand(-30, 30), W.FIRE.y + rand(-10, 20), 1);
   G.report = rep;

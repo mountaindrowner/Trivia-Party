@@ -240,7 +240,7 @@ UI.hud = () => {
       const sp = document.createElement('span'); sp.title = NN.DEFS.RES_NAME[k];
       sp.append(icon(k));
       const t = document.createElement('em'); t.style.fontStyle = 'normal'; t.textContent = G.res[k];
-      if ((k === 'hay' || k === 'water') && G.res[k] < GM.homeCount()) t.className = 'low';
+      if ((k === 'hay' || k === 'water') && G.res[k] < GM.homeCount() / 2) t.className = 'low';
       sp.append(t); box.append(sp);
     }
   }
