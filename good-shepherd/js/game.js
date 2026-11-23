@@ -805,6 +805,7 @@ GM.startNight = () => {
   G.spawns.sort((a, b) => a.at - b.at);
   G.storm = !!cfg.storm; G.cold = !!cfg.cold;
   G.choirOn = G.sheep.filter(s => s.job && s.job.type === 'singer').length >= 2;
+  if (NN.audio) NN.audio.choir = G.choirOn;
   // workers come home; blankets go on in the cold
   for (const s of G.sheep) {
     if (s.state === 'nap' && !W.insideFold(s)) s.state = 'home';

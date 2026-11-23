@@ -672,8 +672,9 @@ ST.AI.prowler = (p, dt) => {
 function theFall() {
   flag('fell', true);
   G.wolves = []; G.frights = [];
-  music('sorrow');
+  music(null); // the lantern drops and the music stops
   ui().fade(true, 2, () => {
+    music('sorrow');
     scene('c7_fall', { done: () => {
       G.prowler = null; G.gateLock = null; G.holdNight = false;
       // three days: the flock alone, until the third morning

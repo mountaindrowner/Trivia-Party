@@ -715,7 +715,7 @@ T.night = { bpm: 84, swing: 0.15, bars: 32, rev: 0.25, echoFb: 0.35,
 const FA = bars('F#5 - - - D5 - - -', 'D5 - - - Bb4 - - -', 'F#5 - - - G5 - F#5 -', 'A#4 - - - - - . .',
   'G5 - - - E5 - - -', 'Eb5 - - - C5 - - -', 'D5 - - - B4 - - -', 'C#5 - - - A#4 - E5 -');
 const FCH = 'Bm | Gm | Bm | F# | Em | Cm | Bm | F#7';
-T.frights = { bpm: 72, bars: 32, rev: 0.4, echoT: 6, echoFb: 0.45,
+T.frights = { bpm: 72, bars: 32, rev: 0.4, gain: 1.6, echoT: 6, echoFb: 0.45,
   chords: rep(FCH, 4),
   layers: [
     { i: 'drone', v: 0.07, drone: true, notes: [35, 42], cut: 300 },
@@ -755,7 +755,7 @@ const SBA = bars('C5 - E5 G5 - - A5 G5', 'F5 - A5 - C6 - A5 -', 'G5 - E5 - C5 - 
 const SBB = bars('A5 - - A5 G5 - F5 -', 'E5 - - - C5 - - -', 'A5 - - A5 Bb5 - A5 -', 'G5 - - - - - . .',
   'A5 - - A5 G5 - F5 -', 'E5 - G5 - C6 - - -', 'D6 - C6 - B5 - G5 -', 'C6 - - - - - . .');
 const SBCH_A = 'C | F | C | G7 | C | F | D7 G7 | C', SBCH_B = 'F | C | F | G | F | C | D7 G7 | C';
-T.sabbath = { bpm: 126, swing: 0.65, sw8: true, bars: 32, rev: 0.18,
+T.sabbath = { bpm: 126, swing: 0.65, sw8: true, bars: 32, rev: 0.18, gain: 0.85,
   chords: bars(SBCH_A, SBCH_B, TC_AE, SBCH_A),
   layers: [
     { i: 'lead', v: 0.14, mel: SBA, on: '0-7' },
@@ -969,7 +969,7 @@ const SFX = {
   select(E, t) { tone(E, E.sfx, t, 'sq', 880, 0, 0.05, 0.13, 3000); tone(E, E.sfx, t + 0.055, 'sq', 1320, 0, 0.08, 0.13, 3000); },
   cancel(E, t) { tone(E, E.sfx, t, 'triangle', 700, 0, 0.07, 0.25); tone(E, E.sfx, t + 0.07, 'triangle', 470, 0, 0.12, 0.25); },
   page(E, t) { burst(E, E.sfx, t, 'bandpass', 4200, 0.9, 0.14, 0.22, 0.02, 1400); burst(E, E.sfx, t + 0.06, 'highpass', 3000, 0.7, 0.05, 0.1); },
-  munch(E, t) { [0, 0.12, 0.24].forEach(d => burst(E, E.sfx, t + d, 'bandpass', 900 + rnd() * 600, 1.4, 0.06, 0.38, 0.004)); },
+  munch(E, t) { [0, 0.12, 0.24].forEach(d => burst(E, E.sfx, t + d, 'bandpass', 900 + rnd() * 600, 1.4, 0.06, 0.8, 0.004)); },
   gulp(E, t) { tone(E, E.sfx, t, 'sine', 240, 520, 0.1, 0.35, 0, 0.01); tone(E, E.sfx, t + 0.13, 'sine', 330, 720, 0.07, 0.2, 0, 0.01); },
   snore(E, t) {
     const s = Nz(E, E.brown, t, 1.4), lp = F(E, 'lowpass', 450, 2), g = G(E), o = O(E, 'sawtooth', 82, t), ol = F(E, 'lowpass', 300, 1), og = G(E, 0.5);
@@ -979,7 +979,7 @@ const SFX = {
   },
   cheer(E, t) {
     const o = wet(E, 0.2);
-    [0, 0.05, 0.11].forEach((d, i) => SFX.baa(E, t + d, 330 + i * 60));
+    [0, 0.07, 0.15].forEach((d, i) => SFX.baa(E, t + d, 330 + i * 60));
     [72, 76, 79, 84, 88].forEach((m, i) => V.harp(E, o, t + 0.05 + i * 0.05, m, 0, 0.18, NO));
     [0, 0.18, 0.36].forEach(d => V.clap(E, E.sfx, t + 0.1 + d, null, 0, 0.35));
   },
