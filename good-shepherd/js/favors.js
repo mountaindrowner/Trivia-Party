@@ -184,6 +184,14 @@ ST.refresh = () => {
 };
 // drawn by main.js: items in the world
 FV.items = () => [].concat((G.favItems || []).filter(i => W.isRevealed(W.region(i))), (G.fav && G.fav.echo === 'active' ? ECHO.map(([x, y], i) => ({ kind: G.flags['echo' + i] ? 'echoStoneLit' : 'echoStone', ...spotCache(i, x, y) })) : []));
+// where the map should point for favors in progress (bells stay a secret)
+FV.targets = () => {
+  if (!G.fav) return [];
+  const out = (G.favItems || []).filter(i => i.kind !== 'lostBell' && G.fav[i.id] === 'active' && W.isRevealed(W.region(i))).map(i => ({ x: i.x, y: i.y }));
+  if (G.fav.echo === 'active') ECHO.forEach(([x, y], i) => { if (!G.flags['echo' + i]) out.push({ x, y }); });
+  if (G.fav.bram === 'active' && !G.flags.barnOpen) out.push({ x: W.SITES.bramFarm.x, y: W.SITES.bramFarm.y });
+  return out;
+};
 const sc = {};
 const spotCache = (i, x, y) => sc[i] || (sc[i] = spotNear(x, y));
 

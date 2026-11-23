@@ -541,7 +541,7 @@ UI.milestone = name => {
   clearTimeout(UI._msT); UI._msT = setTimeout(() => el.classList.remove('on'), 4200);
 };
 function renderMap() {
-  const p = frame('Map', 'You are the blinking dot. Gold dots are lost sheep.', `<canvas id="mapc" width="320" height="142"></canvas>`);
+  const p = frame('Map', 'You are the blinking dot. Gold dots are lost sheep. Pink dots are favors.', `<canvas id="mapc" width="320" height="142"></canvas>`);
   const c = p.querySelector('#mapc'), x = c.getContext('2d');
   x.imageSmoothingEnabled = false;
   const s = Math.min(320 / W.WW, 142 / W.WH), ox = Math.floor((320 - W.WW * s) / 2), oy = Math.floor((142 - W.WH * s) / 2);
@@ -554,6 +554,7 @@ function renderMap() {
   x.fillStyle = '#c9a352'; x.fillRect(ox + W.FOLD.x * s, oy + W.FOLD.y * s, W.FOLD.w * s, W.FOLD.h * s);
   for (const q of G.sheep) { if (q.hidden || q.owner) continue; x.fillStyle = q.lost && q.state === 'wild' ? '#f5c542' : q.state === 'wild' ? '#fff7e0' : '#ffffff'; if (q.state === 'wild' && !q.lost && !W.isRevealed(W.regionAt(q.x, q.y))) continue; x.fillRect(Math.round(ox + q.x * s), Math.round(oy + q.y * s), 2, 2); }
   for (const b of G.buildings) { x.fillStyle = '#7a4a24'; x.fillRect(ox + b.x * s, oy + b.y * s, Math.max(1, b.w * s), Math.max(1, b.h * s)); }
+  if (NN.FAV) for (const t of NN.FAV.targets()) { const px = Math.round(ox + t.x * s), py = Math.round(oy + t.y * s); x.fillStyle = '#3e2416'; x.fillRect(px - 2, py - 2, 5, 5); x.fillStyle = '#ef9aa0'; x.fillRect(px - 1, py - 1, 3, 3); }
   const blink = Math.floor(performance.now() / 300) % 2;
   x.fillStyle = '#3e2416'; x.fillRect(Math.round(ox + G.sh.x * s) - 3, Math.round(oy + G.sh.y * s) - 3, 7, 7); x.fillStyle = blink ? '#3f8f93' : '#ffffff'; x.fillRect(Math.round(ox + G.sh.x * s) - 2, Math.round(oy + G.sh.y * s) - 2, 5, 5);
   if (panel === 'map') requestAnimationFrame(() => { if (panel === 'map') { const keep = $('panel').scrollTop; renderMap(); $('panel').scrollTop = keep; } });
