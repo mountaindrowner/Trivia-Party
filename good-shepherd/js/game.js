@@ -886,6 +886,12 @@ function dawnTally() {
     if (s.joy > 0.75) rep.happy++;
   });
   G.res.hay = Math.max(0, G.res.hay - Math.ceil(ate / 2)); G.res.water = Math.max(0, G.res.water - Math.ceil(drank / 2));
+  // a gentle forecast when the stores are shrinking
+  const need = Math.ceil(home.length / 2);
+  for (const [k, fix] of [['hay', 'Another Hay Barn would help.'], ['water', G.chapter >= 2 ? 'Another Well would help.' : 'A Water Wrangler works at the pond.']]) {
+    const net = (rep.made[k] || 0) - need;
+    if (net < 0 && need > 0) { const left = Math.floor(G.res[k] / need); if (left <= 3) rep.lines.push(left < 1 ? `Out of ${k}! ${fix}` : `${k[0].toUpperCase() + k.slice(1)} is running low: about ${left} day${left > 1 ? 's' : ''} left. ${fix}`); }
+  }
   // happy sheep leave hearts by the fire
   for (let i = 0; i < Math.min(12, Math.floor(rep.happy / 3)); i++) dropHearts(W.FIRE.x + rand(-30, 30), W.FIRE.y + rand(-10, 20), 1);
   G.report = rep;

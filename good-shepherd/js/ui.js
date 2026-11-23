@@ -45,6 +45,7 @@ UI.report = (r, sabbath) => {
   if (made) h += `<div>${esc(made)}</div>`;
   h += `<div>${r.fed} fed${r.hungry ? `, <span class="bad">${r.hungry} hungry</span>` : ''} · ${r.watered} watered${r.thirsty ? `, <span class="bad">${r.thirsty} thirsty</span>` : ''}</div>`;
   if (r.cramped) h += `<div class="bad">${r.cramped} had no bed. Build a Shelter.</div>`;
+  for (const l of r.lines || []) h += `<div class="bad">${esc(l)}</div>`;
   if (r.happy) h += `<div>${r.happy} happy sheep left hearts by the fire.</div>`;
   if (sabbath && r.wool) h += `<div>Shearing day: +${r.wool} wool. Everyone feels lighter.</div>`;
   if (sabbath && r.born && r.born.length) h += `<div>New lambs: ${esc(r.born.join(', '))}!</div>`;
