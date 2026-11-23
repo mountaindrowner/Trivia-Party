@@ -12,6 +12,7 @@ Load order (see `index.html`):
 | `js/world.js` | The map: regions, ground painting, scenery placement, chapter gates, collision, navigation |
 | `js/game.js` | Simulation: the Shepherd and kit, sheep, farm and resources, foes, NPCs, day/night |
 | `js/story.js` | Chapter beats, objectives, set pieces, the ending |
+| `js/help.js` | Lessons (first-time tutorial cards), each chapter's "What's new" card, and when to show them |
 | `js/ui.js` | HUD, dialogue, menus (build, flock, quests, map, codex, pause), title |
 | `js/main.js` | Boot, input, the frame loop, rendering order, save/load |
 

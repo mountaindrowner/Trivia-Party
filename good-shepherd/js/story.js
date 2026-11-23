@@ -54,53 +54,53 @@ const OBJ = {
     { id: 'home12', text: 'Bring 12 sheep home to the fold', prog: () => [homeN(), 12] },
     { id: 'feeder', text: 'Build another Feeder (B)', prog: () => [GM.count('feeder') - 2, 1] },
     { id: 'work', text: 'Build a Workshop or a Hay Barn', prog: () => [GM.count('workshop') + GM.count('hayBarn'), 1] },
-    { id: 'chomp', text: 'Bring Chomp home', done: () => joined('chomp'), key: true },
-    { id: 'jory', text: 'Stop whoever is sneaking around', done: () => helper('jory'), key: true },
+    { id: 'chomp', text: 'Bring Chomp home', done: () => joined('chomp'), key: true, when: () => !!keyed('chomp') },
+    { id: 'jory', text: 'Stop whoever is sneaking around', done: () => helper('jory'), key: true, when: () => !!GM.npc('jory') },
   ],
   2: [
     { id: 'bridge', text: 'Build the bridge across the river (10 timber)', done: () => W.doors.bridge, key: true },
-    { id: 'folk', text: 'Meet the river folk', prog: () => [['nell', 'abe', 'tobi'].filter(k => flag('met_' + k)).length, 3] },
-    { id: 'zeb', text: 'Find the Collector', done: () => helper('zeb'), key: true },
+    { id: 'folk', when: () => W.doors.bridge, text: 'Meet the river folk', prog: () => [['nell', 'abe', 'tobi'].filter(k => flag('met_' + k)).length, 3] },
+    { id: 'zeb', text: 'Find the Collector', done: () => helper('zeb'), key: true, when: () => W.doors.bridge },
     { id: 'well', text: 'Build a Well', prog: () => [GM.count('well'), 1] },
-    { id: 'minnow', text: 'Find the lamb on the lake', done: () => joined('minnow') },
+    { id: 'minnow', text: 'Find the lamb on the lake', done: () => joined('minnow'), when: () => !!keyed('minnow') },
     { id: 'home30', text: 'Bring 30 sheep home', prog: () => [homeN(), 30] },
   ],
   3: [
     { id: 'thorns', text: 'Cut a way through the thorn wall', done: () => W.doors.thorns, key: true },
-    { id: 'bramble', text: 'Win over the Bramble Bunch', prog: () => [['nettle', 'briar', 'sorrel', 'tansy', 'bracken'].filter(joined).length, 5] },
+    { id: 'bramble', when: () => W.doors.thorns, text: 'Win over the Bramble Bunch', prog: () => [['nettle', 'briar', 'sorrel', 'tansy', 'bracken'].filter(joined).length, 5] },
     { id: 'infirmary', text: 'Build an Infirmary', prog: () => [GM.count('infirmary'), 1] },
     { id: 'garden', text: 'Build an Herb Garden', prog: () => [GM.count('herbGarden'), 1] },
     { id: 'lamps', text: 'Build 2 Lamp Posts', prog: () => [GM.count('lampPost'), 2] },
-    { id: 'burr', text: 'Find Burr in the thorn maze', done: () => joined('burr') },
-    { id: 'thistle', text: 'Bring old Thistle home', done: () => joined('thistle'), key: true },
+    { id: 'burr', text: 'Find Burr in the thorn maze', done: () => joined('burr'), when: () => !!keyed('burr') },
+    { id: 'thistle', text: 'Bring old Thistle home', done: () => joined('thistle'), key: true, when: () => !!keyed('thistle') },
   ],
   4: [
     { id: 'treadmill', text: 'Build a Treadmill', prog: () => [GM.count('treadmill'), 1] },
     { id: 'rockslide', text: 'Clear the rockslide on the Old Road', done: () => W.doors.rockslide, key: true },
     { id: 'hank', text: 'Meet the hired hand on the Old Road', done: () => flag('met_hank'), key: true },
     { id: 'haulers', text: 'Have 2 Hay Haulers working', prog: () => [cnt(s => s.job && s.job.type === 'hauler'), 2] },
-    { id: 'hankFlock', text: "Keep Hank's flock safe through the storm", done: () => helper('hank'), key: true },
-    { id: 'dot', text: "Find Hank's lost lamb", done: () => joined('dot') },
+    { id: 'hankFlock', text: "Keep Hank's flock safe through the storm", done: () => helper('hank'), key: true, when: () => G.day >= 13 },
+    { id: 'dot', text: "Find Hank's lost lamb", done: () => joined('dot'), when: () => !!keyed('dot') },
   ],
   5: [
     { id: 'lamps', text: 'Light the canyon: 4 Lamp Posts in Shadow Canyon', prog: () => [G.buildings.filter(b => b.type === 'lampPost' && W.regionId(W.regionAt(b.fx, b.fy)) === 'canyon').length, 4] },
     { id: 'loom', text: 'Build a Loom', prog: () => [GM.count('loom'), 1] },
-    { id: 'blankets', text: 'Give 20 sheep a blanket', prog: () => [cnt(s => s.blanket) , 20] },
-    { id: 'ludo', text: 'Find out what is going on with Lou', done: () => helper('ludo'), key: true },
-    { id: 'pip', text: 'Bring Pip home', done: () => flag('pipHome'), key: true },
+    { id: 'blankets', when: () => GM.count('loom') > 0, text: 'Give 20 sheep a blanket', prog: () => [cnt(s => s.blanket) , 20] },
+    { id: 'ludo', text: 'Find out what is going on with Lou', done: () => helper('ludo'), key: true, when: () => !!GM.npc('lou') || helper('ludo') },
+    { id: 'pip', text: 'Bring Pip home', done: () => flag('pipHome'), key: true, when: () => !!keyed('pip') },
   ],
   6: [
     { id: 'bram', text: 'Meet the shepherd of the Highlands', done: () => flag('met_bram'), key: true },
-    { id: 'feedBram', text: "Feed Bram's flock (6 hay, 6 water)", done: () => flag('fedBram'), key: true },
+    { id: 'feedBram', text: "Feed Bram's flock (6 hay, 6 water)", done: () => flag('fedBram'), key: true, when: () => flag('met_bram') },
     { id: 'press', text: 'Build an Olive Press', prog: () => [GM.count('olivePress'), 1] },
     { id: 'choir', text: 'Build a Choir Stage', prog: () => [GM.count('choirStage'), 1] },
-    { id: 'raid', text: "Defend Bram's flock at night", done: () => flag('raidDone'), key: true },
-    { id: 'table', text: 'Set a table and invite everyone', done: () => helper('bram'), key: true },
+    { id: 'raid', text: "Defend Bram's flock at night", done: () => flag('raidDone'), key: true, when: () => G.day >= 20 },
+    { id: 'table', text: 'Set a table and invite everyone', done: () => helper('bram'), key: true, when: () => G.day >= 21 },
   ],
   7: [
     { id: 'talks', text: 'Spend time with your friends', prog: () => [TALKS.filter(k => flag('talk7_' + k)).length, TALKS.length] },
     { id: 'ready', text: 'Get the farm ready', prog: () => [Math.min(3, GM.count('lampPost')), 3] },
-    { id: 'gate', text: 'Stand in the gate', done: () => flag('fell'), key: true },
+    { id: 'gate', text: 'Stand in the gate', done: () => flag('fell'), key: true, when: () => G.day >= 24 },
   ],
 };
 const TALKS = ['jory', 'zeb', 'hank', 'ludo', 'bram', 'thistle', 'chomp', 'baabara', 'woolsworth'];
@@ -109,10 +109,11 @@ const FLOCK_OBJ = [
   { id: 'fw_lamb', text: 'Find the lamb who wandered off', done: () => flag('fwLamb') },
   { id: 'fw_home', text: 'Get everyone into the fold by dark', prog: () => [homeN(), Math.max(1, cnt(s => !s.owner && !s.hidden && s.state !== 'special'))] },
 ];
-ST.objectives = () => {
-  if (G.form === 'sheep') return FLOCK_OBJ;
-  return OBJ[G.chapter] || [];
+ST.objectives = (all) => {
+  const list = G.form === 'sheep' ? FLOCK_OBJ : (OBJ[G.chapter] || []);
+  return all ? list : list.filter(o => !o.when || o.when() || G.flags['obj_' + G.chapter + '_' + o.id]);
 };
+ST.hiddenGoals = () => (G.form === 'sheep' ? [] : (OBJ[G.chapter] || []).filter(o => o.when && !o.when()).length);
 ST.objState = o => {
   if (o.done) return { done: !!o.done(), text: o.text };
   const [a, b] = o.prog();
@@ -162,21 +163,22 @@ function startChapter(n, first) {
   if (n > 1) GM.resetKnacks();
   music(c.track);
   if (c.verse) codex(c.verse);
-  ui().chapterCard(n, () => {
+  ui().then(() => ui().chapterCard(n, () => {
     if (first) beginCh1(); else (CH_START[n] || (() => {}))();
     ST.refresh();
-  });
+  }));
 }
 // When the dawn passes a chapter's last day, wrap it up and start the next.
 function maybeNextChapter(day) {
   const c = CH[G.chapter];
   if (!c || day <= c.last || G.chapter >= 7) return false;
   const n = G.chapter;
+  if (G.flags['ending_' + n]) return true;
+  G.flags['ending_' + n] = true;
   (CH_FALLBACK[n] || (() => {}))();
-  ui().chapterEnd(n, OBJ[n].map(o => ST.objState(o)), () => {
-    const endKey = 'c' + n + '_end';
-    scene(endKey, { done: () => startChapter(n + 1) });
-  });
+  ui().then(() => ui().chapterEnd(n, OBJ[n].filter(o => !o.when || o.when()).map(o => ST.objState(o)), () => {
+    scene('c' + n + '_end', { done: () => startChapter(n + 1) });
+  }));
   return true;
 }
 
@@ -315,7 +317,7 @@ function beginCh1() {
   GM.spawnWild('meadow', 10, { modes: ['walk', 'walk', 'walk', 'walk', 'whistle', 'patient'] });
   GM.spawnPickups();
   ['woolsworth', 'baabara', 'ramsey'].forEach(k => codex('friend_' + k));
-  scene('c1_intro', { done: () => ui().tip('Walk near wild sheep to win their trust, then lead them through the gate. Press B to build, F for your flock, Q for goals.', 7) });
+  scene('c1_intro', { done: () => { NN.HELP.teach('welcome'); NN.HELP.teach('screen'); } });
   F && 0;
 }
 const CH_EVENTS = {
@@ -416,7 +418,6 @@ HANDLERS.near = s => {
       if (s.key === 'thistle') s.special = 'guard';
     } });
   }
-  if (s.key === 'chomp' && G.sh.moving && dist(s, G.sh) < 70) once('chompHint', () => ui().tip('Chomp is scared. Stand still and let him come to you.', 5));
 };
 // keep forgive-on-trust sheep from joining on their own
 const _join = GM.joinFlock;
@@ -520,7 +521,7 @@ function spawnBramble() {
     s.ax = s.x; s.ay = s.y;
   });
   GM.spawnWild('thorns', 6, { modes: ['walk', 'patient', 'whistle', 'still'] });
-  scene('c3_bramble', { done: () => ui().tip('Each of the Bramble Bunch is hurt in a different way. Watch how they act: some need you still, some need space, some need your whistle, one needs herbs.', 8) });
+  scene('c3_bramble');
 }
 
 // ---------------------------------------------------------------- chapter 4: Paths of Righteousness
@@ -689,7 +690,7 @@ function theFall() {
       ui().fade(false, 2);
       ui().banner('Day 25', 'The morning after.');
       ST.refresh();
-      scene('c7_flockMorning', { done: () => scene('c7_flockTasks', { done: () => ui().tip('You are Woolsworth now. Press E near sheep to talk. Space: a big BAA. You can headbutt wolves, a little.', 7) }) });
+      scene('c7_flockMorning', { done: () => scene('c7_flockTasks') });
     } });
   });
 }
@@ -722,11 +723,17 @@ const CH_START = {
   7: () => { scene('c7_intro'); for (let i = 0; i < 5; i++) { const w = GM.spawnWolf({ anywhere: true }); if (w) w.flee = 4; } },
 };
 const CH_FALLBACK = {
-  1: () => { if (!helper('jory')) { const j = GM.npc('jory'); if (j) joryCaught(true); } },
+  1: () => {
+    if (helper('jory')) return;
+    // if the night ended before he showed up, the sunrise finds him at the gate anyway
+    if (!GM.npc('jory')) GM.addNPC({ id: 'jory', look: 'jory', x: W.GX + 40, y: W.FOLD.y + W.FOLD.h + 30, talk: false, face: -1, dir: 'side', mode: 'scene' });
+    joryCaught(true);
+  },
   2: () => { if (!W.doors.bridge) buildBridge(); },
   3: () => {
     if (!W.doors.thorns) W.openDoor('thorns');
-    const t = keyed('thistle');
+    let t = keyed('thistle');
+    if (!t) { t = GM.addSheep({ key: 'thistle', name: 'Thistle', look: 'horns', trait: 'brave', swap: 'bramble', x: W.GX, y: W.FOLD.y + W.FOLD.h + 30, trustMode: 'still', hurt: true }); }
     if (t && t.state !== 'follow' && t.state !== 'home') { t.x = W.GX; t.y = W.FOLD.y + W.FOLD.h + 30; t.trust = 0.99; HANDLERS.near(t); }
   },
   4: () => { if (!W.doors.rockslide) W.openDoor('rockslide'); },

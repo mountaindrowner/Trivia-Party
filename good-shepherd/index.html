@@ -52,33 +52,69 @@ body {
 .btn.forgive { background: #f2d27a; color: var(--ink); box-shadow: inset 0 1px 0 #fff2c4, 0 0 0 1px var(--bark), 0 2px 0 1px var(--bark); animation: glow 1.4s ease-in-out infinite; }
 @keyframes glow { 50% { box-shadow: inset 0 1px 0 #fff2c4, 0 0 0 1px var(--bark), 0 2px 0 1px var(--bark), 0 0 8px 2px rgba(245, 197, 66, .8); } }
 
-/* HUD */
+/* HUD: three small chips and a thin bar, so the world stays visible */
 #hud { position: absolute; inset: 0; }
-.clock { position: absolute; right: 8px; top: 8px; width: 82px; padding: 3px 5px 4px; display: grid; gap: 1px; font-size: 7px; line-height: 1.1; }
-.clock .row { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-.clock b { font-size: 8px; font-weight: 700; }
-.clock .time { font-variant-numeric: tabular-nums; font-weight: 600; }
-.clock small { font-size: 6px; color: var(--muted); }
+.xp { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: rgba(30, 20, 10, .35); }
+.xp i { display: block; height: 100%; width: 0; background: var(--rose); }
+.goal { position: absolute; left: 6px; top: 6px; max-width: 190px; display: flex; gap: 5px; align-items: center; font-family: var(--font); font-size: 7.5px; padding: 2px 6px; border: 0; text-align: left; cursor: pointer; line-height: 1.2; }
+.goal .lv { font-weight: 700; color: var(--accent); white-space: nowrap; }
+.goal:focus-visible { outline: 1px solid var(--sun); outline-offset: 3px; }
+.clock { position: absolute; right: 6px; top: 6px; padding: 2px 6px 3px; display: grid; grid-template-columns: auto auto auto; gap: 0 4px; align-items: center; font-size: 7.5px; line-height: 1.2; }
+.clock b { font-weight: 700; }
+.clock .time { font-variant-numeric: tabular-nums; }
 .sunmoon { width: 7px; height: 7px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 1px var(--bark); flex: none; }
 .sunmoon.moon { background: #e8ecff; box-shadow: inset -2px -1px 0 #b7c0e8, 0 0 0 1px var(--bark); }
-.dayfill { height: 3px; background: var(--parch-dk); box-shadow: 0 0 0 1px var(--bark); margin-top: 1px; }
+.dayfill { grid-column: 1 / -1; height: 2px; background: var(--parch-dk); margin-top: 2px; }
 .dayfill i { display: block; height: 100%; width: 0; background: var(--sun); }
 .dayfill i.night { background: var(--dusk); }
-.res { position: absolute; right: 8px; top: 62px; width: 82px; padding: 3px 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 1px 4px; font-size: 6.5px; font-variant-numeric: tabular-nums; }
+.res { position: absolute; left: 6px; bottom: 6px; padding: 2px 6px; display: flex; gap: 6px; font-size: 7px; font-variant-numeric: tabular-nums; align-items: center; }
 .res span { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
 .res canvas { width: 9px; height: 9px; image-rendering: pixelated; flex: none; }
 .res .low { color: var(--rose); font-weight: 700; }
-.joy { position: absolute; left: 8px; top: 8px; padding: 2px 5px; display: flex; align-items: center; gap: 4px; font-size: 7px; font-weight: 700; }
-.joybar { width: 62px; height: 4px; background: var(--parch-dk); box-shadow: 0 0 0 1px var(--bark); }
-.joybar i { display: block; height: 100%; width: 0; background: var(--rose); }
-.goals { position: absolute; left: 8px; top: 25px; max-width: 128px; padding: 3px 5px; font-size: 6.5px; line-height: 1.25; display: grid; gap: 1px; }
-.goals b { font-size: 6px; color: var(--muted); font-weight: 600; letter-spacing: .3px; }
-.prompt { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 7.5px; padding: 2px 6px; white-space: nowrap; }
-.prompt kbd { font-family: var(--font); font-weight: 700; background: var(--wood); color: var(--parch); padding: 0 3px; margin-right: 3px; box-shadow: 0 0 0 1px var(--bark); }
+.res .sep { width: 1px; align-self: stretch; background: var(--parch-dk); }
+.prompt { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); font-size: 7.5px; padding: 2px 6px; white-space: nowrap; }
+kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: var(--wood); color: var(--parch); padding: 0 3px; margin: 0 1px; box-shadow: 0 0 0 1px var(--bark); white-space: nowrap; }
 .hold { height: 2px; background: var(--parch-dk); margin-top: 2px; }
 .hold i { display: block; height: 100%; width: 0; background: var(--leaf); }
-.tbar { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
+.tbar { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 5px; }
 .tbar .btn { font-size: 6.5px; padding: 2px 5px; }
+
+/* Lessons and chapter explainers */
+.lesson { width: 220px; padding: 8px 10px 9px; display: grid; gap: 5px; justify-items: center; text-align: center; }
+.lesson .kind { font-size: 6px; color: var(--muted); letter-spacing: .6px; }
+.lesson h3 { margin: 0; font-size: 11px; color: #6a3a1c; }
+.lesson canvas { width: 96px; height: 48px; image-rendering: pixelated; background: #cfe3c4; box-shadow: 0 0 0 1px var(--parch-dk); }
+.lesson p { margin: 0; font-size: 8px; line-height: 1.35; }
+.lesson small { font-size: 6.5px; color: var(--muted); }
+.news { display: grid; gap: 4px; text-align: left; width: 250px; }
+.news div { display: grid; grid-template-columns: 34px 1fr; gap: 6px; align-items: center; font-size: 7.5px; line-height: 1.3; }
+.news canvas { width: 34px; height: 24px; image-rendering: pixelated; background: #cfe3c4; box-shadow: 0 0 0 1px var(--parch-dk); }
+
+/* Two-pane menus: a short list on the left, the chosen item's details on the right */
+.split { display: grid; grid-template-columns: 128px 1fr; gap: 8px; min-height: 0; flex: 1; }
+.split .list { overflow-y: auto; display: grid; gap: 2px; align-content: start; padding-right: 2px; }
+.item { display: grid; grid-template-columns: 22px 1fr auto; gap: 4px; align-items: center; padding: 2px 3px; border: 0; background: #fbefd2; color: var(--ink); font-family: var(--font); font-size: 7.5px; text-align: left; cursor: pointer; }
+.item canvas { width: 22px; height: 16px; image-rendering: pixelated; }
+.item small { font-size: 6.5px; color: var(--muted); }
+.item small.no { color: var(--rose); }
+.item:hover, .item:focus-visible, .item.sel { background: #fff6dc; outline: 1px solid var(--wood); }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--leaf); box-shadow: 0 0 0 1px var(--bark); }
+.dot.warn { background: var(--sun); }
+.dot.bad { background: var(--rose); }
+.pane { overflow-y: auto; display: grid; gap: 4px; align-content: start; font-size: 8px; line-height: 1.35; }
+.pane h3 { margin: 0; font-size: 10px; color: #6a3a1c; }
+.pane .pic { width: 100%; height: 40px; image-rendering: pixelated; background: #cfe3c4; box-shadow: 0 0 0 1px var(--parch-dk); }
+.pane .muted { color: var(--muted); font-size: 7px; }
+.pane .need { display: grid; grid-template-columns: 9px 1fr; gap: 3px; font-size: 7.5px; }
+.pane .need i { font-style: normal; font-weight: 700; color: var(--leaf); }
+.pane .need i.x { color: var(--rose); }
+.pane .bars { display: grid; grid-template-columns: 34px 1fr; gap: 2px 4px; align-items: center; font-size: 7px; }
+.pane .bar { height: 4px; background: var(--parch-dk); }
+.pane .bar i { display: block; height: 100%; background: var(--leaf); }
+.pane .acts { display: flex; gap: 4px; flex-wrap: wrap; }
+.pane .acts .btn { font-size: 7px; padding: 2px 6px; }
+.cost { display: flex; gap: 6px; flex-wrap: wrap; font-size: 7.5px; }
+.cost .no { color: var(--rose); font-weight: 700; }
 
 #toast { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: 220px; text-align: center; font-size: 7.5px; line-height: 1.2; padding: 3px 6px; opacity: 0; transition: opacity .25s; }
 #toast.on { opacity: 1; }
@@ -111,7 +147,8 @@ body {
 .shade { position: absolute; inset: 0; background: rgba(29, 42, 28, .62); display: grid; place-items: center; }
 .panel { width: 336px; max-height: 188px; box-sizing: border-box; padding: 6px 8px 7px; display: flex; flex-direction: column; gap: 4px; font-size: 7px; }
 .panel header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.panel h2 { margin: 0; font-size: 11px; font-weight: 700; color: #6a3a1c; }
+.panel h2 { margin: 0; font-size: 11px; font-weight: 700; color: #6a3a1c; white-space: nowrap; }
+.panel header small { text-align: right; }
 .panel header small { color: var(--muted); font-size: 6.5px; }
 .panel .scroll { overflow-y: auto; min-height: 0; flex: 1; scrollbar-width: thin; padding-right: 2px; }
 .panel .x { font-size: 6.5px; padding: 1px 6px; }
@@ -209,17 +246,12 @@ body {
   <canvas id="game" width="384" height="216" aria-label="Ninety-Nine game screen"></canvas>
   <div id="ui">
     <div id="hud" hidden>
-      <div class="joy wood"><span id="hud-lv">Lv 1</span><div class="joybar"><i id="hud-xpbar"></i></div></div>
-      <div class="goals wood" id="hud-goals"></div>
-      <div class="clock wood">
-        <div class="row"><b id="hud-day">Day 1</b><span class="sunmoon" id="hud-sun"></span></div>
-        <div class="row"><span class="time" id="hud-time">6:00 am</span><small id="hud-phase">Morning</small></div>
-        <div class="dayfill"><i id="hud-bar"></i></div>
-        <div class="row"><small id="hud-ch">Ch 1</small><small id="hud-count">Fold 0</small></div>
-      </div>
+      <div class="xp"><i id="hud-xpbar"></i></div>
+      <button class="goal wood" id="hud-goal" type="button" title="All goals (Q)"><span class="lv" id="hud-lv">Lv 1</span><span id="hud-goal-text"></span></button>
+      <div class="clock wood" title="Day and time"><span class="sunmoon" id="hud-sun"></span><b id="hud-day">Day 1</b><span class="time" id="hud-time">6:00 am</span><div class="dayfill"><i id="hud-bar"></i></div></div>
       <div class="res wood" id="hud-res"></div>
       <div class="prompt wood" id="prompt" hidden><span id="prompt-text"></span><div class="hold" id="hold" hidden><i id="hold-bar"></i></div></div>
-      <div class="tbar" id="tbar">
+      <div class="tbar" id="tbar" hidden>
         <button class="btn" type="button" data-act="whistle">Whistle</button>
         <button class="btn" type="button" data-act="use">Use</button>
         <button class="btn" type="button" data-act="build">Build</button>
@@ -237,13 +269,14 @@ body {
       <div class="pframe" id="pframe"><canvas id="portrait" width="34" height="34"></canvas><span id="dname"></span></div>
     </div>
 
+    <div id="lesson" class="shade" hidden></div>
     <div id="levelup" hidden><h2 class="wood">Level up!</h2><div id="cards"></div></div>
     <div id="panel" class="shade" hidden></div>
 
     <div id="title" class="screen clickable">
       <div class="sign wood"><h1>Ninety-Nine</h1><div class="tag">Leave no sheep behind.</div></div>
       <div class="btns" id="title-btns"></div>
-      <div class="keys wood">Move: WASD / arrows / drag · Use: E · Whistle: Space · Build: B · Flock: F · Goals: Q · Map: M · Menu: Esc</div>
+      <div class="keys wood">Move: WASD or arrows · Use: E · Whistle: Space · How to play: H · Menu: Esc</div>
     </div>
     <div id="chapter" class="screen clickable" hidden></div>
     <div id="chend" class="screen" hidden></div>
@@ -259,6 +292,7 @@ body {
 <script src="js/world.js"></script>
 <script src="js/game.js"></script>
 <script src="js/story.js"></script>
+<script src="js/help.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

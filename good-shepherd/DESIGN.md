@@ -254,8 +254,17 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
   the Night.
 - **People:** the river folk, Zeb, Hank, Ludo, Bram and Jory. Five redemption scenes with one Forgive button each,
   plus Chomp, Thistle and the Bramble Bunch. Redeemed friends live on the farm and help.
-- **Interface:** goals tracker, build menu, flock panel, map, *The Shepherd's Notes* (46 entries), pause menu,
-  autosave every dawn, credits.
+- **Interface:** a quiet screen with three small chips:
+  - top left: your next goal and level;
+  - top right: the day and time;
+  - bottom left: your supplies and how many sheep are home.
+
+  Build and Flock are two-pane menus: pick something on the left, read about it on the right. There is also a map,
+  *The Shepherd's Notes* (46 entries), a pause menu, autosave every dawn, and credits.
+- **Teaching:** 31 lesson cards, each shown the first time its topic comes up. Each one pauses the game, shows a
+  picture, and says in a sentence or two what to do. Every chapter opens with a "What's new" card: the new region and
+  how to get in, new buildings, new dangers, and who you'll meet. How to play (H) keeps every lesson and the key
+  list. Goals only appear once they're possible. Lessons can be turned off in the pause menu.
 - **Sound:** 16 synthesized music tracks and sound effects.
 
 **Controls:**

@@ -98,7 +98,7 @@ const input = () => ({
   x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x,
   y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y,
 });
-const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex' };
+const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex', h: 'help' };
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'tab'].includes(k)) e.preventDefault();
@@ -109,6 +109,7 @@ addEventListener('keydown', e => {
   if (mode === 'title') { if ((k === 'enter' || k === ' ') && !repeat) { if (document.activeElement && document.activeElement.tagName === 'BUTTON') return; NN.hasSave() ? NN.continueGame() : NN.newGame(); } return; }
   if (mode === 'chapter' || mode === 'chend') { if ((k === 'enter' || k === ' ') && !repeat) { e.preventDefault(); UI._chapterGo && UI._chapterGo(); } return; }
   if (mode === 'dialog') { if ((k === 'enter' || k === ' ' || k === 'e') && !repeat) { e.preventDefault(); UI.advance(); } return; }
+  if (mode === 'lesson') { if ((k === 'enter' || k === ' ' || k === 'e' || k === 'escape') && !repeat) { e.preventDefault(); UI._lessonOk && UI._lessonOk(); } return; }
   if (mode === 'levelup') { const n = +k; if (n >= 1 && n <= 3) UI.chooseCardN(n); return; }
   if (mode === 'credits') { if (k === 'enter' || k === 'escape') { clearTimeout(UI._creditsEnd); UI.endScreen(); } return; }
   if (mode === 'panel') {
@@ -152,7 +153,7 @@ stage.addEventListener('pointerdown', e => {
   NN.audio.init();
   if (e.target.closest('button') || e.target.closest('.panel')) return;
   const mode = NN.mode;
-  if (mode === 'title') return;
+  if (mode === 'title' || mode === 'lesson') return;
   if (mode === 'chapter') { UI._chapterGo && UI._chapterGo(); return; }
   if (mode === 'dialog') { UI.advance(); return; }
   if (mode === 'panel') { if (e.target.id === 'panel') UI.closePanel(); return; }
@@ -178,6 +179,11 @@ $('tbar').addEventListener('pointerdown', e => {
   else if (act === 'menu') UI.openPanel('pause');
 });
 addEventListener('pointerup', () => { holdTouch = false; });
+const showTouch = () => { $('tbar').hidden = false; };
+if (window.matchMedia && matchMedia('(pointer: coarse)').matches) showTouch();
+addEventListener('touchstart', showTouch, { once: true, passive: true });
+$('hud-goal').addEventListener('click', e => { e.stopPropagation(); if (NN.mode === 'play') UI.openPanel('goals'); });
+$('hud-goal').addEventListener('pointerdown', e => e.stopPropagation());
 
 // ---------------------------------------------------------------- build placement
 function ghostTile() {

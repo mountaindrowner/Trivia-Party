@@ -24,7 +24,7 @@ UI.banner = (big, small = '') => {
 UI.objectiveDone = text => UI.toast('✓ ' + text.replace(/\s*\(\d+\/\d+\)$/, ''), 3.6);
 UI.codexToast = id => {
   const e = (SCR().codex || []).find(c => c.id === id);
-  if (e && NN.mode !== 'title') UI.tip(`New in the Shepherd's Notes (C): ${e.title}`, 4);
+  if (e && e.kind === 'verse' && NN.mode !== 'title' && G.day > 1) UI.toast(`New page in the Shepherd's Notes (C): ${e.title}`, 3);
 };
 UI.report = (r, sabbath) => {
   if (!r) return;
@@ -38,6 +38,28 @@ UI.report = (r, sabbath) => {
   if (sabbath && r.wool) h += `<div>Shearing day: +${r.wool} wool. Everyone feels lighter.</div>`;
   if (sabbath && r.born && r.born.length) h += `<div>New lambs: ${esc(r.born.join(', '))}!</div>`;
   el.innerHTML = h; el.classList.add('on'); repT = 9;
+};
+
+// Lesson text: [Key] shows as a key cap.
+const keyed = t => esc(t).replace(/\[([^\]]+)\]/g, '<kbd>$1</kbd>');
+UI.keyed = keyed;
+// Draw a small picture for lessons, menus and chapter cards: { spr, mods, swap } | { prop } | { human } | { icon } | { box }
+UI.drawArt = (c, art) => {
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, c.width, c.height);
+  let img = null;
+  try {
+    if (!art) return;
+    if (art.box) { const s = Math.floor(c.height / 4); x.fillStyle = '#3e2416'; x.fillRect(c.width / 2 - s - 1, c.height / 2 - s - 1, s * 2 + 2, s * 2 + 2); x.fillStyle = art.box; x.fillRect(c.width / 2 - s, c.height / 2 - s, s * 2, s * 2); return; }
+    if (art.spr) img = NN.spr(art.spr, art.frame || 0, false, art.mods || '', art.swap || null);
+    else if (art.prop) img = NN.prop(art.prop).img;
+    else if (art.human) img = NN.human(art.human, 'down', 0, 0, false);
+    else if (art.icon) img = NN.ICONS[art.icon]();
+  } catch (e) { return; }
+  if (!img) return;
+  const sc = Math.max(1, Math.min(Math.floor((c.width - 4) / img.width), Math.floor((c.height - 2) / img.height))) || 1;
+  const fit = Math.min(1, (c.width - 2) / (img.width * sc), (c.height - 2) / (img.height * sc));
+  const w = img.width * sc * fit, h = img.height * sc * fit;
+  x.drawImage(img, Math.round((c.width - w) / 2), Math.round(c.height - h - 1), w, h);
 };
 
 // ---------------------------------------------------------------- portraits
@@ -83,10 +105,16 @@ UI.scene = (src, opts = {}) => {
   queue.push({ lines, opts, key: typeof src === 'string' ? src : null });
   pump();
 };
-UI.busy = () => !!dlg || queue.length > 0;
+UI.busy = () => !!dlg || queue.length > 0 || NN.mode === 'lesson';
+// Lessons wait in the same line as scenes, so a card never covers someone talking.
+UI.lesson = l => { queue.push({ lesson: l }); pump(); };
+// Run something (a chapter card, say) only after everything already waiting has been shown.
+UI.then = fn => { queue.push({ action: fn }); pump(); };
 function pump() {
   if (dlg || !queue.length) return;
   if (!['play', 'build', 'dialog'].includes(NN.mode)) return;
+  if (queue[0].action) { if (NN.mode === 'dialog') return; queue.shift().action(); pump(); return; }
+  if (queue[0].lesson) { if (NN.mode === 'dialog') return; showLesson(queue.shift().lesson); return; }
   dlg = queue.shift();
   if (NN.mode !== 'dialog') prevMode = NN.mode === 'build' ? 'play' : NN.mode;
   if (NN.mode === 'build') UI.placing = null;
@@ -94,6 +122,19 @@ function pump() {
   dlg.i = -1; dlg.after = false;
   $('dialog').hidden = false;
   nextLine();
+}
+function showLesson(l) {
+  const back = NN.mode === 'build' ? 'play' : NN.mode;
+  NN.mode = 'lesson';
+  const el = $('lesson');
+  el.innerHTML = `<div class="lesson wood"><div class="kind">HOW TO PLAY</div><h3>${esc(l.title)}</h3><canvas width="96" height="48"></canvas><p>${keyed(l.text)}</p><button class="btn" type="button">Got it</button><small>Read these again any time: press H</small></div>`;
+  UI.drawArt(el.querySelector('canvas'), l.art);
+  el.hidden = false;
+  const ok = () => { if (el.hidden) return; el.hidden = true; NN.mode = back === 'lesson' ? 'play' : back; UI._lessonOk = null; pump(); };
+  UI._lessonOk = ok;
+  el.querySelector('button').addEventListener('click', ok);
+  el.querySelector('button').focus({ preventScroll: true });
+  GM.sfx('page');
 }
 UI.pump = pump;
 function nextLine() {
@@ -151,6 +192,7 @@ UI.levelUp = () => {
   if (!choices.length) return;
   prevMode = 'play'; NN.mode = 'levelup'; GM.sfx('level');
   const box = $('cards'); box.innerHTML = '';
+  $('levelup').querySelector('h2').innerHTML = 'Level up! <small style="display:block;font-size:6.5px;font-weight:500;color:var(--muted)">Pick one with the mouse or keys 1–3. Knacks last until the chapter ends. Friends stay for good.</small>';
   choices.forEach((k, i) => {
     const b = document.createElement('button');
     b.className = 'card wood' + (k.evo ? ' evo' : ''); b.type = 'button';
@@ -178,14 +220,30 @@ UI.chooseCardN = n => { const c = $('levelup').choices; if (c && c[n - 1]) UI.ch
 UI.chapterCard = (n, done) => {
   const c = (SCR().chapters || [])[n - 1] || { title: 'Chapter ' + n, verse: '', ref: '' };
   const el = $('chapter');
-  el.innerHTML = `<div class="card2 wood"><div class="no">CHAPTER ${n} · ${esc((c.region || W.REGIONS[NN.STORY.CH[n].reveal[0] || 'meadow'].name || '').toUpperCase())}</div><h2>${esc(c.title)}</h2>
-    ${c.verse ? `<p>${esc(c.verse)}<cite>${esc(c.ref || '')}</cite></p>` : ''}${c.blurb ? `<div class="blurb">${esc(c.blurb)}</div>` : ''}
-    <button class="btn" type="button" id="ch-go">Begin</button></div>`;
-  el.hidden = false; NN.mode = 'chapter';
-  const go = () => { if (el.hidden) return; el.hidden = true; NN.mode = 'play'; done && done(); pump(); };
+  const region = c.region || W.REGIONS[NN.STORY.CH[n].reveal[0] || 'meadow'].name || '';
+  const news = (NN.HELP && NN.HELP.CHAPTERS[n]) || [];
+  let step = 0;
+  const show = () => {
+    if (step === 0) {
+      el.innerHTML = `<div class="card2 wood"><div class="no">CHAPTER ${n} · ${esc(region.toUpperCase())}</div><h2>${esc(c.title)}</h2>
+        ${c.verse ? `<p>${esc(c.verse)}<cite>${esc(c.ref || '')}</cite></p>` : ''}${c.blurb ? `<div class="blurb">${esc(c.blurb)}</div>` : ''}
+        <button class="btn" type="button" id="ch-go">${news.length ? 'Next' : 'Begin'}</button></div>`;
+    } else {
+      el.innerHTML = `<div class="card2 wood"><div class="no">WHAT'S NEW IN CHAPTER ${n}</div><div class="news">${news.map(() => '<div><canvas width="34" height="24"></canvas><span></span></div>').join('')}</div>
+        <button class="btn" type="button" id="ch-go">Begin</button></div>`;
+      el.querySelectorAll('.news > div').forEach((row, i) => { UI.drawArt(row.querySelector('canvas'), news[i][0]); row.querySelector('span').innerHTML = keyed(news[i][1]); });
+    }
+    $('ch-go').addEventListener('click', go);
+    $('ch-go').focus({ preventScroll: true });
+  };
+  const go = () => {
+    if (el.hidden) return;
+    if (step === 0 && news.length) { step = 1; GM.sfx('page'); show(); return; }
+    el.hidden = true; NN.mode = 'play'; done && done(); pump();
+  };
   UI._chapterGo = go;
-  $('ch-go').addEventListener('click', go);
-  $('ch-go').focus({ preventScroll: true });
+  el.hidden = false; NN.mode = 'chapter';
+  show();
 };
 UI.chapterEnd = (n, objs, done) => {
   const c = (SCR().chapters || [])[n - 1] || { title: 'Chapter ' + n };
@@ -217,40 +275,45 @@ const clockText = () => {
 };
 UI.hud = () => {
   const night = G.phase === 'night';
-  const time = clockText(), part = G.sabbath ? 'Sabbath' : night ? 'Night' : G.len - G.t < 15 ? 'Dusk' : G.t < G.len * 0.35 ? 'Morning' : 'Afternoon';
+  const time = clockText();
   const home = GM.homeCount(), total = G.sheep.filter(s => !s.owner && !s.hidden).length;
-  const key = [G.day, time, part, home, total, G.lv, G.chapter].join('|');
+  const objs = NN.STORY.objectives().map(o => [o, NN.STORY.objState(o)]).filter(([, st]) => !st.done);
+  const next = (objs[0] || [null, { text: NN.STORY.hiddenGoals() ? 'Keep caring for the flock. More will come.' : 'All done. Rest easy.' }])[1].text;
+  const key = [G.day, time, home, total, G.lv, G.form, next].join('|');
   if (key !== hudKey) {
     hudKey = key;
-    $('hud-day').textContent = 'Day ' + G.day; $('hud-time').textContent = time; $('hud-phase').textContent = part;
+    $('hud-day').textContent = (G.sabbath ? 'Sabbath · ' : '') + 'Day ' + G.day; $('hud-time').textContent = time;
     $('hud-sun').className = night ? 'sunmoon moon' : 'sunmoon';
-    $('hud-count').textContent = `Fold ${home}/${total}`;
-    $('hud-ch').textContent = 'Ch ' + G.chapter;
-    $('hud-lv').textContent = (G.form === 'sheep' ? 'Woolsworth' : 'Lv ' + G.lv);
+    $('hud-lv').textContent = G.form === 'sheep' ? 'Woolsworth' : 'Lv ' + G.lv;
+    $('hud-goal-text').textContent = next;
     $('hud-bar').className = night ? 'night' : '';
-    // goals
-    const objs = NN.STORY.objectives().map(o => NN.STORY.objState(o)).filter(o => !o.done).slice(0, 3);
-    $('hud-goals').innerHTML = objs.length ? `<b>GOALS (Q)</b>${objs.map(o => `<div>· ${esc(o.text)}</div>`).join('')}` : '<b>GOALS (Q)</b><div>All done. Rest easy.</div>';
+    resKey = '';
   }
-  const rk = NN.DEFS.RES.map(k => G.res[k]).join(',');
+  // supplies: hay and water always; everything else once you have some
+  const rk = NN.DEFS.RES.map(k => G.res[k]).join(',') + '|' + home + '/' + total;
   if (rk !== resKey) {
     resKey = rk;
     const box = $('hud-res'); box.innerHTML = '';
+    const sp = document.createElement('span'); sp.title = 'Sheep home / in your flock';
+    const sc = document.createElement('canvas'); sc.width = 9; sc.height = 9;
+    try { const x = sc.getContext('2d'); const im = NN.spr('sheep', 0, false, '', null); x.drawImage(im, 0, 0, im.width, im.height, 0, 1, 9, 7); } catch (e) { /* */ }
+    sp.append(sc, document.createTextNode(`${home}/${total}`)); box.append(sp);
+    const sep = document.createElement('span'); sep.className = 'sep'; box.append(sep);
     for (const k of NN.DEFS.RES) {
-      const sp = document.createElement('span'); sp.title = NN.DEFS.RES_NAME[k];
-      sp.append(icon(k));
+      if (!G.res[k] && k !== 'hay' && k !== 'water') continue;
+      const s2 = document.createElement('span'); s2.title = NN.DEFS.RES_NAME[k];
+      s2.append(icon(k));
       const t = document.createElement('em'); t.style.fontStyle = 'normal'; t.textContent = G.res[k];
-      if ((k === 'hay' || k === 'water') && G.res[k] < GM.homeCount() / 2) t.className = 'low';
-      sp.append(t); box.append(sp);
+      if ((k === 'hay' || k === 'water') && G.res[k] < home / 2) t.className = 'low';
+      s2.append(t); box.append(s2);
     }
   }
   $('hud-bar').style.width = (100 * (1 - Math.min(1, G.t / G.len))) + '%';
   $('hud-xpbar').style.width = (100 * G.xp / GM.needXP(G.lv)) + '%';
-  // interact prompt
   const it = NN.mode === 'play' ? GM.nearestInteract() : null;
   UI.current = it;
   if (it) {
-    $('prompt').hidden = false; $('prompt-text').innerHTML = `<kbd>E</kbd>${esc(it.label)}`;
+    $('prompt').hidden = false; $('prompt-text').innerHTML = `<kbd>E</kbd> ${esc(it.label)}`;
     $('hold').hidden = !it.hold; if (it.hold) $('hold-bar').style.width = (100 * (it.prog || 0) / it.hold) + '%';
   } else $('prompt').hidden = true;
 };
@@ -286,34 +349,50 @@ function frame(title, sub, body) {
   return el.firstChild;
 }
 function renderPanel() {
-  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause }[panel] || (() => {}))();
+  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp }[panel] || (() => {}))();
 }
 const PROP_FOR = { feeder: 'feeder', trough: 'trough', lean: 'lean', workshop: 'workshop', hayBarn: 'hayBarn', well: 'well', watchtower: 'watchtower', lampPost: 'lampPostLit', herbGarden: 'herbGarden', infirmary: 'infirmary', loom: 'loom', treadmill: 'treadmill0', choirStage: 'choirStage', olivePress: 'olivePress' };
 NN.PROP_FOR = PROP_FOR;
+let bsel = null;
 function renderBuild() {
   const B = NN.DEFS.BUILD, types = Object.keys(B).filter(k => B[k].ch <= G.chapter);
-  const p = frame('Build', 'Pick something, then place it with the mouse or in front of you. Enter or click to place.', `<div class="scroll"><div class="grid" id="bgrid"></div></div>`);
-  const grid = p.querySelector('#bgrid');
-  types.forEach((t, i) => {
+  if (!bsel || !types.includes(bsel)) bsel = types.find(t => GM.has(B[t].cost)) || types[0];
+  const p = frame('Build', 'Pick a building to see what it does.', `<div class="split"><div class="list" id="blist"></div><div class="pane" id="bpane"></div></div>`);
+  const list = p.querySelector('#blist'), pane = p.querySelector('#bpane');
+  const N = NN.DEFS.RES_NAME, JOBS = NN.DEFS.JOBS;
+  const show = t => {
+    bsel = t;
+    list.querySelectorAll('.item').forEach(b => b.classList.toggle('sel', b.dataset.t === t));
+    const d = B[t], ok = GM.has(d.cost), have = GM.count(t);
+    const jobs = d.jobs ? Object.entries(d.jobs).map(([j, n]) => `${n} ${JOBS[j].name}${n > 1 ? 's' : ''}`).join(', ') : '';
+    pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(d.name)}</h3><div>${esc(d.desc)}</div>
+      ${jobs ? `<div class="muted">Jobs here: ${esc(jobs)}. Sheep volunteer by themselves.</div>` : ''}
+      <div class="cost">Costs: ${Object.entries(d.cost).map(([k, v]) => `<span class="${(G.res[k] || 0) < v ? 'no' : ''}">${v} ${esc(N[k])} (you have ${G.res[k] || 0})</span>`).join('')}</div>
+      ${have ? `<div class="muted">You have built ${have}.</div>` : ''}
+      <div class="acts"><button class="btn" type="button" id="bgo" ${ok ? '' : 'disabled'}>${ok ? 'Place it' : 'Not enough supplies'}</button></div>`;
+    UI.drawArt(pane.querySelector('canvas'), { prop: PROP_FOR[t] });
+    pane.querySelector('#bgo').addEventListener('click', () => place(t));
+  };
+  const place = t => {
+    const d = B[t];
+    if (!GM.has(d.cost)) { GM.sfx('cancel'); return; }
+    UI.closePanel(); UI.placing = { type: t }; NN.mode = 'build'; GM.sfx('select');
+    UI.tip(`Place the ${d.name}: point with the mouse, or walk to the spot and press Enter. Esc cancels.`, 6);
+  };
+  types.forEach(t => {
     const d = B[t], ok = GM.has(d.cost);
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'bcard' + (ok ? '' : ' no');
-    const c = document.createElement('canvas'); c.width = 70; c.height = 30;
-    try {
-      const pr = NN.prop(PROP_FOR[t]), x = c.getContext('2d'); x.imageSmoothingEnabled = false;
-      const s = Math.min(1, 66 / pr.img.width, 28 / pr.img.height), w = pr.img.width * s, h = pr.img.height * s;
-      x.drawImage(pr.img, (70 - w) / 2, 30 - h - 1, w, h);
-    } catch (e) { /* placeholder */ }
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.dataset.t = t;
+    const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { prop: PROP_FOR[t] });
     b.append(c);
-    b.insertAdjacentHTML('beforeend', `<b>${esc(d.name)}</b><em>${esc(GM.costText(d.cost))}</em><span>${esc(d.desc)}</span>`);
-    b.addEventListener('click', () => {
-      if (!GM.has(d.cost)) { UI.toast(`Not enough for a ${d.name}: needs ${GM.costText(d.cost)}.`); GM.sfx('cancel'); return; }
-      UI.closePanel(); UI.placing = { type: t }; NN.mode = 'build'; GM.sfx('select');
-      UI.tip(`Placing a ${d.name}. Enter or click to place, Esc to cancel.`, 5);
-    });
-    grid.append(b);
-    if (i === 0) setTimeout(() => b.focus({ preventScroll: true }), 0);
+    b.insertAdjacentHTML('beforeend', `<span>${esc(d.name)}</span><small class="${ok ? '' : 'no'}">${ok ? 'ready' : 'need more'}</small>`);
+    b.addEventListener('click', () => show(t));
+    b.addEventListener('dblclick', () => place(t));
+    b.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); place(t); } });
+    b.addEventListener('focus', () => show(t));
+    list.append(b);
   });
+  show(bsel);
+  setTimeout(() => { const b = list.querySelector('.item.sel'); b && b.focus({ preventScroll: true }); }, 0);
 }
 const STATUS = s => {
   const c = [];
@@ -332,35 +411,50 @@ function renderFlock() {
   const flock = G.sheep.filter(s => !s.owner && !s.hidden && ['home', 'follow', 'nap', 'feast'].includes(s.state)).sort((a, b) => a.name.localeCompare(b.name));
   const cap = GM.capacity(), home = GM.homeCount();
   const lost = G.sheep.filter(s => s.lost && s.state === 'wild').length;
-  const p = frame('Your flock', `${flock.length} with you or home${lost ? ` · ${lost} lost out there` : ''}`,
-    `<div class="summary"><span>Beds <b>${home}/${cap.beds}</b></span><span>Feeders <b>${cap.food}</b> sheep/day</span><span>Troughs <b>${cap.drink}</b> sheep/day</span><span>Hay <b>${G.res.hay}</b> · Water <b>${G.res.water}</b></span></div>
-     <div class="scroll"><div class="rows" id="frows"></div></div><div class="detail" id="fdetail"><span>Pick a sheep to see how they're doing and ask them about a job.</span></div>`);
-  const rows = p.querySelector('#frows');
+  const p = frame('Your flock', `${flock.length} sheep${lost ? ` · ${lost} lost out there` : ''} · beds ${home}/${cap.beds} · feeders for ${cap.food} · troughs for ${cap.drink}`,
+    `<div class="split"><div class="list" id="flist"></div><div class="pane" id="fpane"><div class="muted">Pick a sheep to see how they're doing.</div></div></div>`);
+  const list = p.querySelector('#flist'), pane = p.querySelector('#fpane');
+  const health = s => (s.hurt || !s.fed || !s.watered) ? 'bad' : (s.energy < 0.35 || s.cold) ? 'warn' : '';
+  const show = s => {
+    sel = s.id;
+    list.querySelectorAll('.item').forEach(b => b.classList.toggle('sel', +b.dataset.id === s.id));
+    const job = s.job ? NN.DEFS.JOBS[s.job.type].name : s.state === 'follow' ? 'Following you' : s.state === 'nap' ? 'Napping' : s.kind === 'lamb' ? 'Being a lamb' : 'Grazing';
+    const need = (ok, good, bad) => `<div class="need"><i class="${ok ? '' : 'x'}">${ok ? '✓' : '✗'}</i><span>${esc(ok ? good : bad)}</span></div>`;
+    pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(s.name)} <span class="muted">${esc(s.trait)}${s.kind === 'lamb' ? ' lamb' : ''}</span></h3>
+      <div>Doing: ${esc(job)}</div>
+      ${need(s.fed, 'Fed this morning', 'Hungry. Needs hay and room at a feeder.')}
+      ${need(s.watered, 'Had water this morning', 'Thirsty. Needs water and room at a trough.')}
+      ${need(!s.hurt, 'Healthy', 'Hurt. A Doc in the fold will patch them up.')}
+      ${G.chapter >= 5 ? need(s.blanket, 'Has a blanket', 'No blanket for cold nights. Knitters make them at a Loom.') : ''}
+      <div class="bars"><span>Energy</span><div class="bar"><i style="width:${Math.round(s.energy * 100)}%"></i></div><span>Joy</span><div class="bar"><i style="width:${Math.round(s.joy * 100)}%;background:var(--rose)"></i></div></div>
+      <div class="muted">Ask, don't order. Tired, hungry or hurt sheep will say no.</div><div class="acts" id="facts"></div>`;
+    UI.drawArt(pane.querySelector('canvas'), { spr: s.kind === 'lamb' ? 'lamb' : 'sheep', mods: NN.GAME_MODS(s), swap: s.swap });
+    const acts = pane.querySelector('#facts');
+    if (s.kind !== 'lamb') for (const j of [...new Set(GM.freeSlots().map(sl => sl[0]).filter(j => j !== 'guard'))]) {
+      const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = 'Ask: ' + NN.DEFS.JOBS[j].name; b.title = NN.DEFS.JOBS[j].desc;
+      b.addEventListener('click', () => { const r = GM.ask(s, j); UI.closePanel(); UI.sheepTalk(s, r.line); }); acts.append(b);
+    }
+    const rb = document.createElement('button'); rb.className = 'btn'; rb.type = 'button'; rb.textContent = s.job ? 'Ask them to rest' : 'Let them rest';
+    rb.addEventListener('click', () => { const r = GM.ask(s, 'rest'); UI.closePanel(); UI.sheepTalk(s, r.line); }); acts.append(rb);
+  };
   for (const s of flock) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'srow' + (sel === s.id ? ' sel' : '');
-    const c = document.createElement('canvas'); c.width = 18; c.height = 14;
-    try { const x = c.getContext('2d'); const im = NN.spr(s.kind === 'lamb' ? 'lamb' : 'sheep', 0, false, NN.GAME_MODS(s), s.swap); x.drawImage(im, Math.floor((18 - im.width) / 2), 14 - im.height); } catch (e) { /* */ }
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.dataset.id = s.id;
+    const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { spr: s.kind === 'lamb' ? 'lamb' : 'sheep', mods: NN.GAME_MODS(s), swap: s.swap });
     b.append(c);
-    const job = s.job ? NN.DEFS.JOBS[s.job.type].name : s.state === 'follow' ? 'Following' : s.kind === 'lamb' ? 'Being a lamb' : 'Grazing';
-    b.insertAdjacentHTML('beforeend', `<span><b>${esc(s.name)}</b> <span class="kind">${esc(s.trait)}</span></span><span>${esc(job)}</span><span class="chips">${STATUS(s).map(([t, k]) => `<span class="chip ${k}">${t}</span>`).join('')}</span><span class="minijoy" title="Joy"><i style="width:${Math.round(s.joy * 100)}%"></i></span>`);
-    b.addEventListener('click', () => { sel = s.id; renderFlock(); });
-    rows.append(b);
+    b.insertAdjacentHTML('beforeend', `<span>${esc(s.name)}</span><span class="dot ${health(s)}"></span>`);
+    b.addEventListener('click', () => show(s)); b.addEventListener('focus', () => show(s));
+    list.append(b);
   }
-  const s = sel && GM.sheepById(sel);
-  if (s && flock.includes(s)) {
-    const det = p.querySelector('#fdetail'); det.innerHTML = '';
-    const open = [...new Set(GM.freeSlots().map(sl => sl[0]).filter(j => j !== 'guard'))];
-    det.insertAdjacentHTML('beforeend', `<span><b>${esc(s.name)}</b>: ${s.job ? 'working as ' + esc(NN.DEFS.JOBS[s.job.type].name) : 'no job'}. Energy ${Math.round(s.energy * 100)}%.</span>`);
-    for (const j of open) { const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = 'Ask: ' + NN.DEFS.JOBS[j].name; b.title = NN.DEFS.JOBS[j].desc; b.addEventListener('click', () => { const r = GM.ask(s, j); UI.closePanel(); UI.sheepTalk(s, r.line); }); det.append(b); }
-    const rb = document.createElement('button'); rb.className = 'btn'; rb.type = 'button'; rb.textContent = s.job ? 'Ask to rest' : 'Let them rest'; rb.addEventListener('click', () => { const r = GM.ask(s, 'rest'); UI.closePanel(); UI.sheepTalk(s, r.line); }); det.append(rb);
-  }
+  const first = (sel && flock.find(s => s.id === sel)) || flock[0];
+  if (first) { show(first); setTimeout(() => { const b = list.querySelector('.item.sel'); b && b.focus({ preventScroll: true }); }, 0); }
 }
 function renderGoals() {
   const n = G.chapter, c = (SCR().chapters || [])[n - 1] || { title: 'Chapter ' + n };
   const objs = NN.STORY.objectives();
   const p = frame(`Chapter ${n}: ${c.title}`, `Day ${G.day}`, `<div class="scroll">${c.verse ? `<div class="verse">${esc(c.verse)} (${esc(c.ref || '')})</div>` : ''}<div id="olist"></div></div>`);
   p.querySelector('#olist').innerHTML = objs.map(o => { const s = NN.STORY.objState(o); return `<div class="obj${s.done ? ' done' : ''}${o.key ? ' key' : ''}"><i>${s.done ? '✓' : '·'}</i><span>${esc(s.text)}</span></div>`; }).join('') +
-    `<div class="obj"><i></i><span style="color:var(--muted)">Bold goals move the story along. The rest make the farm stronger.</span></div>`;
+    (NN.STORY.hiddenGoals() ? `<div class="obj"><i>…</i><span style="color:var(--muted)">More goals will turn up as the chapter goes on.</span></div>` : '') +
+    `<div class="obj"><i></i><span style="color:var(--muted)">Bold goals move the story along. The rest make the farm stronger. The one at the top shows in the corner of the screen.</span></div>`;
 }
 function renderMap() {
   const p = frame('Map', 'You are the blinking dot. Gold dots are lost sheep.', `<canvas id="mapc" width="320" height="142"></canvas>`);
@@ -389,6 +483,28 @@ function renderCodex(id) {
   const first = all.find(e => e.id === id) || all[all.length - 1];
   if (first) show(first);
 }
+function renderHelp() {
+  const all = NN.HELP ? NN.HELP.LESSONS : [];
+  const p = frame('How to play', 'Every lesson in the game. They pop up the first time something new happens.', `<div class="split"><div class="list" id="hlist"></div><div class="pane" id="hpane"></div></div>`);
+  const list = p.querySelector('#hlist'), pane = p.querySelector('#hpane');
+  const show = l => {
+    list.querySelectorAll('.item').forEach(b => b.classList.toggle('sel', b.dataset.id === l.id));
+    pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(l.title)}</h3><div>${keyed(l.text)}</div>`;
+    UI.drawArt(pane.querySelector('canvas'), l.art);
+  };
+  all.forEach(l => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.dataset.id = l.id;
+    b.style.gridTemplateColumns = '1fr auto';
+    b.innerHTML = `<span>${esc(l.title)}</span><small>${NN.HELP.seen(l.id) ? '' : 'new'}</small>`;
+    b.addEventListener('click', () => show(l)); b.addEventListener('focus', () => show(l));
+    list.append(b);
+  });
+  const keys = { id: 'keys', title: 'Keys', art: { human: 'shepherd' }, text: 'Move: [W][A][S][D] or arrows. Use or talk: [E]. Whistle: [Space]. Build: [B]. Flock: [F]. Goals: [Q]. Map: [M]. Notes: [C]. How to play: [H]. Menu: [Esc].' };
+  const kb = document.createElement('button'); kb.type = 'button'; kb.className = 'item'; kb.dataset.id = 'keys'; kb.style.gridTemplateColumns = '1fr'; kb.innerHTML = '<span><b>Keys</b></span>';
+  kb.addEventListener('click', () => show(keys)); kb.addEventListener('focus', () => show(keys));
+  list.prepend(kb);
+  show(keys);
+}
 function renderPause() {
   const el = $('panel');
   el.innerHTML = `<div class="panel wood menu"><h2>Paused</h2></div>`;
@@ -396,11 +512,13 @@ function renderPause() {
   const m = el.firstChild;
   const add = (label, fn) => { const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = label; b.addEventListener('click', fn); m.append(b); return b; };
   add('Resume', UI.closePanel).focus({ preventScroll: true });
+  add('How to play (H)', () => { UI.closePanel(); UI.openPanel('help'); });
   add('Goals (Q)', () => { UI.closePanel(); UI.openPanel('goals'); });
   add('Map (M)', () => { UI.closePanel(); UI.openPanel('map'); });
   add("Shepherd's Notes (C)", () => { UI.closePanel(); UI.openPanel('codex'); });
   add(NN.audio && NN.audio.muted ? 'Sound: off' : 'Sound: on', e => { const m2 = NN.audio.toggleMute(); e.target.textContent = m2 ? 'Sound: off' : 'Sound: on'; });
-  add('Save game', () => { NN.save(); UI.toast('Saved on this device.'); });
+  add(NN.HELP && NN.HELP.enabled() ? 'Lessons: on' : 'Lessons: off', e => { const on = !NN.HELP.enabled(); NN.HELP.setEnabled(on); e.target.textContent = on ? 'Lessons: on' : 'Lessons: off'; });
+  add('Save game', () => { if (NN.save()) UI.toast('Saved on this device.'); else UI.toast('You can save in the daytime.'); });
   add('Save and quit to title', () => { NN.save(); UI.closePanel(); NN.toTitle(); });
 }
 
