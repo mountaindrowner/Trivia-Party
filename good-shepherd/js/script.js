@@ -46,6 +46,9 @@ NN.SCRIPT = {
     { n: 7, title: 'The House of the Lord',
       verse: 'Surely goodness and loving kindness shall follow me all the days of my life, and I will dwell in Yahweh\'s house forever.',
       ref: 'Psalm 23:6', region: 'The Home Meadow', blurb: 'The farm is full. Something waits past the edge of the meadow.' },
+    // After the credits. Chapter 7 quotes all of 23:6, so this card keeps to its first half.
+    { n: 8, title: 'Goodness and Mercy', verse: 'Surely goodness and loving kindness shall follow me all the days of my life,',
+      ref: 'Psalm 23:6', region: 'All the land', blurb: 'The days keep coming, and there are still sheep out there. Fill the fold.' },
   ],
 
   // ------------------------------------------------------------------------------------------------ speakers
@@ -1025,6 +1028,249 @@ NN.SCRIPT = {
       ['dot', 'Mister Hank, you can sit with me.'],
       ['hank', '...Okay. I can do that.'],
     ],
+
+    // ============================================================ Favors (side quests)
+    // fav_<id>_ask: the giver asks. fav_<id>_done: the task is done and the reward is named plainly.
+    fav_nell_ask: [
+      ['nell', 'SHEPHERD! OVER HERE! LOOK AT MY DOCK! WELL, WHAT\'S LEFT OF IT!'],
+      ['narrator', 'Half of the ferry dock is in the river. The other half is thinking about it.'],
+      ['nell', 'High water took the planks! Can\'t run a ferry without a dock! I tried! I got VERY wet!'],
+      ['woolsworth', 'She\'s still a little damp, Boss.'],
+      ['nell', 'Bring me eight timber and I\'ll have it fixed by supper! EIGHT! Not seven! Seven sank last time!'],
+      ['shepherd', 'Eight timber. I\'ll bring them, Nell.'],
+    ],
+    fav_nell_done: [
+      ['nell', 'EIGHT! I COUNTED! ZEB TAUGHT ME! HE MADE ME COUNT TWICE!'],
+      ['narrator', 'Nell hammers. Nell hammers loudly. The dock is fixed before the sun has moved.'],
+      ['nell', 'Now LISTEN! I know every shortcut on land AND water! Every creek, every back path, every goat trail!'],
+      ['nell', 'Go to any signpost you\'ve found, pick any other signpost you\'ve found, and you\'re there! Quick as a fish!'],
+      ['nell', 'And whoever\'s following you comes too! Every sheep! I don\'t leave ANYBODY on the bank!'],
+      ['ramsey', 'Is there a ferry part? Please say there\'s a ferry part.'],
+      ['nell', 'THERE\'S ALWAYS A FERRY PART!'],
+    ],
+
+    fav_tobi_ask: [
+      ['tobi', 'Shepherd! Shepherd! My kite! The wind took it! It went south! Into the MARSH!'],
+      ['tobi', 'It\'s red! With a fish on it! The fish has a face! I drew the face! It\'s a good face!'],
+      ['tobi', 'I looked all morning. The Marsh is all reeds and mud. I lost a boot. Then I found a different boot.'],
+      ['shepherd', 'I\'ll find your kite, Tobi.'],
+      ['tobi', 'You will? You find EVERYTHING! You found Zeb, and he was up a TREE!'],
+    ],
+    fav_tobi_done: [
+      ['tobi', 'MY KITE! You found it! The fish still has its face!'],
+      ['narrator', 'The kite is muddy, bent, and missing half its tail. Tobi holds it like treasure.'],
+      ['tobi', 'Here! My spare tin whistle! It\'s the LOUD one. Nell banned it. Twice.'],
+      ['tobi', 'Blow your whistle with this and it reaches twice as far! Sheep way out in the hills will hear you!'],
+      ['shepherd', 'Thank you, Tobi. I\'ll use it every day.'],
+      ['tobi', 'Can you teach me your real whistle? Woolsworth tried. His is mostly spit.'],
+    ],
+
+    fav_abe_ask: [
+      ['abe', 'Hm. Heard you pulled a lamb off the sandbar. Night of the high water.'],
+      ['shepherd', 'Minnow.'],
+      ['abe', 'Minnow. ...I was fishing that bend that night. Heard her crying. Couldn\'t get to her. Too slow.'],
+      ['abe', 'Like to meet her. If she\'d come. Bring her by sometime. No hurry.'],
+      ['abe', '...Some hurry. I\'m old.'],
+    ],
+    fav_abe_done: [
+      ['minnow', 'Hi! Are you Abe? The Shepherd says you know the river. Do you know the moon too?'],
+      ['abe', 'Hm. A little. Comes up over that bend every night. Never once late.'],
+      ['abe', 'Heard you crying, that night on the sandbar. Couldn\'t reach you. ...Glad somebody did.'],
+      ['minnow', 'He put me on his shoulders! I could see the whole river!'],
+      ['abe', 'Here. Old river tune. My father hummed it to skittish calves. Slow. Scared things like slow.'],
+      ['abe', 'Hum it near a shy one, or a hurt one, or a frightened one. They\'ll trust you faster.'],
+      ['minnow', 'It\'s SO slow. I love it. What\'s it called?'],
+      ['abe', '...Patience.'],
+    ],
+
+    fav_zeb_ask: [
+      ['zeb', 'Shepherd. Can I ask a favor? A free one. I\'m practicing asking for free things.'],
+      ['zeb', 'I went through my old ledgers. Found three more debts. Nell, Abe and Tobi. The ones I laughed about.'],
+      ['zeb', 'I want to pay them in person. But I walk up, my face goes hot, and I buy a pie instead.'],
+      ['zeb', 'Would you carry the purse? Tell them it\'s from me. And that I\'m sorry. And that I counted twice.'],
+      ['shepherd', 'I\'ll take it to them, Zeb.'],
+      ['zeb', 'Thank you. If Nell yells, that\'s good. That\'s how she says thank you.'],
+    ],
+    fav_zeb_nell: [
+      ['nell', 'A PURSE? FROM ZEB? HE ALREADY PAID ME! FIVE TIMES OVER! I YELLED!'],
+      ['shepherd', 'One more, from his old ledger. He charged you a toll to ride your own ferry. He\'s sorry.'],
+      ['nell', '...HE DID! I FORGOT! HE DIDN\'T! Oh, that silly, silly man! TELL HIM THANK YOU! LOUDLY!'],
+    ],
+    fav_zeb_abe: [
+      ['abe', 'Hm. Zeb.'],
+      ['shepherd', 'He charged you to fish your own bend. Every morning, for three years. He\'s sorry.'],
+      ['abe', '...Hm. Tell him the fish are biting. Tell him to come sit. Bring nothing. Just come.'],
+    ],
+    fav_zeb_tobi: [
+      ['tobi', 'From ZEB? Is this for the coin he charged me? For saying short?'],
+      ['shepherd', 'It is. Four times over. He\'s sorry, Tobi.'],
+      ['tobi', 'I\'m gonna run it right back and say sorry for saying short! Then he\'ll give it back! It\'s our GAME!'],
+    ],
+    fav_zeb_done: [
+      ['zeb', 'Well? Did they... were they... how loud was Nell?'],
+      ['shepherd', 'Very. She says thank you. Abe says come and sit with him. Tobi is running here now.'],
+      ['zeb', 'Then I owe nobody anything. Nothing! I have never owed nothing! I feel light! I feel TALL!'],
+      ['zeb', 'And a light heart needs a heavy wagon. From now on, every morning, I bring double the supplies.'],
+      ['zeb', 'Double. Every morning. Don\'t argue. I\'ve done the math. It\'s generous math.'],
+      ['tobi', 'ZEB! HERE\'S YOUR COIN BACK! SORRY FOR SAYING SHORT!'],
+    ],
+
+    fav_doc_ask: [
+      ['@doc', 'Shepherd. A word. Doc to Shepherd. Professional to professional.'],
+      ['@doc', 'The Infirmary needs a proper herb chest. Right now I keep the herbs in my wool. It\'s not ideal.'],
+      ['woolsworth', 'That explains the smell.'],
+      ['@doc', 'It\'s a HEALING smell. Bring me six herbs and I\'ll stock a real chest. Labeled. Alphabetized.'],
+      ['shepherd', 'Six herbs. I\'ll find them.'],
+      ['@doc', 'And nobody ask where I\'ll get the labels.'],
+    ],
+    fav_doc_done: [
+      ['@doc', 'Six herbs! Perfect specimens. This one\'s practically glowing.'],
+      ['narrator', 'The Doc fills the herb chest. Every drawer gets a label. Nobody asks where the labels came from.'],
+      ['@doc', 'Proper chest, proper medicine. From now on, hurt sheep heal much faster. In, patched, out.'],
+      ['woolsworth', 'Is it magic?'],
+      ['@doc', 'It\'s alphabetizing. Which is better.'],
+      ['nettle', 'Does it still sting?'],
+      ['@doc', 'Less. Hold still. No biting the doc.'],
+    ],
+
+    // Plays when Chomp and all five of the Bramble Bunch are home in the fold together for the first time.
+    fav_bramble_done: [
+      ['narrator', 'For the first time, they\'re all home at once. Chomp. Nettle. Briar. Sorrel. Tansy. Bracken.'],
+      ['chomp', '...Huh. Look at that. The whole bunch. Nobody hiding. Nobody biting.'],
+      ['nettle', 'I could bite something. To celebrate.'],
+      ['chomp', 'You could not.'],
+      ['briar', 'I\'m not even in a bush. I\'m just standing here. In the open. Hi, everybody.'],
+      ['sorrel', 'I\'m crying. The good kind. Obviously.'],
+      ['tansy', 'Hmph. Fine. It\'s a nice flock. I\'m grumpy about how nice it is.'],
+      ['bracken', 'I feel something. A lot of something. I think it\'s happy.'],
+      ['chomp', 'Yeah. And it\'s catching. Look at the fold, Boss. Every sheep in it is happier tonight.'],
+    ],
+
+    fav_hank_ask: [
+      ['hank', 'Boss. Delicate matter. Foreman to Shepherd.'],
+      ['hank', 'When I... relocated quickly. In the storm. My lucky hat blew off.'],
+      ['woolsworth', 'You\'re wearing a hat right now.'],
+      ['hank', 'That\'s my REGULAR hat. The lucky one has a feather. And a dent from when I wrestled that wolf.'],
+      ['woolsworth', 'Dog. Asleep.'],
+      ['hank', 'It\'s in the Pine Woods somewhere, north of the Old Road. I\'d go, but my post. I don\'t leave my post.'],
+      ['shepherd', 'I\'ll find it, Hank.'],
+    ],
+    fav_hank_done: [
+      ['hank', 'My HAT! Look at that dent! That is a legendary dent!'],
+      ['narrator', 'A squirrel had moved into it. The squirrel has moved out. The squirrel is not happy about it.'],
+      ['hank', 'Boss, I owe you. And Hank Haywood pays his debts. In knowledge. Haulers! Gather round!'],
+      ['hank', 'Time you learned my proper pitchfork technique. Bend the knees. Use the whole fork. Rest between loads.'],
+      ['@hauler', 'We just... lift the hay.'],
+      ['hank', 'Fewer trips, less sore, more hay. Try it.'],
+      ['@hauler', '...Huh. That actually works.'],
+      ['hank', 'Told you! From now on, the Hay Haulers bring in more hay. Every load. Remember who taught you.'],
+    ],
+
+    fav_echo_ask: [
+      ['jory', 'Boss. Something I learned back when I hid in Shadow Canyon. Not proud of why I was hiding.'],
+      ['jory', 'Three old stones stand down there. Tall. Hollow. Strike one and it rings, and the whole canyon rings back.'],
+      ['jory', 'Old shepherds set them up, long ago. Ring all three and the dark lifts. Not all the way. A little.'],
+      ['woolsworth', 'A little less rude dark. I\'ll take it.'],
+      ['shepherd', 'Then let\'s go ring them.'],
+      ['jory', 'Tap them with the crook. Gently. Unless you want an echo for a week.'],
+    ],
+    // Plays each time one of the three stones is rung.
+    fav_echo_stone: [
+      ['narrator', 'The Shepherd taps the old stone. It rings, low and long, and the canyon rings back.'],
+      ['@sheep', 'Did the dark just take a step back? I think it took a step back.'],
+    ],
+    fav_echo_done: [
+      ['narrator', 'The third stone rings. The other two answer. The whole canyon hums like a choir.'],
+      ['narrator', 'And the dark lifts. Not all the way. A little. Enough.'],
+      ['jory', 'There it is. Years I hid down here, and I never once heard all three.'],
+      ['@lamp', 'Boss! The lamp posts! Look at them! It\'s like the ringing got into the glass!'],
+      ['@lamp', 'Every lamp post shines much brighter now. Fire good. Dark bad. Brighter fire, very good.'],
+      ['woolsworth', 'Dark at noon? Not anymore. Moody at noon, tops.'],
+    ],
+
+    fav_ludo_ask: [
+      ['ludo', 'Shepherd. Confession. A small one. Medium one.'],
+      ['ludo', 'When I was Lou, I "borrowed" wool. From the wool pile. An armful at a time. Nobody noticed.'],
+      ['ludo', 'I stuffed it in a sack and hid it in Shadow Canyon. Behind a rock shaped like a disappointed face.'],
+      ['woolsworth', 'Wait. Was some of it MINE?'],
+      ['ludo', 'Some of it was yours. From the spring shearing. It was very good wool. That\'s why I took it.'],
+      ['woolsworth', '...I\'m flattered and furious.'],
+      ['ludo', 'It\'s the flock\'s. I want to give it back. Would you fetch it? Every rock down there looks like it\'s judging me.'],
+    ],
+    fav_ludo_done: [
+      ['ludo', 'That\'s it. That\'s the sack. It\'s heavier than I remember. So is the guilt.'],
+      ['narrator', 'Ludo opens it. Wool. A lot of wool. And four blankets he knitted down there, feeling bad.'],
+      ['ludo', 'Twelve wool, all genuine. I checked twice. And four blankets for the cold lambs.'],
+      ['ludo', 'All of it goes to the flock. Not one tuft for me.'],
+      ['woolsworth', 'Is my wool in one of those blankets?'],
+      ['ludo', 'The softest one.'],
+      ['woolsworth', '...Okay. We\'re good.'],
+    ],
+
+    fav_bram_ask: [
+      ['bram', 'Shepherd. This is for you.'],
+      ['narrator', 'He holds out an old iron key. His hand shakes, just a little.'],
+      ['bram', 'My old barn, on my old hill. Padlocked. I kept it full, and I kept them hungry.'],
+      ['bram', 'Hay. Barrels of water. Blankets I never once put on a lamb. I told myself it was for hard times.'],
+      ['bram', 'It was hard times. For them. Every day.'],
+      ['bram', 'Everything in it is the flock\'s now. Open it. Please. I can\'t. Not yet.'],
+      ['shepherd', 'I\'ll open it, Bram. Thank you.'],
+    ],
+    // Plays when the Shepherd opens Bram's barn.
+    fav_bram_done: [
+      ['narrator', 'The padlock is rusted shut. The key turns anyway.'],
+      ['narrator', 'Inside: hay to the rafters. Barrels of clean water. A stack of blankets, folded and never used.'],
+      ['woolsworth', 'Boss. That\'s a LOT of hay. That\'s worried-about-everything hay.'],
+      ['@sheep', 'Blankets! Real ones! I\'ve never had a blanket!'],
+      ['narrator', 'Bram stands at the door with his hat in his hands. He doesn\'t come in. He doesn\'t leave, either.'],
+      ['bram', 'You have one now. ...You have one now.'],
+      ['shepherd', 'Hay, water and blankets. All of it goes home to the flock. Nobody goes without.'],
+    ],
+
+    fav_bells_ask: [
+      ['woolsworth', 'Boss. Unrelated question. Totally casual. Have you seen any little bells lying around?'],
+      ['woolsworth', 'There was an old flock, way back. Every sheep had a bell. Twelve of them. Tiny. Tinkly.'],
+      ['woolsworth', 'Flock scattered. Bells scattered. All over. Every region. I think about them a normal amount.'],
+      ['baabara', 'He talks about them in his sleep.'],
+      ['woolsworth', 'I talk about MANY things in my sleep, Baabara.'],
+      ['woolsworth', 'Anyway. Find all twelve, bring them home. No big deal. Huge deal. Medium deal.'],
+      ['shepherd', 'I\'ll find every one, Woolsworth.'],
+    ],
+    fav_bells_done: [
+      ['woolsworth', 'Twelve. That\'s all twelve. You found every single one.'],
+      ['narrator', 'Woolsworth takes off his shades. Then he puts them back on, very fast.'],
+      ['woolsworth', 'I\'m fine. Something\'s in my eye. A bell. Twelve bells.'],
+      ['jory', 'Hung them together on the gatepost. Listen. Sounds like one big golden bell.'],
+      ['woolsworth', 'The Golden Bell. When wolves come near the fold, it rings. And they lose their nerve. Every time.'],
+      ['woolsworth', 'It did that for the old flock. ...Now it does it for this one.'],
+      ['shepherd', 'Thank you for telling me about them.'],
+      ['woolsworth', 'Thanks for finding them, Boss. All of them. That\'s kind of your thing.'],
+    ],
+
+    // ============================================================ After the credits
+    pg_start: [
+      ['narrator', 'The morning after. The sun comes up the way it always does. Today, that feels exactly right.'],
+      ['woolsworth', 'Boss. BOSS. The field is full. Where is everybody supposed to nap?'],
+      ['baabara', 'We\'re not done, though. There are still sheep out there. Strays. Wanderers. I can feel it in my wool.'],
+      ['pip', 'So... do we wait here until they come back?'],
+      ['shepherd', 'No. We go and get them.'],
+      ['ramsey', 'I KNEW you\'d say that! I\'m in! What are we in? Still in!'],
+      ['zeb', 'I\'ll keep the count. Let\'s fill this fold to ninety-nine. I want to say that number happy this time.'],
+      ['woolsworth', 'Ugh. Cardio. Forever. ...Fine. Honestly? Best job there is.'],
+    ],
+    // Plays when the ninety-ninth sheep comes home (ninety-nine in the fold, plus Pip).
+    pg_ninetynine: [
+      ['narrator', 'Evening. The Shepherd comes through the gate with one more sheep. Zeb has been waiting all day.'],
+      ['zeb', 'Ninety-six, ninety-seven, ninety-eight...'],
+      ['zeb', '...Ninety-nine.'],
+      ['baabara', 'Count again. I\'m sorry. I have to. Count again.'],
+      ['zeb', 'Ninety-nine! And Pip! Pip\'s HERE! Nobody\'s missing! I\'ve never said that number happy before!'],
+      ['pip', 'I\'m right here! I didn\'t even look at a firefly today! Okay, one. From far away.'],
+      ['woolsworth', 'Last time we got to ninety-nine, I had to be brave. This time I just get to be happy. Better.'],
+      ['ramsey', 'Is it a party? It\'s a party. It\'s the LOUDEST party!'],
+      ['shepherd', 'Rejoice with me. Every one of you is home.'],
+      ['narrator', 'And for the first time anyone could remember, Zeb stopped counting.'],
+    ],
   },
 
   // ------------------------------------------------------------------------------------------------ barks
@@ -1448,6 +1694,72 @@ NN.SCRIPT = {
       lost: ['BAA?', 'HELP!', 'HELLO?', 'HOME?', 'BOSS?', 'SNIFF', 'BAAA?', 'ANYONE?'],
       happy: ['YAY', 'BAA!', 'HOME!', 'YES!', 'WHEE', '+1', 'HAPPY', 'HOORAY!'],
     },
+
+    // What a favor's giver says if you talk to them while the favor is unfinished.
+    favors: {
+      nell: [
+        'DOCK\'S STILL IN THE RIVER! EIGHT TIMBER, SHEPHERD! EIGHT!',
+        'I\'d fix it with fish if fish were planks! THEY ARE NOT!',
+        'No rush! THERE IS A LITTLE RUSH! Eight timber!',
+      ],
+      tobi: [
+        'Red kite! Fish on it! Fish has a face! It\'s in the Marsh, down south!',
+        'I\'d look again, but the Marsh ate my boot. It might want the other one.',
+        'No kite yet? That\'s okay! Kites are good at hiding! Better than me!',
+      ],
+      abe: [
+        'Hm. That lamb. Minnow. Bring her by. ...No hurry.',
+        'Still waiting on that lamb. I\'m good at waiting. Getting old at it, though.',
+        'Fish are biting. Lamb\'s not here. One out of two.',
+      ],
+      zeb: [
+        'Did you give it to them? No? That\'s fine. I\'ll just sweat quietly.',
+        'Nell, Abe, Tobi. Three stops. I\'d go myself, but my face goes all red.',
+        'I counted the purse again. Still right. Still here. No pressure! Some pressure.',
+      ],
+      doc: [
+        'Six herbs. For the chest. Not for my wool. My wool is full.',
+        'Herb chest is still empty. Well. There\'s one sock in it. Don\'t ask.',
+        'The doc is patient. The doc is also running out of wool.',
+      ],
+      hank: [
+        'Lucky hat. Feather. Dent. Pine Woods. You can\'t miss it. You might miss it.',
+        'This regular hat is fine. It\'s FINE. It\'s just not lucky.',
+        'Still at my post! Hatless. Well, luckless. I have a hat.',
+      ],
+      echo: [
+        'Three stones, Boss. Shadow Canyon. Ring \'em gently.',
+        'I rang one by accident once, years back. I can still hear it.',
+        'Dark\'s still down there. Those stones won\'t ring themselves. I checked.',
+      ],
+      ludo: [
+        'The sack. The canyon. The rock with the disappointed face. You\'ll know it. It\'ll know you.',
+        'I keep inspecting fleeces for my own guilt. Still there. The sack would help.',
+        'Returned anything lately? Me neither. The sack is still out there.',
+      ],
+      bram: [
+        'The key\'s yours. The barn is theirs. I just can\'t be the one to open it.',
+        'Still locked? ...Take your time. I took years.',
+        'All that hay, sitting in the dark, doing nothing for anybody. Like I did.',
+      ],
+      bells: [
+        'Little bells. Twelve. Not that I\'m counting. I\'m counting.',
+        'Found any bells? No pressure. I\'m very chill about the bells.',
+        'Every region, Boss. Look low. Bells like to hide in the grass. Like me.',
+      ],
+    },
+
+    // A toast when a single one of Woolsworth's twelve bells is found.
+    bellFound: [
+      'A bell! Ring it! No, don\'t! Okay, ring it a little!',
+      'Woolsworth will pretend he isn\'t thrilled. He\'s thrilled.',
+      'Tink! One more for the old flock.',
+      'Found one! It was hiding under a very rude rock.',
+      'Another bell! Shades is going to lose it.',
+      'I heard it before I saw it. Tink tink!',
+      'Shiny! Can I wear it? No? Okay. Bring it home.',
+      'Bells don\'t stay lost. Not around here.',
+    ],
   },
 
   // ------------------------------------------------------------------------------------------------ sheep names
@@ -1575,6 +1887,12 @@ NN.SCRIPT = {
       text: 'Dark even at noon. I said "I\'m here" a lot down there. I meant it every time.' },
     { id: 'place_highlands', kind: 'place', title: 'The Highlands',
       text: 'Cold wind, good grass, and a long table on the hill where enemies came to dinner and stayed.' },
+
+    // After the credits
+    { id: 'ninety_nine', kind: 'verse', title: 'More Joy', ref: 'Luke 15:7',
+      text: 'I tell you that even so there will be more joy in heaven over one sinner who repents, than over ninety-nine righteous people who need no repentance.' },
+    { id: 'goodness_mercy', kind: 'note', title: 'The Days After',
+      text: 'The days after are the best part. Goodness and Mercy follow us everywhere now, all our days. And every morning I still go out, because there is always one more.' },
   ],
 
   // ------------------------------------------------------------------------------------------------ end credits

@@ -124,6 +124,19 @@ function move(e, dt, r = 4, ghost) {
   if (!ghost) W.collide(e, r, px, py);
 }
 GM.steer = steer; GM.move = move; GM.knock = knock;
+// Walk toward a point, going through the fold gate if needed and around obstacles when the way isn't clear.
+function goTo(e, tx, ty, speed, dt, arrive = 8) {
+  let [nx, ny] = W.nav(e, tx, ty);
+  if (Math.hypot(nx - e.x, ny - e.y) > 24 && !W.clearLine(e.x, e.y, nx, ny)) {
+    e._pt = (e._pt || 0) - dt;
+    if (!e._path || e._pt <= 0 || !e._pathTo || Math.hypot(e._pathTo.x - nx, e._pathTo.y - ny) > 24) { e._path = W.path(e.x, e.y, nx, ny); e._pathTo = { x: nx, y: ny }; e._pt = 2.5; }
+    while (e._path.length > 1 && Math.hypot(e._path[0].x - e.x, e._path[0].y - e.y) < 10) e._path.shift();
+    const w = e._path[Math.min(1, e._path.length - 1)];
+    if (w) { nx = w.x; ny = w.y; arrive = 2; }
+  } else e._path = null;
+  steer(e, nx, ny, speed, dt, arrive);
+}
+GM.goTo = goTo;
 // Does a straight line cross a closed barrier or the river? Used to keep wolves from spawning on the wrong side.
 function crossesWall(x1, y1, x2, y2) {
   const inter = (ax, ay, bx, by, cx, cy, dx, dy) => {
@@ -286,10 +299,11 @@ function goHome(s) { s.state = 'home'; s.wt = 0; emit('home', s); }
 function scare(s, by) {
   if (['chomp', 'scene', 'penned', 'special'].includes(s.state) || s.immune) return;
   const wasOut = !W.insideFold(s);
+  s.wasFlock = ['follow', 'home', 'nap', 'feast'].includes(s.state);
   s.from = { x: by.x, y: by.y }; s.scaredT = wasOut ? 2.4 : 1.4; s.state = 'scared'; s.hurt = true; s.joy = Math.max(0, s.joy - 0.15);
   if (s.job && wasOut) s.job = null;
   pop(s.x, s.y - 18, '!', '#d8574f'); sfx('hurt');
-  if (wasOut) { G.stats.scattered++; emit('scattered', s); }
+  if (wasOut && s.wasFlock) { G.stats.scattered++; emit('scattered', s); }
 }
 GM.scare = scare;
 
@@ -346,7 +360,8 @@ function updSheep(s, dt) {
       steer(s, s.x + dx / d * 40, s.y + dy / d * 40, 76 * sp, dt, 1);
       if (s.scaredT <= 0) {
         if (W.insideFold(s)) s.state = 'home';
-        else { s.state = 'wild'; s.lost = true; s.trust = 0; s.trustMode = 'walk'; s.ax = s.x; s.ay = s.y; s.wt = 0; }
+        else if (s.wasFlock || s.lost) { s.state = 'wild'; s.lost = true; s.trust = 0; s.trustMode = 'walk'; s.ax = s.x; s.ay = s.y; s.wt = 0; }
+        else { s.state = 'wild'; s.trust = 0; s.ax = s.x; s.ay = s.y; s.wt = 0; }
       }
       break;
     }
@@ -438,17 +453,17 @@ function updHome(s, dt, sp) {
       let best = null, bd = 120;
       for (const w of G.wolves) if (!w.flee && dist(w, W.FIRE) < 150) { const d = dist(w, s); if (d < bd) { bd = d; best = w; } }
       if (best) {
-        [tx, ty] = W.nav(s, best.x, best.y);
+        [tx, ty] = [best.x, best.y];
         s.bite -= dt;
         if (bd < 12 && s.bite <= 0) { s.bite = 1.1; best.fear += 1; knock(best, s, 110); pop(best.x, best.y - 14, 'CHOMP', '#f5c542'); sfx('bark'); }
-        steer(s, tx, ty, 66, dt, 6);
+        goTo(s, tx, ty, 66, dt, 6);
         return;
       }
     }
     if (s.job.type === 'doc') {
       const p = G.sheep.find(q => q.hurt && q.state === 'home' && W.insideFold(q));
-      [tx, ty] = p ? [p.x + 11, p.y] : W.nav(s, st.x, st.y);
-    } else [tx, ty] = W.nav(s, st.x, st.y);
+      [tx, ty] = p ? [p.x + 11, p.y] : [st.x, st.y];
+    } else [tx, ty] = [st.x, st.y];
     const at = Math.hypot(s.x - st.x, s.y - st.y) < 16 || s.job.type === 'doc';
     if (at) { s.workT += dt; s.energy -= dt * (s.trait === 'sleepy' ? 0.006 : 0.0045); if (Math.random() < dt * 0.25) s.anim += 3; }
     if (s.energy < 0.2) { s.state = 'nap'; s.napT = rand(14, 22); s.job = null; pop(s.x, s.y - 18, 'NAP', '#cfe3ff', 1.2); return; }
@@ -456,10 +471,10 @@ function updHome(s, dt, sp) {
     // wander home: inside the fold, or out to the meadow by day if the gate is open and it's nice out
     s.wt -= dt;
     if (s.wt <= 0 || !W.inFold(s.tx, s.ty)) { s.tx = rand(F.x + 16, F.x + F.w - 16); s.ty = rand(F.y + 20, F.y + F.h - 20); s.wt = rand(3, 8); }
-    [tx, ty] = W.nav(s, s.tx, s.ty);
+    [tx, ty] = [s.tx, s.ty];
     if (s.trait === 'sleepy' && !night && Math.random() < dt * 0.004 && s.energy < 0.9) { s.state = 'nap'; s.napT = rand(8, 14); return; }
   }
-  steer(s, tx, ty, (working ? 34 : 22) * sp, dt, 6);
+  goTo(s, tx, ty, (working ? 34 : 22) * sp, dt, 6);
   // healing
   if (s.hurt && W.insideFold(s) || s.hurt && G.buildings.some(b => b.type === 'infirmary' && Math.hypot(b.fx - s.x, b.fy - s.y) < 50)) {
     const docs = G.sheep.filter(q => q.job && q.job.type === 'doc' && q.state === 'home').length;
@@ -594,12 +609,13 @@ function updWolf(w, dt) {
     let best = w.target && !w.target.gone && ['wild', 'follow', 'home', 'penned', 'nap'].includes(w.target.state) ? w.target : null, bd = 1e9;
     if (!best) for (const s of G.sheep) {
       if (['scared', 'chomp', 'scene', 'special'].includes(s.state) || (s.job && s.job.type === 'guard') || s.immune) continue;
-      const d = dist(w, s) + (W.insideFold(s) ? 90 : 0);
+      const wild = s.state === 'wild' && !s.lost;
+      if (wild && dist(w, s) > 150) continue; // wolves hunt your flock; a wild sheep only if it's right there
+      const d = dist(w, s) + (W.insideFold(s) ? 90 : 0) + (wild ? 60 : 0);
       if (d < bd && d < 520) { bd = d; best = s; }
     }
     if (best) {
-      const [tx, ty] = W.nav(w, best.x, best.y);
-      steer(w, tx, ty, w.speed * slow, dt, 1);
+      goTo(w, best.x, best.y, w.speed * slow, dt, 1);
       if (dist(w, best) < 9) { scare(best, w); w.rest = 1.7; w.rx = best.x; w.ry = best.y; }
     } else steer(w, G.sh.x, G.sh.y, 40 * slow, dt, 1);
     if (dsh < 10 && G.sh.stun <= 0) { G.sh.stun = 0.4; knock(G.sh, w, 110); w.rest = 1; w.rx = G.sh.x; w.ry = G.sh.y; G.shake = 0.2; sfx('hurt'); }

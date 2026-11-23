@@ -63,7 +63,7 @@ const OBJ = {
     { id: 'zeb', text: 'Find the Collector', done: () => helper('zeb'), key: true, when: () => W.doors.bridge },
     { id: 'well', text: 'Build a Well', prog: () => [GM.count('well'), 1] },
     { id: 'minnow', text: 'Find the lamb on the lake', done: () => joined('minnow'), when: () => !!keyed('minnow') },
-    { id: 'home30', text: 'Bring 30 sheep home', prog: () => [homeN(), 30] },
+    { id: 'home30', text: 'Bring 25 sheep home', prog: () => [homeN(), 25] },
   ],
   3: [
     { id: 'thorns', text: 'Cut a way through the thorn wall', done: () => W.doors.thorns, key: true },

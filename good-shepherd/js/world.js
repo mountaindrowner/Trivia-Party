@@ -369,6 +369,59 @@ function pushFromPoly(e, pts, m) {
   }
 }
 
+// ---------------------------------------------------------------- pathfinding
+// A 16 px walkability grid, rebuilt when doors open or buildings go up. Animals that can't walk straight to where
+// they're going ask for a path and follow its waypoints.
+const NC = 16, NCOLS = Math.ceil(WW / NC), NROWS = Math.ceil(WH / NC);
+let navGrid = null, navKey = '';
+W.navDirty = () => { navKey = ''; };
+const ensureNav = () => {
+  const key = JSON.stringify(W.doors) + ':' + (W.dynamicRects().length);
+  if (key === navKey && navGrid) return;
+  navKey = key; navGrid = new Uint8Array(NCOLS * NROWS);
+  for (let j = 0; j < NROWS; j++) for (let i = 0; i < NCOLS; i++) {
+    const x = i * NC + 8, y = j * NC + 8, e = { x, y };
+    W.collide(e, 4, x, y);
+    navGrid[j * NCOLS + i] = Math.hypot(e.x - x, e.y - y) < 3 ? 1 : 0;
+  }
+};
+const walk = (x, y) => { const i = Math.floor(x / NC), j = Math.floor(y / NC); return i >= 0 && j >= 0 && i < NCOLS && j < NROWS && navGrid[j * NCOLS + i] === 1; };
+W.clearLine = (x1, y1, x2, y2) => {
+  ensureNav();
+  const d = Math.hypot(x2 - x1, y2 - y1), n = Math.ceil(d / 8);
+  for (let k = 1; k < n; k++) { const t = k / n; if (!walk(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false; }
+  return true;
+};
+W.path = (sx, sy, tx, ty, maxNodes = 9000) => {
+  ensureNav();
+  const cl = (v, m) => Math.max(0, Math.min(m - 1, v));
+  const si = cl(Math.floor(sx / NC), NCOLS), sj = cl(Math.floor(sy / NC), NROWS), ti = cl(Math.floor(tx / NC), NCOLS), tj = cl(Math.floor(ty / NC), NROWS);
+  const s0 = sj * NCOLS + si, t0 = tj * NCOLS + ti;
+  const g = new Map([[s0, 0]]), from = new Map(), open = [[Math.hypot(ti - si, tj - sj), s0]];
+  let best = s0, bestH = 1e9, n = 0;
+  while (open.length && n++ < maxNodes) {
+    let mi = 0; for (let k = 1; k < open.length; k++) if (open[k][0] < open[mi][0]) mi = k;
+    const cur = open[mi][1]; open[mi] = open[open.length - 1]; open.pop();
+    const ci = cur % NCOLS, cj = (cur / NCOLS) | 0, h = Math.hypot(ti - ci, tj - cj);
+    if (h < bestH) { bestH = h; best = cur; }
+    if (cur === t0) break;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const ni = ci + di, nj = cj + dj;
+      if (ni < 0 || nj < 0 || ni >= NCOLS || nj >= NROWS) continue;
+      const nk = nj * NCOLS + ni;
+      if (!navGrid[nk] && nk !== t0) continue;
+      if (di && dj && (!navGrid[cj * NCOLS + ni] || !navGrid[nj * NCOLS + ci])) continue;
+      const ng = g.get(cur) + (di && dj ? 1.414 : 1);
+      if (ng < (g.get(nk) ?? 1e9)) { g.set(nk, ng); from.set(nk, cur); open.push([ng + Math.hypot(ti - ni, tj - nj), nk]); }
+    }
+  }
+  const out = []; let k = best;
+  while (k !== undefined && out.length < 600) { out.push({ x: (k % NCOLS) * NC + 8, y: ((k / NCOLS) | 0) * NC + 8 }); k = from.get(k); }
+  out.reverse();
+  if (best === t0) out.push({ x: tx, y: ty });
+  return out;
+};
+
 // Route through the fold gate when the target is on the other side of the fence.
 W.nav = (e, tx, ty) => {
   const a = W.insideFold(e), b = W.inFold(tx, ty);

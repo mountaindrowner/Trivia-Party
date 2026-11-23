@@ -48,6 +48,7 @@ NN.hasSave = () => !!store.get();
 function loadSave() {
   const raw = store.get(); if (!raw) return false;
   let d; try { d = JSON.parse(raw); } catch (e) { return false; }
+  if (!d || d.v !== 2 || !Array.isArray(d.sheep) || !d.res || !Number.isFinite(d.day)) { console.warn('save looked damaged; starting fresh'); return false; }
   W.build(); GM.newGame();
   for (const [k, v] of Object.entries(d)) if (!['doors', 'revealed', 'v'].includes(k)) G[k] = v;
   G.wolves = []; G.frights = []; G.fx = []; G.hearts = []; G.shots = []; G.interact = []; G.prowler = null; G.spawns = [];
@@ -94,8 +95,8 @@ const keys = {};
 const joy = { on: false, ox: 0, oy: 0, x: 0, y: 0, id: null };
 let mouse = { x: 0, y: 0, t: -1e9 }, holdTouch = false;
 const input = () => ({
-  x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x + padMove.x,
-  y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y + padMove.y,
+  x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x + padMove.x + (NN.botInput ? NN.botInput.x : 0),
+  y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y + padMove.y + (NN.botInput ? NN.botInput.y : 0),
 });
 const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex', h: 'help' };
 addEventListener('keydown', e => {
@@ -516,7 +517,9 @@ function frame(now) {
   }
   if ((mode === 'play' || mode === 'build') && NN.FX.hitstop > 0) { /* a beat of hit-stop: the world holds still for a moment */ }
   else if (mode === 'play' || mode === 'build') {
-    GM.update(dt, input());
+    // testing only: NN.timeScale runs extra simulation steps per frame (the playtest bot uses it)
+    const steps = NN.debug && NN.timeScale > 1 ? Math.min(8, NN.timeScale | 0) : 1;
+    for (let i = 0; i < steps && (NN.mode === 'play' || NN.mode === 'build'); i++) { try { GM.update(dt, input()); } catch (e) { NN.GUARD.error(e, 'update'); } if (i) NN.GUARD.tick(dt); }
     // held interactions (cutting thorns, clearing rocks)
     const it = UI.current;
     if (it && it.hold && (keys.e || holdTouch) && NN.mode === 'play') { it.prog = (it.prog || 0) + dt; if (it.prog >= it.hold) { it.prog = 0; GM.useInteract(it); } }
@@ -524,7 +527,8 @@ function frame(now) {
     if (G.lvPending > 0 && NN.mode === 'play' && !UI.busy()) UI.levelUp();
     if (G.day !== lastDay && G.phase === 'day' && NN.mode === 'play') { lastDay = G.day; if (G.day > 1 && NN.save()) UI.saved(); }
   } else if (mode === 'title' || mode === 'dialog' || mode === 'chapter' || mode === 'chend') GM.updateIdle(dt);
-  if (G.sh) draw(now);
+  if (NN.GUARD && (mode === 'play' || mode === 'build' || mode === 'dialog' || mode === 'lesson' || mode === 'levelup' || mode === 'panel')) NN.GUARD.tick(dt);
+  if (G.sh) { try { draw(now); } catch (e) { NN.GUARD.error(e, 'draw'); } }
   if (!$('hud').hidden && G.sh) UI.hud();
   requestAnimationFrame(frame);
 }

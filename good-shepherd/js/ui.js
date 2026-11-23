@@ -152,6 +152,21 @@ function showLesson(l) {
   play('lessonPop', 'page');
 }
 UI.pump = pump;
+// The watchdog calls this twice a second: it puts menus, scenes and the game mode back in step if they ever drift.
+UI.health = note => {
+  const m = NN.mode, dlgEl = $('dialog');
+  if (m === 'dialog' && !dlg) { dlgEl.hidden = true; NN.mode = 'play'; note('dialogue mode with no dialogue'); }
+  if (m !== 'dialog' && dlg && !['chapter', 'chend', 'panel', 'levelup', 'lesson', 'credits', 'end', 'title'].includes(m)) { NN.mode = 'dialog'; dlgEl.hidden = false; note('dialogue was hidden mid-scene'); }
+  if (!dlg && !dlgEl.hidden && m !== 'dialog') { dlgEl.hidden = true; document.getElementById('ui').classList.remove('cine'); note('stray dialogue box'); }
+  if (m === 'lesson' && $('lesson').hidden) { NN.mode = 'play'; note('lesson mode with no lesson'); }
+  if (m === 'levelup' && $('levelup').hidden) { NN.mode = 'play'; note('level-up mode with no cards'); }
+  if (m === 'chapter' && $('chapter').hidden) { NN.mode = 'play'; note('chapter mode with no card'); }
+  if (m === 'chend' && $('chend').hidden) { NN.mode = 'play'; note('chapter-end mode with no card'); }
+  if (m === 'panel' && $('panel').hidden) { NN.mode = 'play'; note('menu mode with no menu'); }
+  if (m === 'build' && !UI.placing) { NN.mode = 'play'; }
+  if (NN.mode === 'play' && queue.length && !dlg) pump();
+  if (NN.mode === 'play' && document.getElementById('ui').classList.contains('cine') && !dlg) document.getElementById('ui').classList.remove('cine');
+};
 function nextLine() {
   dlg.i++;
   let e = dlg.lines[dlg.i];
