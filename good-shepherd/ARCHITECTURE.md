@@ -14,7 +14,9 @@ Load order (see `index.html`):
 | `js/story.js` | Chapter beats, objectives, set pieces, the ending |
 | `js/fx.js` | Game feel: settings (`NN.SET`), camera, hit-stop and flashes, particles, ambient wildlife, color grading, vignette |
 | `js/help.js` | Lessons (first-time tutorial cards), each chapter's "What's new" card, and when to show them |
-| `js/ui.js` | HUD, dialogue, menus (build, flock, quests, map, codex, pause), title |
+| `js/guard.js` | The runtime watchdog: repairs stuck animals, people and pickups, nights that can't finish, and catches errors so the game never freezes (`NN.GUARD.log`) |
+| `js/favors.js` | Depth past the story: favors and their rewards (`G.fav`, `G.perks`), the twelve lost bells, travel with Nell, milestones (localStorage `nn-milestones`), and chapter 8, the post-game |
+| `js/ui.js` | HUD, dialogue, menus (build, flock, goals and favors, map, codex, milestones, travel, pause), title, end screen |
 | `js/main.js` | Boot, input, the frame loop, rendering order, save/load |
 
 ## Design rules (from DESIGN.md §1, enforced everywhere)
@@ -215,3 +217,18 @@ barks: {
 `sabbath`, `feed_my_sheep`, `wolf_and_lamb`, `the_table`, `third_day`, plus one `friend_<key>` entry per named
 friend (`woolsworth baabara ramsey chomp jory goodness mercy zeb nell abe tobi thistle burr hank ludo pip bram`) and
 one `place_<region>` per region (`meadow river thorns road canyon highlands`).
+
+## Favors and the post-game (`js/favors.js`)
+
+- Favors are offered through the normal talk events: `favors.js` wraps `NN.STORY.emit` and handles `talk` /
+  `talkSheep` before the story does, but only after a person's first-meeting and chapter 7 goodbye scenes have played.
+- Each favor in `NN.FAV.FAVORS` has a giver, a `when` gate, a requirement (`need()`, or an item in `G.favItems`), and
+  a `reward()` that usually sets a flag in `G.perks`. `game.js` reads perks through `pk(id)`: `farWhistle`,
+  `patience`, `zebDouble`, `herbChest`, `pitchfork`, `echo`. `favors.js` handles `travel` and `goldenBell` itself.
+- Scenes: `fav_<id>_ask`, `fav_<id>_done`, `fav_zeb_<nell|abe|tobi>`, `fav_echo_stone`, `fav_bramble_done`.
+  Reminders: `barks.favors.<id>`; bell toasts: `barks.bellFound`.
+- Milestones are checked every two seconds of play and stored per device, not per save.
+- Post-game: the end screen calls `NN.FAV.prepPostgame()` (chapter 8, all regions open, saved), and "Keep
+  shepherding" calls `beginPostgame()` (chapter card, then `pg_start`). Chapter 8 has its own goals (`ST.OBJ[8]`),
+  nights scaled to the flock (`ST.nightFor`), and four new wild sheep each dawn until about 112 exist. Ninety-nine
+  home plays `pg_ninetynine` and a second end screen; play continues after it.

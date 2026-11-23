@@ -109,6 +109,7 @@ const FLOCK_OBJ = [
   { id: 'fw_lamb', text: 'Find the lamb who wandered off', done: () => flag('fwLamb') },
   { id: 'fw_home', text: 'Get everyone into the fold by dark', prog: () => [homeN(), Math.max(1, cnt(s => !s.owner && !s.hidden && s.state !== 'special'))] },
 ];
+ST.OBJ = OBJ; ST.readSign = () => readSign(); ST.nearestSign = () => nearestSign();
 ST.objectives = (all) => {
   const list = G.form === 'sheep' ? FLOCK_OBJ : (OBJ[G.chapter] || []);
   return all ? list : list.filter(o => !o.when || o.when() || G.flags['obj_' + G.chapter + '_' + o.id]);

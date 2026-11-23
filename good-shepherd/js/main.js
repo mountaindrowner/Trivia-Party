@@ -72,7 +72,7 @@ NN.continueGame = () => {
   NN.audio.init();
   loading(() => {
     if (!loadSave()) { W.build(); GM.newGame(); startPlay(); ST.start(); return; }
-    startPlay(); ST.load(); UI.banner('Day ' + G.day, 'Welcome back.');
+    startPlay(); ST.load(); UI.banner('Day ' + G.day, 'Welcome back.'); NN.FAV && NN.FAV.onLoad();
   });
 };
 NN.toTitle = () => {
@@ -365,6 +365,12 @@ function draw(now) {
   }
   if (G.tableOut && NN.onScreen(W.SITES.table.x, W.SITES.table.y, 90)) list.push({ y: W.SITES.table.y, d: () => drawProp('feastTable', W.SITES.table.x, W.SITES.table.y) });
   for (const p of G.pickups) if (NN.onScreen(p.x, p.y)) list.push({ y: p.y, d: () => drawProp(p.kind, p.x, p.y) });
+  if (NN.FAV && G.favItems) for (const it of NN.FAV.items()) if (NN.onScreen(it.x, it.y)) list.push({ y: it.y, d: () => {
+    const echo = it.kind.startsWith('echoStone'), bob = echo ? 0 : Math.round(Math.sin(performance.now() / 300 + it.x) * 1.5);
+    if (!echo) { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(X(it.x) - 3, Y(it.y) - 1, 6, 2); }
+    drawProp(it.kind, it.x, it.y + bob - (echo ? 0 : 3));
+    if (!echo && (performance.now() / 120 + it.x) % 14 < 1.2) { ctx.fillStyle = '#fff7e0'; ctx.fillRect(X(it.x) + 3, Y(it.y) - 12 + bob, 1, 1); }
+  } });
   // the fold fence
   const F = W.FOLD;
   if (NN.onScreen(F.x + F.w / 2, F.y + F.h / 2, F.w)) {

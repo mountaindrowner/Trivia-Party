@@ -170,7 +170,7 @@ FX.grade = (ctx, dark) => {
     if (f < 0.22) wash('#ffc878', 0.38 * (1 - f / 0.22));          // golden morning
     else if (f > 0.6) wash('#ffb070', 0.3 * Math.min(1, (f - 0.6) / 0.25)); // warm afternoon
     if (G.sabbath) wash('#ffe0a0', 0.22);
-    if (G.shepLook === 'shepherdDawn' || G.shepLook === 'shepherdScarred') wash('#fff0c8', 0.28);
+    if (G.chapter === 7 && (G.shepLook === 'shepherdDawn' || G.shepLook === 'shepherdScarred')) wash('#fff0c8', 0.28);
   }
   if (region === 'canyon') wash('#7884c8', 0.32);
   if (region === 'highlands') wash('#d8f0ff', 0.12);

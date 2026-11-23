@@ -9,6 +9,7 @@ const { rand, irand, clamp, dist, pick, shuffle } = NN.U;
 const W = NN.WORLD, TAU = NN.TAU;
 const SCRIPT = () => NN.SCRIPT || {};
 const barks = (path, fallback = ['…']) => { let o = SCRIPT().barks; for (const k of path.split('.')) o = o && o[k]; return Array.isArray(o) && o.length ? o : fallback; };
+const pk = id => !!(G.perks && G.perks[id]); // rewards from favors
 const emit = (ev, data) => { if (NN.STORY && NN.STORY.emit) NN.STORY.emit(ev, data); };
 const ui = () => NN.UI;
 
@@ -392,7 +393,7 @@ function updWild(s, dt, sp) {
   };
   const flee = (speed, from = G.sh) => { const dx = s.x - from.x, dy = s.y - from.y, n = Math.hypot(dx, dy) || 1; steer(s, s.x + dx / n * 30, s.y + dy / n * 30, speed, dt, 1); };
   const gain = r => { s.trust += dt * r * S.trustRate * (s.lost ? 2 : 1); if (s.trust >= 1) GM.joinFlock(s); };
-  const shepherd = G.form === 'shepherd';
+  const shepherd = G.form === 'shepherd', pat = pk('patience') ? 1.6 : 1;
   switch (s.trustMode) {
     case 'still': {
       if (d < 76 && shepherd) {
@@ -402,7 +403,7 @@ function updWild(s, dt, sp) {
             s.bite = 2.2; G.sh.stun = 0.7; knock(G.sh, s, 120); G.shake = 0.25; sfx('hurt'); pop(s.x, s.y - 18, 'CHOMP!', '#d8574f');
             emit('bitten', s);
           }
-        } else { steer(s, G.sh.x + (s.x < G.sh.x ? -16 : 16), G.sh.y, 12, dt, 6); gain(0.45); }
+        } else { steer(s, G.sh.x + (s.x < G.sh.x ? -16 : 16), G.sh.y, 12, dt, 6); gain(0.45 * pat); }
         emit('near', s);
       } else wander(14);
       s.bite -= dt;
@@ -410,13 +411,13 @@ function updWild(s, dt, sp) {
     }
     case 'patient': { // hides if you rush in; comes to you if you give it space
       if (d < 44 && shepherd) { flee(48); s.trust = Math.max(0, s.trust - dt * 0.4); }
-      else if (d < 100 && shepherd && !(G.sh.moving && approaching(s))) { steer(s, G.sh.x, G.sh.y, 10, dt, 40); gain(0.5); }
+      else if (d < 100 && shepherd && !(G.sh.moving && approaching(s))) { steer(s, G.sh.x, G.sh.y, 10, dt, 40); gain(0.5 * pat); }
       else wander(14);
       if (d < 100) emit('near', s);
       break;
     }
     case 'whistle': {
-      if (d < 90 && s.whistled > 0 && shepherd) gain(1.6);
+      if (d < (pk('farWhistle') ? 180 : 90) && s.whistled > 0 && shepherd) gain(1.6 * pat);
       else if (d < 30 && shepherd) flee(30);
       else wander(12);
       if (d < 100) emit('near', s);
@@ -479,7 +480,7 @@ function updHome(s, dt, sp) {
   if (s.hurt && W.insideFold(s) || s.hurt && G.buildings.some(b => b.type === 'infirmary' && Math.hypot(b.fx - s.x, b.fy - s.y) < 50)) {
     const docs = G.sheep.filter(q => q.job && q.job.type === 'doc' && q.state === 'home').length;
     const infirm = G.buildings.some(b => b.type === 'infirmary');
-    const rate = docs ? (1 + docs * 0.5) * (infirm ? 1.6 : 1) * (G.res.herbs > 0 ? 1.5 : 1) / 10 : 0;
+    const rate = docs ? (1 + docs * 0.5) * (infirm ? 1.6 : 1) * (G.res.herbs > 0 ? 1.5 : 1) * (pk('herbChest') ? 1.6 : 1) / 10 : 0;
     s.heal += dt * rate;
     if (s.heal >= 1) {
       s.hurt = false; s.heal = 0; pop(s.x, s.y - 18, '+', '#f5c542'); dropHearts(s.x, s.y, 1);
@@ -596,7 +597,7 @@ function updWolf(w, dt) {
   if (G.form === 'shepherd' && dsh < S.lantern) { w.fear += dt * 0.25 * S.lanternLvl; slow = 0.62; }
   if (dist(w, W.FIRE) < fireR() * 0.8) { w.fear += dt * (G.sheep.some(s => s.job && s.job.type === 'lamp') ? 0.45 : 0.15); slow *= 0.75; }
   for (const b of G.buildings) {
-    if (b.type === 'lampPost' && Math.hypot(w.x - b.fx, w.y - b.fy) < 56) { w.fear += dt * 0.3; slow *= 0.8; }
+    if (b.type === 'lampPost' && Math.hypot(w.x - b.fx, w.y - b.fy) < (pk('echo') ? 80 : 56)) { w.fear += dt * (pk('echo') ? 0.45 : 0.3); slow *= 0.8; }
     if (b.type === 'watchtower' && Math.hypot(w.x - b.fx, w.y - b.fy) < 90 && G.sheep.some(s => s.job && s.job.key && s.job.key.includes('@' + b.id + '#'))) { w.fear += dt * 0.2; }
   }
   if (G.choirOn && dist(w, W.FIRE) < 220) w.fear += dt * 0.12;
@@ -691,9 +692,10 @@ GM.addDog = addDog;
 GM.whistle = () => {
   const sh = G.sh;
   if (sh.whistleT > 0) return;
-  sh.whistleT = 3; sfx(G.form === 'sheep' ? 'baa' : 'whistle'); ring(sh.x, sh.y - 12, 90, '#f5c542', 0.6);
+  const WR = pk('farWhistle') && G.form === 'shepherd' ? 180 : 90;
+  sh.whistleT = 3; sfx(G.form === 'sheep' ? 'baa' : 'whistle'); ring(sh.x, sh.y - 12, WR, '#f5c542', 0.6);
   for (const s of G.sheep) {
-    if (dist(s, sh) > 90) continue;
+    if (dist(s, sh) > WR) continue;
     if (s.state === 'wild') {
       s.whistled = 4;
       if (s.trustMode === 'walk') s.trust = Math.min(0.99, s.trust + (s.lost ? 0.6 : 0.3));
@@ -854,7 +856,7 @@ function dawnTally() {
     if (!s.job) { s.workT = 0; continue; }
     const share = Math.min(1, s.workT / (dayLen * 0.45));
     switch (s.job.type) {
-      case 'hauler': add('hay', 7 * share * boost); break;
+      case 'hauler': add('hay', 7 * share * boost * (pk('pitchfork') ? 1.5 : 1)); break;
       case 'wrangler': add('water', (s.job.key.includes('@pond') ? 8 : 12) * share * boost); break;
       case 'gardener': add('herbs', 3 * share * boost); break;
       case 'gatherer': add('timber', 3 * share * boost); add('stone', 1.4 * share * boost); break;
@@ -863,7 +865,7 @@ function dawnTally() {
     s.workT = 0;
   }
   if (GM.count('olivePress')) add('oil', 2 * GM.count('olivePress'));
-  if (G.helpers.includes('zeb')) { add('timber', 2); add('stone', 1); add('hay', 2); add('water', 2); }
+  if (G.helpers.includes('zeb')) { const z = pk('zebDouble') ? 2 : 1; add('timber', 2 * z); add('stone', 1 * z); add('hay', 2 * z); add('water', 2 * z); }
   const home = G.sheep.filter(s => ['home', 'nap', 'feast'].includes(s.state) || (s.state === 'follow' && !s.owner));
   const cap = GM.capacity();
   shuffle(home);

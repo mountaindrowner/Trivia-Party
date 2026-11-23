@@ -289,6 +289,15 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
 #ui.big .pane, #ui.big .item, #ui.big .obj, #ui.big .set { font-size: 9px; }
 #ui.big #toast, #ui.big .goal, #ui.big .prompt { font-size: 8.5px; }
 @media (prefers-reduced-motion: reduce) { .panel, .lesson, .card2.enter, #dialog.enter, #cards .card, .logo, .spinner i, .goal.pulse { animation: none; } }
+
+#milestone{position:absolute;right:6px;top:30px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:4px 8px;background:#2a1a10ee;border:1px solid #f5c542;color:#fff7e0;font-size:7px;transform:translateX(130%);transition:transform .35s cubic-bezier(.2,1.4,.4,1);pointer-events:none;z-index:30}
+#milestone.on{transform:none}
+#milestone b{color:#f5c542;font-size:6px;letter-spacing:1px}
+.menu-sub{color:var(--muted);font-size:7px;margin:0 0 4px;text-align:center;max-width:220px}
+.btnrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+h3.sub{font-size:8px;margin:8px 0 2px;color:var(--gold, #f5c542)}
+.obj.got i{color:#d9a520}
+.obj.got b{color:#9a6a10}
 </style>
 </head>
 <body>
@@ -332,6 +341,7 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
     </div>
     <div id="chapter" class="screen clickable" hidden></div>
     <div id="chend" class="screen" hidden></div>
+    <div id="milestone"></div>
     <div id="end" class="screen" hidden></div>
     <div id="credits" class="screen" hidden><div class="roll" id="roll"></div></div>
     <div id="cine"><i></i><i></i></div>
@@ -349,6 +359,7 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
 <script src="js/help.js"></script>
 <script src="js/fx.js"></script>
 <script src="js/guard.js"></script>
+<script src="js/favors.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

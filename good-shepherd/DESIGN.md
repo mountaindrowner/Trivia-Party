@@ -231,7 +231,7 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
 
 ## 10. What's built (this folder)
 
-`index.html` plays the whole story, all seven chapters, in about two hours. See `ARCHITECTURE.md` for the code.
+`index.html` plays the whole story, all seven chapters, and an open-ended eighth chapter after the credits. See `ARCHITECTURE.md` for the code.
 
 - **World:** nine regions in a 3×3 map (2640×1980 px). Each chapter opens one: you build a bridge, cut through a
   thorn wall, clear a rockslide, and walk down a canyon path and over a ridge. Unreached regions are under fog.
@@ -266,6 +266,14 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
   how to get in, new buildings, new dangers, and who you'll meet. How to play (H) keeps every lesson and the key
   list. Goals only appear once they're possible. Lessons can be turned off in the pause menu.
 - **Sound:** 16 synthesized music tracks and sound effects.
+- **Favors:** eleven optional side quests from the people you meet. Each has a reward that changes how you play:
+  travel by signpost, a longer whistle, faster trust, double gifts from Zeb, faster healing, more hay, brighter lamp
+  posts, a stash of wool, a barn full of supplies, a happier flock, and the Golden Bell that unnerves wolves.
+- **Collectibles:** twelve lost bells hidden one or two to a region.
+- **Milestones:** 24, kept on the device across playthroughs, listed in the pause menu.
+- **After the credits:** "Keep shepherding" opens chapter 8 with every region open, new strays each morning, and
+  one goal: ninety-nine sheep home.
+- **Watchdog:** `guard.js` quietly fixes stuck animals and nights that can't end, and keeps errors from freezing play.
 
 **Controls:**
 
@@ -286,7 +294,7 @@ Open the page with `#debug` on the address to get the testing shortcut: N skips 
 ## 11. Roadmap
 
 1. **Playtest and tune:** wolf counts, day length, building costs, and how many sheep each chapter offers.
-2. **Depth:** fences and pens you can draw, sheep friendships, more tasks for the flock days.
+2. **Depth:** fences and pens you can draw, sheep friendships, more favors and more for the post-game.
 3. **Length:** stretch chapters toward the 10-hour target with side stories for the river folk and the Highlands.
 4. **Controller support**, then itch.io (like Trivia Holy Party) and maybe Steam.
 

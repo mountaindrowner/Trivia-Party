@@ -399,7 +399,7 @@ function frame(title, sub, body) {
   return el.firstChild;
 }
 function renderPanel() {
-  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp, settings: renderSettings }[panel] || (() => {}))();
+  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp, settings: renderSettings, menu: renderMenu, milestones: renderMilestones }[panel] || (() => {}))();
 }
 const PROP_FOR = { feeder: 'feeder', trough: 'trough', lean: 'lean', workshop: 'workshop', hayBarn: 'hayBarn', well: 'well', watchtower: 'watchtower', lampPost: 'lampPostLit', herbGarden: 'herbGarden', infirmary: 'infirmary', loom: 'loom', treadmill: 'treadmill0', choirStage: 'choirStage', olivePress: 'olivePress' };
 NN.PROP_FOR = PROP_FOR;
@@ -504,8 +504,42 @@ function renderGoals() {
   const p = frame(`Chapter ${n}: ${c.title}`, `Day ${G.day}`, `<div class="scroll">${c.verse ? `<div class="verse">${esc(c.verse)} (${esc(c.ref || '')})</div>` : ''}<div id="olist"></div></div>`);
   p.querySelector('#olist').innerHTML = objs.map(o => { const s = NN.STORY.objState(o); return `<div class="obj${s.done ? ' done' : ''}${o.key ? ' key' : ''}"><i>${s.done ? '✓' : '·'}</i><span>${esc(s.text)}</span></div>`; }).join('') +
     (NN.STORY.hiddenGoals() ? `<div class="obj"><i>…</i><span style="color:var(--muted)">More goals will turn up as the chapter goes on.</span></div>` : '') +
-    `<div class="obj"><i></i><span style="color:var(--muted)">Bold goals move the story along. The rest make the farm stronger. The one at the top shows in the corner of the screen.</span></div>`;
+    `<div class="obj"><i></i><span style="color:var(--muted)">Bold goals move the story along. The rest make the farm stronger. The one at the top shows in the corner of the screen.</span></div>` + favorsHtml();
 }
+function favorsHtml() {
+  const FV = NN.FAV; if (!FV || !G.fav) return '';
+  const rows = Object.entries(FV.FAVORS).filter(([id]) => G.fav[id]).map(([id, f]) => {
+    const done = G.fav[id] === 'done', ready = !done && ((f.need && f.need()) || G.flags['got_' + id]);
+    return `<div class="obj${done ? ' done' : ''}"><i>${done ? '✓' : ready ? '!' : '·'}</i><span>${esc(f.needText)}${f.progress && !done ? ' (' + esc(f.progress()) + ')' : ''}${ready ? ' · go and tell them' : ''}</span></div>`;
+  });
+  if (G.fav.bramble === 'done') rows.push(`<div class="obj done"><i>✓</i><span>The Bramble Bunch, together again</span></div>`);
+  if (!rows.length) return `<h3 class="sub">Favors</h3><div class="obj"><i></i><span style="color:var(--muted)">People around the land will ask for help. Talk to them now and then.</span></div>`;
+  return `<h3 class="sub">Favors</h3>` + rows.join('') + `<div class="obj"><i></i><span style="color:var(--muted)">Favors are optional. Each one comes with a reward that helps the farm.</span></div>`;
+}
+let menuData = null;
+UI.menu = (title, sub, opts) => { menuData = { title, sub, opts }; if (panel === 'menu') renderPanel(); else UI.openPanel('menu'); };
+function renderMenu() {
+  const el = $('panel'), m = menuData || { title: '', opts: [] };
+  el.innerHTML = `<div class="panel wood menu"><h2>${esc(m.title)}</h2>${m.sub ? `<p class="menu-sub">${esc(m.sub)}</p>` : ''}</div>`;
+  el.hidden = false;
+  const box = el.firstChild;
+  m.opts.concat([{ label: 'Never mind', act: () => {} }]).forEach((o, i) => {
+    const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = o.label;
+    b.addEventListener('click', () => { UI.closePanel(); o.act(); }); box.append(b);
+    if (!i) setTimeout(() => b.focus({ preventScroll: true }), 0);
+  });
+}
+function renderMilestones() {
+  const list = NN.FAV ? NN.FAV.milestones() : [], got = list.filter(m => m.got).length;
+  const p = frame('Milestones', `${got} of ${list.length} · kept on this device across every playthrough`, `<div class="scroll" id="mlist"></div>`);
+  p.querySelector('#mlist').innerHTML = list.map(m => `<div class="obj${m.got ? ' got' : ''}"><i>${m.got ? '★' : '·'}</i><span><b>${esc(m.name)}</b> · ${esc(m.desc)}</span></div>`).join('');
+}
+UI.milestone = name => {
+  const el = $('milestone'); if (!el) { UI.toast('★ Milestone: ' + name, 4); return; }
+  el.innerHTML = `<b>★ MILESTONE</b><span>${esc(name)}</span>`; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  play('goal', 'level');
+  clearTimeout(UI._msT); UI._msT = setTimeout(() => el.classList.remove('on'), 4200);
+};
 function renderMap() {
   const p = frame('Map', 'You are the blinking dot. Gold dots are lost sheep.', `<canvas id="mapc" width="320" height="142"></canvas>`);
   const c = p.querySelector('#mapc'), x = c.getContext('2d');
@@ -605,6 +639,7 @@ function renderPause() {
   add('Goals (Q)', () => { UI.closePanel(); UI.openPanel('goals'); });
   add('Map (M)', () => { UI.closePanel(); UI.openPanel('map'); });
   add("Shepherd's Notes (C)", () => { UI.closePanel(); UI.openPanel('codex'); });
+  add('Milestones', () => { UI.closePanel(); UI.openPanel('milestones'); });
   add('Settings', () => { UI.closePanel(); UI.openPanel('settings'); });
   add('Save game', () => { if (NN.save()) UI.toast('Saved on this device.'); else UI.toast('You can save in the daytime.'); });
   add('Save and quit to title', () => { NN.save(); UI.closePanel(); NN.toTitle(); });
@@ -625,6 +660,7 @@ UI.title = hasSave => {
   if (!hasSave) ng.focus({ preventScroll: true });
   add('Settings', () => UI.openPanel('settings'));
   add('How to play', () => UI.openPanel('help'));
+  if (NN.FAV && NN.FAV.milestones().some(m => m.got)) add('Milestones', () => UI.openPanel('milestones'));
   const lc = $('logo');
   if (lc && !lc.dataset.done) { try { const pr = NN.prop('logo'), x = lc.getContext('2d'); lc.width = pr.img.width; lc.height = pr.img.height; x.imageSmoothingEnabled = false; x.drawImage(pr.img, 0, 0); lc.hidden = false; lc.dataset.done = 1; $('title-h1').hidden = true; } catch (e) { /* text title stays */ } }
 };
@@ -644,17 +680,24 @@ UI.credits = () => {
   UI._creditsEnd = setTimeout(UI.endScreen, secs * 1000);
   el.onclick = () => { clearTimeout(UI._creditsEnd); UI.endScreen(); };
 };
-UI.endScreen = () => {
+UI.endScreen = kind => {
   $('credits').hidden = true;
+  const ninety = kind === 'ninetynine';
   NN.mode = 'end';
-  const st = G.stats, n = G.sheep.filter(s => !s.owner).length;
+  const st = G.stats, n = G.sheep.filter(s => !s.owner && !s.hidden).length;
   const el = $('end');
-  el.innerHTML = `<div class="card2 wood"><div class="no">THE END</div><h2>${n} in the fold</h2>
+  el.innerHTML = `<div class="card2 wood"><div class="no">${ninety ? 'NINETY-NINE' : 'THE END'}</div><h2>${n} in the fold</h2>
     <div class="stats"><span>Days</span><b>${G.day}</b><span>Lost sheep found again</span><b>${st.found}</b><span>Wolves turned away</span><b>${st.turned}</b><span>Frights faded</span><b>${st.faded}</b><span>Lambs born</span><b>${st.lambs}</b><span>Buildings raised</span><b>${st.built}</b><span>Forgiveness offered</span><b>${st.forgiven}</b><span>Times it was refused</span><b>0</b></div>
-    <p>"Rejoice with me, for I have found my sheep which was lost!"<cite>Luke 15:6</cite></p>
-    <button class="btn" type="button" id="end-title">Back to the title</button></div>`;
+    ${ninety ? `<p>"There will be more joy in heaven over one sinner who repents than over ninety-nine righteous persons who need no repentance."<cite>Luke 15:7</cite></p>`
+      : `<p>"Rejoice with me, for I have found my sheep which was lost!"<cite>Luke 15:6</cite></p><p class="menu-sub">The story is over, but the farm isn't. There are still sheep out there.</p>`}
+    <div class="btnrow"><button class="btn" type="button" id="end-go">Keep shepherding</button><button class="btn" type="button" id="end-title">Back to the title</button></div></div>`;
   el.hidden = false;
-  NN.clearSave && NN.clearSave();
+  if (!ninety && NN.FAV) NN.FAV.prepPostgame(); else NN.save();
+  $('end-go').focus({ preventScroll: true });
+  $('end-go').addEventListener('click', () => {
+    el.hidden = true;
+    if (ninety) { $('hud').hidden = false; NN.mode = 'play'; NN.audio.track('home'); pump(); } else NN.FAV.beginPostgame();
+  });
   $('end-title').addEventListener('click', () => { el.hidden = true; NN.toTitle(); });
 };
 })();
