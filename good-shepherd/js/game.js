@@ -857,7 +857,7 @@ function dawnTally() {
     const share = Math.min(1, s.workT / (dayLen * 0.45));
     switch (s.job.type) {
       case 'hauler': add('hay', 8 * share * boost * (pk('pitchfork') ? 1.5 : 1)); break;
-      case 'wrangler': add('water', (s.job.key.includes('@pond') ? 8 : 12) * share * boost); break;
+      case 'wrangler': add('water', (s.job.key.includes('@pond') ? 10 : 14) * share * boost); break;
       case 'gardener': add('herbs', 3 * share * boost); break;
       case 'gatherer': add('timber', 3 * share * boost); add('stone', 1.4 * share * boost); break;
       case 'knitter': { const n = Math.min(Math.floor(G.res.wool / 2), Math.round(1.5 * share * boost)); if (n > 0) { G.res.wool -= n * 2; add('blanket', n); } break; }
