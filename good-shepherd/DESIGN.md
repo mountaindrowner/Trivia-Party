@@ -165,38 +165,41 @@ Redeemed people join the farm in a job that turns their old life around.
 
 ## 7. Story: seven chapters on Psalm 23
 
-About 10 hours: 7 chapters × about 10 in-game days × about 8.5 minutes per day-and-night ≈ 10 hours, plus scenes.
+The game as built runs 26 in-game days. A day is about 2½ minutes and a night about 1 minute, so a playthrough is
+about 2 hours. A longer target game (about 10 hours) would stretch each chapter to about 10 days.
 
-| # | Chapter | Psalm 23 | Biome | New system | Main foe | Redemption | Set piece |
-|---|---|---|---|---|---|---|---|
-| 1 | **Green Pastures** | v. 2a | Meadows | Trust, fold, first jobs | Wolves, Jory | Chomp, Jory | The first night |
-| 2 | **Still Waters** | v. 2b | Rivers and marsh | Wells, channels, troughs | The Collector | The Collector | Tearing the fences down |
-| 3 | **He Restores My Soul** | v. 3a | Thorn hills | Infirmary, herbs, Docs | Night Frights | A whole flock of hurt sheep | The thorn maze rescue |
-| 4 | **Paths of Righteousness** | v. 3b | Old road | Hay lines, carts, treadmills | Hank the Hireling | Hank | Hank's flock in a storm |
-| 5 | **Valley of the Shadow** | v. 4 | Dark canyon | Lamps on posts; long nights | Wolf packs, the Wolf in Wool | Wolf in Wool | **Leave the 99**: the fold is full, one is missing, and the game makes you go |
-| 6 | **A Table Before My Enemies** | v. 5 | Highlands | Feasts; every redeemed foe at one table | Bram the Bitter Shepherd | Bram | The feast, with enemies invited to dinner |
-| 7 | **The House of the Lord** | v. 6 | Home valley | Everything | The Prowler | (section 8) | (section 8) |
+| # | Chapter | Days | Psalm 23 | Region | New system | Foe | Redemption | Set piece |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **Green Pastures** | 1–3 | v. 1–2a | The Home Meadow | Trust, the fold, first jobs, building | Wolves, Jory the Thief | Chomp, Jory | The first night |
+| 2 | **Still Waters** | 4–7 | v. 2b | The Riverlands and the Marsh | The bridge, wells, the river folk | Zeb the Collector | Zeb ("come down, I'm staying at your house today") | Minnow on the lake islet; the first Sabbath |
+| 3 | **He Restores My Soul** | 8–11 | v. 3a | The Thorn Hills | Infirmary, herbs, lamp posts | Night Frights | The Bramble Bunch, old Thistle | The thorn maze |
+| 4 | **Paths of Righteousness** | 12–14 | v. 3b | The Old Road and the Pine Woods | Hay barns, the treadmill, the Foreman | Storm and alpha wolves | Hank the Hireling | Hank runs; you keep his flock |
+| 5 | **The Valley of the Shadow** | 15–18 | v. 4 | Shadow Canyon (dark even at noon) | Blankets, long cold nights | The Wolf in Wool | Ludo | **Leave the 99**: the fold is full, Pip is missing, and the night won't end until Pip is home |
+| 6 | **A Table Before My Enemies** | 19–21 | v. 5 | The Highlands | Olive press, choir | Bram the Bitter Shepherd | Bram | The Sabbath table, with every redeemed enemy at it |
+| 7 | **The House of the Lord** | 22–26 | v. 6 | Home | Everything | The Prowler | (section 8) | (section 8) |
+
+Every seventh day is a Sabbath: no work, a feast at a long table, shearing (good for the sheep), new lambs if the
+flock is happy, and a quiet night.
 
 Each chapter card shows the chapter name big, with one verse line underneath in small type. That's the only
-scripture on screen during play.
+scripture on screen during play; the rest is in *The Shepherd's Notes* (the codex).
 
 ## 8. The ending (John 10:11)
 
-The last night of Chapter 7 is the hardest night in the game. The Prowler comes for the whole flock, and the
-Shepherd stands in the gate of the fold ("I am the gate," John 10:9) and won't move.
+The last night of Chapter 7 (night 24) is the hardest night in the game. The Prowler comes for the whole flock, and
+the Shepherd stands in the gate of the fold ("I am the gate," John 10:9) and won't move.
 
 1. **The gate.** You can't leave the gate. Everything you've built and everyone you've redeemed fights the night
-   with you: Jory on watch, Hank holding his post, Chomp guarding, the choir singing. It works, and the flock
-   is safe. But the Prowler gets through to the Shepherd. The screen goes dark. It's handled quietly, with nothing
+   with you. The flock is safe. But the Prowler gets through to the Shepherd. It's handled quietly, with nothing
    graphic: the lantern drops and the music stops.
-2. **Three days as the flock.** Control passes to the sheep. For three short in-game days you play the flock you
-   cared for: Woolsworth, Baabara, Chomp, Jory. You run the farm the way He taught you to, and you go out after
-   lost sheep yourselves. It's harder without Him, and the jokes get quieter. This is the payoff of "He cares for
-   the sheep so they can care for the sheep."
-3. **The third morning.** The fold gate is open, there's light, and He's back. The pixel art shows the scars on His
-   hands for the first time. The Prowler is gone for good.
-4. **Feed my sheep.** One last line, to whichever sheep you played most as (John 21:17). Then the credits: every
-   sheep you found, by name, walking into the fold, with the wolves lying down among the lambs.
+2. **Until the third day, as the flock.** Control passes to Woolsworth. For a day and a night you play the flock
+   he cared for: keep the fire going, find the lamb who wandered off, get everyone home, and keep watch together.
+   It's harder without Him, and the jokes get quieter. This is the payoff of "He cares for the sheep so they can
+   care for the sheep."
+3. **The third morning** (day 26). The fold gate is open, there's light, and He's back. The pixel art shows the scars
+   on His hands. The Prowler is gone for good.
+4. **Feed my sheep.** (John 21:17.) Then the wolves lie down among the lambs (Isaiah 11:6), and the credits roll
+   with every sheep you found, by name.
 
 Final card: *"I am the good shepherd. The good shepherd lays down his life for the sheep." (John 10:11)*
 
@@ -226,35 +229,57 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
 - **Writing voice:** the sheep are spunky, sarcastic and loyal ("WOLF. That's a wolf. I'm not being dramatic.").
   The Shepherd says very little, always kindly and never sarcastic. The humor is never at a hurt character's expense.
 
-## 10. The prototype in this folder
+## 10. What's built (this folder)
 
-`index.html` plays a vertical slice of **Chapter 1: Green Pastures**, three days and three nights (about 10 minutes).
+`index.html` plays the whole story, all seven chapters, in about two hours. See `ARCHITECTURE.md` for the code.
 
-- A meadow with the Shepherd's hut, a fenced fold with a shelter, hay and a campfire, a pond, paths and trees.
-- Find and befriend 20+ wild sheep and walk them through the gate into the fold.
-- Day and night cycle with stepped-light darkness; wolves at night; sheep left outside get scattered, never killed,
-  and you go find them again.
-- Auto-firing staff and lantern, hearts, and level-up picks: Longer Staff, Quick Hands, Brighter Lantern, Swift
-  Sandals, Kind Voice, Sling, Harp Song, Goodness, Mercy.
-- Jobs that switch on as the fold fills: Lookout (3 sheep home), Doc (5), Lamplighter (8), Guard (Chomp).
-- **Chomp**, the hurt sheep who bites (stand still and let him come), and **Jory the Thief** on night 3. Both
-  get the one-button FORGIVE scene.
-- Chiptune music and sound effects, all synthesized; keyboard and touch controls.
+- **World:** nine regions in a 3×3 map (2640×1980 px). Each chapter opens one: you build a bridge, cut through a
+  thorn wall, clear a rockslide, and walk down a canyon path and over a ridge. Unreached regions are under fog.
+- **Flock:** up to about 100 sheep. Each has a name, a personality (brave, dramatic, sleepy, nerdy, chatty,
+  hungry), hunger, thirst, energy, joy and a blanket in the cold. There are six ways to win trust:
+  - walk near;
+  - stand still for the hurt ones;
+  - give them space for the shy ones;
+  - whistle for the frightened ones;
+  - bring a gift;
+  - let the dogs help with the stubborn ones.
+- **Jobs:** sheep volunteer for 11 jobs when they're healthy and nap when they're tired. Ask them through the
+  Flock panel; they can say no.
+- **Farm:** 14 buildings and 8 resources (timber, stone, hay, water, wool, herbs, oil, blankets). Pickups lie
+  around each region. A morning report tallies production, feeding, beds and joy. Happy sheep leave hearts.
+  Sabbaths bring shearing and lambs.
+- **Nights:** wolves, alpha wolves, Night Frights that only light can chase, a storm, cold nights, and the Prowler.
+- **Kit:** staff, lantern and whistle, plus 12 level-up Knacks (including the Rod, Oil, Bread & Fish, and the dogs
+  Goodness and Mercy). There are four evolutions: City on a Hill, Rod and Staff, Five Smooth Stones, and Songs in
+  the Night.
+- **People:** the river folk, Zeb, Hank, Ludo, Bram and Jory. Five redemption scenes with one Forgive button each,
+  plus Chomp, Thistle and the Bramble Bunch. Redeemed friends live on the farm and help.
+- **Interface:** goals tracker, build menu, flock panel, map, *The Shepherd's Notes* (46 entries), pause menu,
+  autosave every dawn, credits.
+- **Sound:** 16 synthesized music tracks and sound effects.
 
-**Controls:** WASD or arrow keys to move (on touch, drag anywhere). Space whistles. M mutes, P pauses.
-`N` skips to the next dawn or dusk (a testing shortcut).
+**Controls:**
+
+| Action | Keyboard | Touch |
+|---|---|---|
+| Move | WASD or arrow keys | Drag |
+| Use / talk | E (hold E for long actions) | Use |
+| Whistle | Space | Whistle |
+| Build | B | Build |
+| Flock | F | Flock |
+| Goals | Q | |
+| Map | M | |
+| Notes | C | |
+| Menu | Esc | Menu |
+
+Open the page with `#debug` on the address to get the testing shortcut: N skips to the next dusk or dawn.
 
 ## 11. Roadmap
 
-1. **Slice polish (this folder):** tune the first night, add the build menu (fences, troughs, lamp posts), and
-   save the game on the device.
-2. **Farm layer:** tile grid, care chains for hay and water, job assignment UI, sheep energy and naps, the
-   Sabbath day.
-3. **Chapters 2–3:** rivers, the Collector, the Infirmary chain, Night Frights.
-4. **Engine decision:** stay in plain web canvas (works on phones and itch.io like Trivia Holy Party), or move to
-   Godot before the farm grid gets big. Recommendation: stay on web through Chapter 2, then decide.
-5. **Chapters 4–7, the ending, the codex.**
-6. **Steam/itch release** with controller support.
+1. **Playtest and tune:** wolf counts, day length, building costs, and how many sheep each chapter offers.
+2. **Depth:** fences and pens you can draw, sheep friendships, more tasks for the flock days.
+3. **Length:** stretch chapters toward the 10-hour target with side stories for the river folk and the Highlands.
+4. **Controller support**, then itch.io (like Trivia Holy Party) and maybe Steam.
 
 ## 12. Questions for the owner
 
