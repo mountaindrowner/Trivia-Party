@@ -12,6 +12,7 @@ Load order (see `index.html`):
 | `js/world.js` | The map: regions, ground painting, scenery placement, chapter gates, collision, navigation |
 | `js/game.js` | Simulation: the Shepherd and kit, sheep, farm and resources, foes, NPCs, day/night |
 | `js/story.js` | Chapter beats, objectives, set pieces, the ending |
+| `js/fx.js` | Game feel: settings (`NN.SET`), camera, hit-stop and flashes, particles, ambient wildlife, color grading, vignette |
 | `js/help.js` | Lessons (first-time tutorial cards), each chapter's "What's new" card, and when to show them |
 | `js/ui.js` | HUD, dialogue, menus (build, flock, quests, map, codex, pause), title |
 | `js/main.js` | Boot, input, the frame loop, rendering order, save/load |
@@ -107,6 +108,15 @@ Keep the API in the file header. Tracks (keys of `NN.TRACKS`): `title meadow riv
 home night frights storm sabbath boss sorrow morning credits`. Weather is part of a track (the `storm` track has rain
 noise). Sound effects (`NN.sfx.*`): existing `heart join swing bark bell whistle hurt yelp level baa forgive`, plus
 `build collect chop thunder fright roar splash door menu select cancel page munch gulp snore cheer step`.
+
+Polish additions:
+- **Volume:** `NN.audio.setMusicVolume(v)` / `setSfxVolume(v)` (0..1, saved). The sfx volume also sets the ambience
+  and dialogue voices.
+- **Ducking:** `NN.audio.duck(on)` lowers the music under dialogue.
+- **Ambience:** `NN.audio.ambience('meadow' | 'night' | 'river' | 'canyon' | 'storm' | 'none')` crossfades the
+  ambient bed. main.js picks it by region and time of day.
+- **Voices:** `NN.sfx.voice(kind, i)` makes typewriter blips for `shepherd sheep lamb human gruff narrator`.
+- **More sfx:** `footstep hover open close goal chapter lessonPop pickupWood pickupStone hitWolf poof sparkle`.
 
 ## Content contract: words (`js/script.js`)
 

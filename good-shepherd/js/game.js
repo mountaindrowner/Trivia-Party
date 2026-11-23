@@ -519,7 +519,7 @@ function updPickups() {
       p.got = true;
       const gift = {};
       for (const [k, [a, b]] of Object.entries(PICKUP[p.kind])) gift[k] = irand(a, b);
-      GM.give(gift, p.x, p.y); sfx('collect');
+      GM.give(gift, p.x, p.y); if (!NN.sfx || !NN.sfx.pickupWood) sfx('collect');
       emit('pickup', p);
     }
   }
@@ -725,7 +725,7 @@ function updShepherd(dt, input) {
   if (sh.staffT <= 0) {
     const hit = G.wolves.filter(w => !w.flee && dist(w, sh) < S.staffRange);
     if (hit.length) {
-      for (const w of hit) { w.fear += 1; knock(w, sh, 120); if (S.evo.rodstaff) w.root = 1; }
+      for (const w of hit) { w.fear += 1; knock(w, sh, 120); if (S.evo.rodstaff) w.root = 1; emit('staffHit', w); }
       sh.swing = 0.25; sh.staffT = S.staffCd; sfx('swing');
       G.fx.push({ kind: 'arc', x: sh.x, y: sh.y - 12, r: S.staffRange, t: 0, life: 0.25, a: Math.atan2(hit[0].y - sh.y, hit[0].x - sh.x) });
     } else sh.staffT = 0.08;

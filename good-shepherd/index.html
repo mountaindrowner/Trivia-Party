@@ -239,6 +239,56 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
   #banner.on { animation: none; opacity: 1; }
   .btn.forgive, #dnext { animation: none; }
 }
+
+/* Polish: motion, feedback and settings */
+@keyframes pop { from { opacity: 0; transform: scale(.94) translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes bumpUp { 0% { transform: scale(1); } 35% { transform: scale(1.3); color: #3f7a2e; } 100% { transform: scale(1); } }
+@keyframes dipDown { 0% { transform: none; } 35% { transform: translateY(1px); color: var(--rose); } 100% { transform: none; } }
+@keyframes pulse { 0% { box-shadow: inset 0 0 0 1px var(--parch-dk), 0 0 0 1px var(--bark), 0 0 0 3px var(--wood), 0 0 0 4px var(--bark), 0 0 0 4px rgba(245,197,66,.9); } 100% { box-shadow: inset 0 0 0 1px var(--parch-dk), 0 0 0 1px var(--bark), 0 0 0 3px var(--wood), 0 0 0 4px var(--bark), 0 0 0 12px rgba(245,197,66,0); } }
+@keyframes spin { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.panel { animation: pop .16s ease-out; }
+.lesson, .card2.enter { animation: pop .22s ease-out; }
+#dialog.enter { animation: rise .18s ease-out; }
+#cards .card { animation: rise .25s ease-out both; }
+#cards .card:nth-child(2) { animation-delay: .07s; }
+#cards .card:nth-child(3) { animation-delay: .14s; }
+#toast.on { animation: rise .2s ease-out; }
+.res span.bump em { display: inline-block; animation: bumpUp .5s ease-out; }
+.res span.dip em { display: inline-block; animation: dipDown .5s ease-out; }
+.goal.pulse { animation: pulse .9s ease-out; }
+#ribbon { position: absolute; left: 6px; top: 26px; padding: 3px 8px 4px; display: grid; gap: 0; font-size: 8px; opacity: 0; transform: translateX(-12px); transition: opacity .25s, transform .25s; max-width: 200px; }
+#ribbon.on { opacity: 1; transform: none; }
+#ribbon small { font-size: 5.5px; letter-spacing: .8px; color: var(--leaf); font-weight: 700; }
+#ribbon span { font-weight: 600; color: #3f6a24; }
+.card2 canvas.vignette { width: 192px; height: 96px; image-rendering: pixelated; box-shadow: 0 0 0 1px var(--bark), 0 0 0 2px var(--wood), 0 0 0 3px var(--bark); margin-bottom: 4px; }
+.logo { image-rendering: pixelated; width: min(320px, 84%); height: auto; filter: drop-shadow(0 3px 0 rgba(30, 18, 8, .5)); animation: pop .5s ease-out; }
+#title .btns { flex-wrap: wrap; justify-content: center; }
+#loading { background: #1d2a1c; z-index: 5; }
+.spinner { display: flex; gap: 4px; justify-content: center; }
+.spinner i { width: 6px; height: 6px; background: var(--parch-dk); box-shadow: 0 0 0 1px var(--bark); animation: spin .8s ease-in-out infinite; }
+.spinner i:nth-child(2) { animation-delay: .12s; } .spinner i:nth-child(3) { animation-delay: .24s; }
+.settings { display: grid; gap: 4px; }
+.set { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: center; font-size: 8px; padding: 2px 4px; background: #fbefd2; }
+.set > span:first-child { display: grid; }
+.set small { font-size: 6px; color: var(--muted); }
+.set .opts { display: flex; gap: 3px; grid-column: 2 / -1; }
+.set .btn { font-size: 7px; padding: 1px 7px; }
+.set .btn.off { background: var(--parch-dk); color: var(--muted); box-shadow: 0 0 0 1px var(--bark); }
+.set input[type=range] { width: 100%; accent-color: var(--wood); }
+.set b { font-size: 7px; width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
+#cine i { position: absolute; left: 0; right: 0; height: 0; background: #0c0806; transition: height .35s ease; }
+#cine i:first-child { top: 0; } #cine i:last-child { bottom: 0; }
+#ui.cine #cine i { height: 16px; }
+#ui.cine #hud .goal, #ui.cine #hud .clock, #ui.cine #hud .res, #ui.cine #hud .xp { opacity: 0; transition: opacity .3s; }
+#ui.cine #dialog { bottom: 20px; }
+#saved { position: absolute; right: 6px; top: 26px; font-size: 6.5px; padding: 1px 6px; opacity: 0; transition: opacity .3s; color: var(--leaf); font-weight: 700; }
+#saved.on { opacity: 1; }
+#ui.big #dline { font-size: 10px; }
+#ui.big .lesson p { font-size: 9.5px; }
+#ui.big .pane, #ui.big .item, #ui.big .obj, #ui.big .set { font-size: 9px; }
+#ui.big #toast, #ui.big .goal, #ui.big .prompt { font-size: 8.5px; }
+@media (prefers-reduced-motion: reduce) { .panel, .lesson, .card2.enter, #dialog.enter, #cards .card, .logo, .spinner i, .goal.pulse { animation: none; } }
 </style>
 </head>
 <body>
@@ -260,6 +310,8 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
       </div>
     </div>
     <div id="report" class="wood"></div>
+    <div id="ribbon" class="wood"></div>
+    <div id="saved" class="wood">Saved</div>
     <div id="toast" class="wood" role="status" aria-live="polite"></div>
     <div id="tip" class="wood"></div>
     <div id="banner"></div>
@@ -274,7 +326,7 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
     <div id="panel" class="shade" hidden></div>
 
     <div id="title" class="screen clickable">
-      <div class="sign wood"><h1>Ninety-Nine</h1><div class="tag">Leave no sheep behind.</div></div>
+      <canvas id="logo" class="logo" hidden></canvas><div class="sign wood" id="title-sign"><h1 id="title-h1">Ninety-Nine</h1><div class="tag">Leave no sheep behind.</div></div>
       <div class="btns" id="title-btns"></div>
       <div class="keys wood">Move: WASD or arrows · Use: E · Whistle: Space · How to play: H · Menu: Esc</div>
     </div>
@@ -282,7 +334,9 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
     <div id="chend" class="screen" hidden></div>
     <div id="end" class="screen" hidden></div>
     <div id="credits" class="screen" hidden><div class="roll" id="roll"></div></div>
+    <div id="cine"><i></i><i></i></div>
     <div id="fade"></div>
+    <div id="loading" class="screen" hidden><div class="card2 wood"><div class="spinner"><i></i><i></i><i></i></div><div class="blurb">Gathering the flock…</div></div></div>
   </div>
 </div>
 <script src="js/core.js"></script>
@@ -293,6 +347,7 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
 <script src="js/game.js"></script>
 <script src="js/story.js"></script>
 <script src="js/help.js"></script>
+<script src="js/fx.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

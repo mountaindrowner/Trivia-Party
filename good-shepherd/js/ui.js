@@ -12,6 +12,9 @@ NN.mode = 'title';
 const SCR = () => NN.SCRIPT || {};
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+const play = (name, alt) => { const f = NN.sfx && (NN.sfx[name] || (alt && NN.sfx[alt])); if (f) try { f(); } catch (e) { /* */ } };
+const duck = on => { if (NN.audio && NN.audio.duck) try { NN.audio.duck(on); } catch (e) { /* */ } };
+
 // ---------------------------------------------------------------- small messages
 let toastT = 0, tipT = 0, repT = 0;
 UI.toast = (msg, secs = 3.4) => { const el = $('toast'); el.textContent = msg; el.classList.add('on'); toastT = secs; };
@@ -21,7 +24,15 @@ UI.banner = (big, small = '') => {
   el.textContent = big; if (small) { const s = document.createElement('small'); s.textContent = small; el.append(s); }
   el.classList.add('on');
 };
-UI.objectiveDone = text => UI.toast('✓ ' + text.replace(/\s*\(\d+\/\d+\)$/, ''), 3.6);
+let ribbonT = 0, savedT = 0;
+UI.saved = () => { const el = $('saved'); el.classList.add('on'); savedT = 1.8; };
+UI.objectiveDone = text => {
+  const el = $('ribbon');
+  el.innerHTML = `<small>GOAL COMPLETE</small><span>✓ ${esc(text.replace(/\s*\(\d+\/\d+\)$/, ''))}</span>`;
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); ribbonT = 3.6;
+  const g = $('hud-goal'); g.classList.remove('pulse'); void g.offsetWidth; g.classList.add('pulse');
+  play('goal', 'level');
+};
 UI.codexToast = id => {
   const e = (SCR().codex || []).find(c => c.id === id);
   if (e && e.kind === 'verse' && NN.mode !== 'title' && G.day > 1) UI.toast(`New page in the Shepherd's Notes (C): ${e.title}`, 3);
@@ -121,6 +132,10 @@ function pump() {
   NN.mode = 'dialog';
   dlg.i = -1; dlg.after = false;
   $('dialog').hidden = false;
+  // the big story moments get letterbox bars
+  const k = dlg.key || '';
+  const cine = dlg.lines.some(l => l && l.choice) || /^c\d_(intro|end)$/.test(k) || ['c5_ninetynine', 'c6_table', 'c7_gate', 'c7_prowler', 'c7_fall', 'c7_return', 'c7_feedMySheep', 'c7_wolves', 'c7_flockMorning'].includes(k);
+  document.getElementById('ui').classList.toggle('cine', cine);
   nextLine();
 }
 function showLesson(l) {
@@ -134,7 +149,7 @@ function showLesson(l) {
   UI._lessonOk = ok;
   el.querySelector('button').addEventListener('click', ok);
   el.querySelector('button').focus({ preventScroll: true });
-  GM.sfx('page');
+  play('lessonPop', 'page');
 }
 UI.pump = pump;
 function nextLine() {
@@ -143,7 +158,8 @@ function nextLine() {
   if (e && !Array.isArray(e) && e.choice) { dlg.i++; e = dlg.lines[dlg.i]; }
   if (dlg.i >= dlg.lines.length) {
     const d = dlg; dlg = null;
-    $('dialog').hidden = true;
+    $('dialog').hidden = true; duck(false);
+    if (!queue.length || !queue[0].lines) document.getElementById('ui').classList.remove('cine');
     NN.mode = prevMode === 'dialog' ? 'play' : prevMode;
     if (d.opts.done) d.opts.done();
     pump();
@@ -151,6 +167,9 @@ function nextLine() {
   }
   const [sp, text] = e;
   const who = resolve(sp);
+  dlg.voice = who.narr ? 'narrator' : sp === 'shepherd' ? 'shepherd' : (sp === 'bram' || sp === 'chomp' || sp === 'thistle' || sp === 'hank') ? 'gruff'
+    : who.human || who.dog ? 'human' : (who.sheep && who.sheep.kind === 'lamb') || ['pip', 'burr', 'minnow', 'dot', 'crumb'].includes(sp) ? 'lamb' : 'sheep';
+  if (dlg.i === 0 || $('dialog').hidden) { const el = $('dialog'); el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); duck(true); }
   $('pframe').hidden = !!who.narr;
   $('dline').className = who.narr ? 'narr' : '';
   if (!who.narr) { $('dname').textContent = who.name; drawPortrait(who); }
@@ -179,7 +198,10 @@ UI.advance = () => {
 };
 UI.tickDialog = dt => {
   if (!dlg || dlg.shown >= dlg.text.length) return;
-  dlg.shown = Math.min(dlg.text.length, dlg.shown + dt * 60);
+  const before = Math.floor(dlg.shown);
+  dlg.shown = Math.min(dlg.text.length, dlg.shown + dt * (NN.textCps ? NN.textCps() : 60));
+  const now = Math.floor(dlg.shown);
+  if (Math.floor(now / 2) !== Math.floor(before / 2) && /\w/.test(dlg.text[now - 1] || '') && NN.sfx && NN.sfx.voice) try { NN.sfx.voice(dlg.voice, now); } catch (e) { /* */ }
   $('dline').textContent = dlg.text.slice(0, Math.floor(dlg.shown));
   if (dlg.shown >= dlg.text.length) finishLine();
 };
@@ -225,17 +247,20 @@ UI.chapterCard = (n, done) => {
   let step = 0;
   const show = () => {
     if (step === 0) {
-      el.innerHTML = `<div class="card2 wood"><div class="no">CHAPTER ${n} · ${esc(region.toUpperCase())}</div><h2>${esc(c.title)}</h2>
+      el.innerHTML = `<div class="card2 wood enter"><canvas class="vignette" width="128" height="64" hidden></canvas><div class="no">CHAPTER ${n} · ${esc(region.toUpperCase())}</div><h2>${esc(c.title)}</h2>
         ${c.verse ? `<p>${esc(c.verse)}<cite>${esc(c.ref || '')}</cite></p>` : ''}${c.blurb ? `<div class="blurb">${esc(c.blurb)}</div>` : ''}
         <button class="btn" type="button" id="ch-go">${news.length ? 'Next' : 'Begin'}</button></div>`;
     } else {
-      el.innerHTML = `<div class="card2 wood"><div class="no">WHAT'S NEW IN CHAPTER ${n}</div><div class="news">${news.map(() => '<div><canvas width="34" height="24"></canvas><span></span></div>').join('')}</div>
+      el.innerHTML = `<div class="card2 wood enter"><div class="no">WHAT'S NEW IN CHAPTER ${n}</div><div class="news">${news.map(() => '<div><canvas width="34" height="24"></canvas><span></span></div>').join('')}</div>
         <button class="btn" type="button" id="ch-go">Begin</button></div>`;
       el.querySelectorAll('.news > div').forEach((row, i) => { UI.drawArt(row.querySelector('canvas'), news[i][0]); row.querySelector('span').innerHTML = keyed(news[i][1]); });
     }
+    const vc = el.querySelector('canvas.vignette');
+    if (vc) { try { const pr = NN.prop('vignette' + n); const x = vc.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(pr.img, 0, 0, 128, 64); vc.hidden = false; } catch (e) { /* no painting yet */ } }
     $('ch-go').addEventListener('click', go);
     $('ch-go').focus({ preventScroll: true });
   };
+  play('chapter', 'bell');
   const go = () => {
     if (el.hidden) return;
     if (step === 0 && news.length) { step = 1; GM.sfx('page'); show(); return; }
@@ -263,6 +288,7 @@ UI.fade = (on, secs, cb) => { const f = $('fade'); f.style.transitionDuration = 
 
 // ---------------------------------------------------------------- HUD
 let hudKey = '', resKey = '';
+const prevRes = {};
 const icon = name => {
   const c = document.createElement('canvas'); c.width = 9; c.height = 9;
   try { if (NN.ICONS && NN.ICONS[name]) { const x = c.getContext('2d'); x.imageSmoothingEnabled = false; const s = NN.ICONS[name](); x.drawImage(s, Math.floor((9 - s.width) / 2), Math.floor((9 - s.height) / 2)); } } catch (e) { /* no icon */ }
@@ -305,6 +331,8 @@ UI.hud = () => {
       s2.append(icon(k));
       const t = document.createElement('em'); t.style.fontStyle = 'normal'; t.textContent = G.res[k];
       if ((k === 'hay' || k === 'water') && G.res[k] < home / 2) t.className = 'low';
+      if (prevRes[k] !== undefined && prevRes[k] !== G.res[k]) s2.className = G.res[k] > prevRes[k] ? 'bump' : 'dip';
+      prevRes[k] = G.res[k];
       s2.append(t); box.append(s2);
     }
   }
@@ -320,6 +348,8 @@ UI.hud = () => {
 UI.tick = dt => {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('on'); }
   if (tipT > 0) { tipT -= dt; if (tipT <= 0) $('tip').classList.remove('on'); }
+  if (ribbonT > 0) { ribbonT -= dt; if (ribbonT <= 0) $('ribbon').classList.remove('on'); }
+  if (savedT > 0) { savedT -= dt; if (savedT <= 0) $('saved').classList.remove('on'); }
   if (repT > 0) { repT -= dt; if (repT <= 0) $('report').classList.remove('on'); }
   if (NN.mode === 'dialog') UI.tickDialog(dt);
 };
@@ -327,17 +357,22 @@ UI.tick = dt => {
 // ---------------------------------------------------------------- panels
 let panel = null, sel = null;
 UI.panelName = () => panel;
+let panelBack = 'play';
 UI.openPanel = name => {
-  if (!['play', 'panel', 'build'].includes(NN.mode)) return;
+  if (!['play', 'panel', 'build', 'title'].includes(NN.mode)) return;
   if (panel === name) { UI.closePanel(); return; }
+  if (NN.mode !== 'panel') panelBack = NN.mode === 'title' ? 'title' : 'play';
+  if (panelBack === 'title') $('title').hidden = true;
   UI.placing = null;
-  panel = name; NN.mode = 'panel'; GM.sfx('menu');
+  panel = name; NN.mode = 'panel'; play('open', 'menu');
   NN.audio && (NN.audio.paused = name === 'pause');
   renderPanel();
 };
 UI.closePanel = () => {
+  if (panel) play('close');
   panel = null; $('panel').hidden = true; $('panel').innerHTML = '';
-  if (NN.mode === 'panel') NN.mode = 'play';
+  if (NN.mode === 'panel') NN.mode = panelBack;
+  if (panelBack === 'title' && NN.mode === 'title') { $('title').hidden = false; const b = $('title-btns').querySelector('button'); b && b.focus({ preventScroll: true }); }
   NN.audio && (NN.audio.paused = false);
   pump();
 };
@@ -349,7 +384,7 @@ function frame(title, sub, body) {
   return el.firstChild;
 }
 function renderPanel() {
-  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp }[panel] || (() => {}))();
+  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp, settings: renderSettings }[panel] || (() => {}))();
 }
 const PROP_FOR = { feeder: 'feeder', trough: 'trough', lean: 'lean', workshop: 'workshop', hayBarn: 'hayBarn', well: 'well', watchtower: 'watchtower', lampPost: 'lampPostLit', herbGarden: 'herbGarden', infirmary: 'infirmary', loom: 'loom', treadmill: 'treadmill0', choirStage: 'choirStage', olivePress: 'olivePress' };
 NN.PROP_FOR = PROP_FOR;
@@ -505,6 +540,45 @@ function renderHelp() {
   list.prepend(kb);
   show(keys);
 }
+function renderSettings() {
+  const S = NN.SET, A = NN.audio || {};
+  const p = frame('Settings', 'Saved on this device.', `<div class="scroll"><div class="settings" id="sets"></div></div>`);
+  const box = p.querySelector('#sets');
+  const slider = (label, get, set) => {
+    const row = document.createElement('label'); row.className = 'set';
+    row.innerHTML = `<span>${label}</span><input type="range" min="0" max="100" step="5"><b></b>`;
+    const r = row.querySelector('input'), v = row.querySelector('b');
+    r.value = Math.round(get() * 100); v.textContent = r.value + '%';
+    r.addEventListener('input', () => { set(r.value / 100); v.textContent = r.value + '%'; });
+    r.addEventListener('change', () => play('select'));
+    box.append(row);
+  };
+  const toggle = (label, get, set, hint) => {
+    const row = document.createElement('div'); row.className = 'set';
+    row.innerHTML = `<span>${label}${hint ? `<small>${hint}</small>` : ''}</span><button class="btn" type="button"></button>`;
+    const b = row.querySelector('button'); const paint = () => { b.textContent = get() ? 'On' : 'Off'; b.classList.toggle('off', !get()); };
+    paint(); b.addEventListener('click', () => { set(!get()); paint(); NN.saveSettings(); play('select'); });
+    box.append(row);
+  };
+  const choice = (label, opts, get, set) => {
+    const row = document.createElement('div'); row.className = 'set';
+    row.innerHTML = `<span>${label}</span><span class="opts"></span>`;
+    const o = row.querySelector('.opts');
+    opts.forEach(([val, txt]) => { const b = document.createElement('button'); b.className = 'btn' + (get() === val ? '' : ' off'); b.type = 'button'; b.textContent = txt; b.addEventListener('click', () => { set(val); NN.saveSettings(); o.querySelectorAll('button').forEach(x => x.classList.toggle('off', x !== b)); play('select'); }); o.append(b); });
+    box.append(row);
+  };
+  if (A.setMusicVolume) slider('Music', () => A.musicVolume, v => A.setMusicVolume(v));
+  if (A.setSfxVolume) slider('Sound effects', () => A.sfxVolume, v => A.setSfxVolume(v));
+  toggle('All sound', () => !A.muted, () => A.toggleMute && A.toggleMute());
+  choice('Text speed', [['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast'], ['instant', 'Instant']], () => S.textSpeed, v => { S.textSpeed = v; });
+  toggle('Lessons', () => NN.HELP.enabled(), v => NN.HELP.setEnabled(v), 'Tutorial cards the first time things happen');
+  toggle('Large text', () => S.bigText, v => { S.bigText = v; document.getElementById('ui').classList.toggle('big', v); }, 'Bigger dialogue, lessons and menus');
+  toggle('Screen shake', () => S.shake, v => { S.shake = v; });
+  toggle('Flashes', () => S.flashes, v => { S.flashes = v; }, 'Lightning and hit flashes');
+  toggle('Vignette', () => S.vignette, v => { S.vignette = v; }, 'Soft darkening at the edges');
+  toggle('Particles and wildlife', () => S.particles, v => { S.particles = v; });
+  setTimeout(() => { const f = box.querySelector('input, button'); f && f.focus({ preventScroll: true }); }, 0);
+}
 function renderPause() {
   const el = $('panel');
   el.innerHTML = `<div class="panel wood menu"><h2>Paused</h2></div>`;
@@ -516,11 +590,14 @@ function renderPause() {
   add('Goals (Q)', () => { UI.closePanel(); UI.openPanel('goals'); });
   add('Map (M)', () => { UI.closePanel(); UI.openPanel('map'); });
   add("Shepherd's Notes (C)", () => { UI.closePanel(); UI.openPanel('codex'); });
-  add(NN.audio && NN.audio.muted ? 'Sound: off' : 'Sound: on', e => { const m2 = NN.audio.toggleMute(); e.target.textContent = m2 ? 'Sound: off' : 'Sound: on'; });
-  add(NN.HELP && NN.HELP.enabled() ? 'Lessons: on' : 'Lessons: off', e => { const on = !NN.HELP.enabled(); NN.HELP.setEnabled(on); e.target.textContent = on ? 'Lessons: on' : 'Lessons: off'; });
+  add('Settings', () => { UI.closePanel(); UI.openPanel('settings'); });
   add('Save game', () => { if (NN.save()) UI.toast('Saved on this device.'); else UI.toast('You can save in the daytime.'); });
   add('Save and quit to title', () => { NN.save(); UI.closePanel(); NN.toTitle(); });
 }
+
+let lastHover = null;
+document.getElementById('ui').addEventListener('pointerover', e => { const b = e.target.closest('button'); if (b && b !== lastHover && !b.disabled) { lastHover = b; play('hover'); } });
+document.getElementById('ui').addEventListener('focusin', e => { if (e.target.tagName === 'BUTTON' && e.target !== lastHover) { lastHover = e.target; play('hover'); } });
 
 // ---------------------------------------------------------------- title, credits, end
 UI.title = hasSave => {
@@ -531,6 +608,10 @@ UI.title = hasSave => {
   if (hasSave) add('Continue', () => NN.continueGame()).focus({ preventScroll: true });
   const ng = add('New game', () => NN.newGame());
   if (!hasSave) ng.focus({ preventScroll: true });
+  add('Settings', () => UI.openPanel('settings'));
+  add('How to play', () => UI.openPanel('help'));
+  const lc = $('logo');
+  if (lc && !lc.dataset.done) { try { const pr = NN.prop('logo'), x = lc.getContext('2d'); lc.width = pr.img.width; lc.height = pr.img.height; x.imageSmoothingEnabled = false; x.drawImage(pr.img, 0, 0); lc.hidden = false; lc.dataset.done = 1; $('title-h1').hidden = true; } catch (e) { /* text title stays */ } }
 };
 UI.credits = () => {
   NN.mode = 'credits'; $('hud').hidden = true;

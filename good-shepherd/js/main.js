@@ -62,18 +62,17 @@ function startPlay() {
   $('title').hidden = true; $('end').hidden = true; $('credits').hidden = true; $('hud').hidden = false;
   NN.mode = 'play';
 }
+const loading = fn => { $('loading').hidden = false; setTimeout(() => { try { fn(); } finally { $('loading').hidden = true; NN.FX.snap(); } }, 40); };
 NN.newGame = () => {
   NN.audio.init();
-  W.build(); GM.newGame();
-  startPlay();
-  ST.start();
+  loading(() => { W.build(); GM.newGame(); startPlay(); ST.start(); });
 };
 NN.continueGame = () => {
   NN.audio.init();
-  if (!loadSave()) { NN.newGame(); return; }
-  startPlay();
-  ST.load();
-  UI.banner('Day ' + G.day, 'Welcome back.');
+  loading(() => {
+    if (!loadSave()) { W.build(); GM.newGame(); startPlay(); ST.start(); return; }
+    startPlay(); ST.load(); UI.banner('Day ' + G.day, 'Welcome back.');
+  });
 };
 NN.toTitle = () => {
   $('hud').hidden = true; $('dialog').hidden = true; $('levelup').hidden = true; $('chapter').hidden = true; $('chend').hidden = true;
@@ -95,8 +94,8 @@ const keys = {};
 const joy = { on: false, ox: 0, oy: 0, x: 0, y: 0, id: null };
 let mouse = { x: 0, y: 0, t: -1e9 }, holdTouch = false;
 const input = () => ({
-  x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x,
-  y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y,
+  x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x + padMove.x,
+  y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y + padMove.y,
 });
 const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex', h: 'help' };
 addEventListener('keydown', e => {
@@ -185,6 +184,54 @@ addEventListener('touchstart', showTouch, { once: true, passive: true });
 $('hud-goal').addEventListener('click', e => { e.stopPropagation(); if (NN.mode === 'play') UI.openPanel('goals'); });
 $('hud-goal').addEventListener('pointerdown', e => e.stopPropagation());
 
+// ---------------------------------------------------------------- controller
+let padPrev = {}, padMove = { x: 0, y: 0 }, padSeen = false, navT = 0;
+function pollPad(dt) {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const gp = [...pads].find(p => p && p.connected);
+  if (!gp) { padMove.x = padMove.y = 0; return; }
+  if (!padSeen) { padSeen = true; UI.toast('Controller ready: A use · X whistle · Y build · B back · Start menu', 5); }
+  const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = i => gp.axes[i] || 0;
+  let x = ax(0), y = ax(1);
+  if (Math.hypot(x, y) < 0.22) x = y = 0;
+  if (b(14)) x = -1; if (b(15)) x = 1; if (b(12)) y = -1; if (b(13)) y = 1;
+  padMove.x = x; padMove.y = y;
+  const now = {}; for (let i = 0; i < 17; i++) now[i] = b(i);
+  const down = i => now[i] && !padPrev[i];
+  const mode = NN.mode;
+  const key = k => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
+  // menus: move focus with the stick or d-pad, A presses, B goes back
+  if (['panel', 'title', 'levelup', 'chend', 'chapter', 'lesson', 'end'].includes(mode)) {
+    navT -= dt;
+    if (navT <= 0 && (Math.abs(x) > 0.5 || Math.abs(y) > 0.5)) { navT = 0.18; moveFocus(Math.abs(y) > Math.abs(x) ? (y > 0 ? 1 : -1) : (x > 0 ? 1 : -1)); }
+    if (Math.abs(x) < 0.3 && Math.abs(y) < 0.3) navT = 0;
+    if (down(0)) { const f = document.activeElement; if (f && f.tagName === 'BUTTON') f.click(); else key('Enter'); }
+    if (down(1)) key('Escape');
+  } else if (mode === 'dialog') { if (down(0) || down(1)) UI.advance(); }
+  else if (mode === 'play' || mode === 'build') {
+    if (down(0)) { if (mode === 'build') key('Enter'); else key('e'); }
+    if (now[0] !== !!padPrev[0]) keys.e = mode === 'play' && now[0];
+    if (down(1)) key('Escape');
+    if (down(2)) key(' ');
+    if (down(3)) key('b');
+    if (down(4)) key('f');
+    if (down(5)) key('m');
+    if (down(9)) key('Escape');
+    if (down(8)) key('h');
+  }
+  padPrev = now;
+}
+function moveFocus(dir) {
+  const root = [...document.querySelectorAll('#panel:not([hidden]), #levelup:not([hidden]), #lesson:not([hidden]), #chapter:not([hidden]), #chend:not([hidden]), #title:not([hidden]), #end:not([hidden])')].pop();
+  if (!root) return;
+  const els = [...root.querySelectorAll('button, input')].filter(e => !e.disabled && e.offsetParent !== null);
+  if (!els.length) return;
+  const i = els.indexOf(document.activeElement);
+  const n = els[(i + dir + els.length) % els.length] || els[0];
+  n.focus({ preventScroll: false }); if (n.scrollIntoView) n.scrollIntoView({ block: 'nearest' });
+  if (NN.sfx && NN.sfx.hover) NN.sfx.hover();
+}
+
 // ---------------------------------------------------------------- build placement
 function ghostTile() {
   const t = UI.placing && NN.DEFS.BUILD[UI.placing.type]; if (!t) return null;
@@ -248,11 +295,23 @@ function drawPerson(x, y, p, look) {
 }
 function drawSheep(s, x, y) {
   const moving = Math.hypot(s.vx, s.vy) > 4, fr = moving ? Math.floor(s.anim / 5) % 2 : 0;
-  const lamb = s.kind === 'lamb';
+  const lamb = s.kind === 'lamb', base = lamb ? 'lamb' : 'sheep', mods = NN.GAME_MODS(s);
   NN.U.shadow(ctx, X(x), Y(y), lamb ? 9 : 12);
   const hop = s.state === 'scared' ? -Math.abs(Math.round(Math.sin(s.anim / 3) * 2)) : (moving && fr ? -1 : 0);
-  const img = safeSpr(lamb ? 'lamb' : 'sheep', fr, s.face < 0, NN.GAME_MODS(s), s.swap) || safeSpr('sheep', fr, s.face < 0, NN.GAME_MODS(s), s.swap);
-  if (img) ctx.drawImage(img, X(x) - Math.floor(img.width / 2), Y(y) - img.height + hop);
+  let img = null;
+  const t = performance.now() / 1000;
+  const sleepy = s.state === 'nap' || (G.phase === 'night' && s.state === 'home' && !s.job && W.insideFold(s) && G.t > 6);
+  if (!moving && sleepy) img = safeSpr(base + 'Sleep', 0, s.face < 0, mods, s.swap);
+  else if (!moving && ['home', 'wild', 'penned', 'feast'].includes(s.state) && Math.sin(t * 0.45 + s.id * 1.7) > 0.2) img = safeSpr(base + 'Graze', Math.floor(t * 3 + s.id) % 2, s.face < 0, mods, s.swap);
+  if (!img) img = safeSpr(base, fr, s.face < 0, mods, s.swap) || safeSpr('sheep', fr, s.face < 0, mods, s.swap);
+  if (!img) return;
+  if (sleepy && !moving && Math.random() < 0.004) GM.pop(s.x + 4, s.y - 14, 'Z', '#cfe3ff', 1.4);
+  if (s.popT > 0) { // a happy bounce when someone new joins
+    s.popT -= 1 / 60;
+    const k = 1 + Math.sin((1 - s.popT / 0.4) * Math.PI) * 0.3, w = Math.round(img.width * (2 - k)), h = Math.round(img.height * k);
+    ctx.drawImage(img, X(x) - Math.floor(w / 2), Y(y) - h, w, h); return;
+  }
+  ctx.drawImage(img, X(x) - Math.floor(img.width / 2), Y(y) - img.height + hop);
 }
 function darkness() {
   let dk = 0;
@@ -268,9 +327,7 @@ function darkness() {
 }
 let rain = [];
 function draw(now) {
-  const shake = G.shake > 0 ? (Math.random() - 0.5) * 3 : 0;
-  camX = Math.round(clamp(G.sh.x - SW / 2, 0, W.WW - SW) + shake);
-  camY = Math.round(clamp(G.sh.y - 16 - SH / 2, 0, W.WH - SH));
+  [camX, camY] = NN.FX.camera(lastDt);
   ctx.drawImage(W.ground, camX, camY, SW, SH, 0, 0, SW, SH);
   const R = NN.U.rect;
   // water sparkle
@@ -296,7 +353,14 @@ function draw(now) {
     if (b.type === 'trough' && G.res.water <= 0) name = 'troughEmpty';
     if (b.type === 'lampPost' && dk > 0.2) name = 'lampPostLit'; else if (b.type === 'lampPost') name = 'lampPost';
     if (b.type === 'treadmill') name = 'treadmill' + (G.sheep.some(s => s.job && s.job.type === 'runner' && s.workT > 0 && s.state === 'home') ? Math.floor(b.anim * 6) % 2 : 0);
-    list.push({ y: b.fy, d: () => drawProp(name, b.fx, b.fy) });
+    list.push({ y: b.fy, d: () => {
+      if (b.bornT !== undefined && b.bornT < 0.45) {
+        b.bornT += 1 / 60;
+        const k = Math.min(1, b.bornT / 0.3), drop = Math.round((1 - k) * (1 - k) * 18), p = safeProp(name);
+        if (p) { const sq = k < 1 ? 1 : 1 + Math.sin((b.bornT - 0.3) / 0.15 * Math.PI) * 0.08; const w = Math.round(p.img.width * sq), h = Math.round(p.img.height / sq); ctx.drawImage(p.img, X(b.fx) - Math.round(p.ox * sq), Y(b.fy) - h - drop, w, h); return; }
+      }
+      drawProp(name, b.fx, b.fy);
+    } });
   }
   if (G.tableOut && NN.onScreen(W.SITES.table.x, W.SITES.table.y, 90)) list.push({ y: W.SITES.table.y, d: () => drawProp('feastTable', W.SITES.table.x, W.SITES.table.y) });
   for (const p of G.pickups) if (NN.onScreen(p.x, p.y)) list.push({ y: p.y, d: () => drawProp(p.kind, p.x, p.y) });
@@ -317,7 +381,8 @@ function draw(now) {
   for (const s of G.sheep) if (!s.hidden && NN.onScreen(s.x, s.y)) list.push({ y: s.y, d: () => drawSheep(s, s.x, s.y) });
   for (const w of G.wolves) if (NN.onScreen(w.x, w.y)) list.push({ y: w.y, d: () => {
     NN.U.shadow(ctx, X(w.x), Y(w.y), 16);
-    const im = safeSpr('wolf', w.peace ? 0 : Math.floor(w.anim / 6) % 2, w.face < 0, '', w.alpha ? 'alpha' : null);
+    let im = (w.peace && safeSpr('wolfLie', Math.floor(performance.now() / 900) % 2, w.face < 0, '', w.alpha ? 'alpha' : null)) || safeSpr('wolf', w.peace ? 0 : Math.floor(w.anim / 6) % 2, w.face < 0, '', w.alpha ? 'alpha' : null);
+    if (im && w.flashT > 0) { w.flashT -= 1 / 60; if (NN.SET.flashes) im = NN.FX.whiteOf(im); }
     if (im) ctx.drawImage(im, X(w.x) - Math.floor(im.width / 2), Y(w.y) - im.height + 1);
   } });
   for (const g of G.dogs) list.push({ y: g.y, d: () => { NN.U.shadow(ctx, X(g.x), Y(g.y), 10); const im = safeSpr('dog', Math.hypot(g.vx, g.vy) > 4 ? Math.floor(g.anim / 5) % 2 : 0, g.face < 0, '', g.kind === 'mercy' ? 'mercy' : null); if (im) ctx.drawImage(im, X(g.x) - Math.floor(im.width / 2), Y(g.y) - im.height + 1); } });
@@ -327,13 +392,15 @@ function draw(now) {
     list.push({ y: n.y, d: () => drawPerson(X(n.x), Y(n.y), n, n.look) });
   }
   if (G.form === 'sheep') { const w = G.playerSheep && GM.sheepById(G.playerSheep); list.push({ y: G.sh.y, d: () => drawSheep(Object.assign({}, w || { look: 'shades', kind: 'sheep' }, { vx: G.sh.vx, vy: G.sh.vy, anim: G.sh.anim, face: G.sh.face, state: 'follow', hurt: false, job: null }), G.sh.x, G.sh.y) }); }
-  else list.push({ y: G.sh.y, d: () => drawPerson(X(G.sh.x), Y(G.sh.y), G.sh, G.shepLook || 'shepherd') });
+  else if (NN.mode !== 'title') list.push({ y: G.sh.y, d: () => drawPerson(X(G.sh.x), Y(G.sh.y), G.sh, G.shepLook || 'shepherd') });
   if (G.prowler) list.push({ y: G.prowler.y, d: () => {
     const p = G.prowler, im = safeSpr('prowler', Math.floor(p.anim / 4) % 2, p.face < 0);
     ctx.globalAlpha = 0.35; ctx.fillStyle = '#0a0614'; NN.U.oval(ctx, X(p.x), Y(p.y), 34, 8); ctx.globalAlpha = 1;
     if (im) ctx.drawImage(im, X(p.x) - Math.floor(im.width / 2), Y(p.y) - im.height + 2);
   } });
   list.sort((a, b) => a.y - b.y).forEach(o => o.d());
+  NN.FX.drawParts(ctx, X, Y, false);
+  NN.FX.drawLife(ctx, X, Y, false);
   for (const f of G.frights) if (NN.onScreen(f.x, f.y)) {
     const im = safeSpr('fright', Math.floor(f.anim) % 3, f.face < 0);
     ctx.globalAlpha = clamp(0.25 + f.hp * 0.6, 0, 0.85);
@@ -367,6 +434,7 @@ function draw(now) {
     ctx.fillStyle = 'rgba(200,210,200,.12)';
     for (let i = 0; i < 18; i++) { const fx = rx + ((i * 211 + now / 60) % W.RW), fy = ry + ((i * 137) % W.RH); NN.U.disc(ctx, X(fx), Y(fy), 18 + (i % 4) * 6); }
   }
+  NN.FX.grade(ctx, dk);
   // night: stepped pools of light cut from a blue dark, then a little warm glow added back
   if (dk > 0) {
     dctx.globalCompositeOperation = 'source-over';
@@ -388,7 +456,11 @@ function draw(now) {
     for (const r of rain) { r.y += r.v / 60; r.x -= r.v / 240; if (r.y > SH) { r.y = -6; r.x = rand(0, SW + 40); } ctx.moveTo(Math.round(r.x) + 0.5, Math.round(r.y)); ctx.lineTo(Math.round(r.x - 2) + 0.5, Math.round(r.y + 5)); }
     ctx.stroke();
   }
-  if (G.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${G.flash * 2})`; ctx.fillRect(0, 0, SW, SH); }
+  NN.FX.drawParts(ctx, X, Y, true);
+  NN.FX.drawLife(ctx, X, Y, true);
+  if (G.flash > 0 && NN.SET.flashes) { ctx.fillStyle = `rgba(255,255,255,${G.flash * 2})`; ctx.fillRect(0, 0, SW, SH); }
+  NN.FX.vignette(ctx);
+  lastDark = dk;
   // labels above the dark
   for (const s of G.sheep) {
     if (s.hidden || !NN.onScreen(s.x, s.y)) continue;
@@ -428,19 +500,29 @@ function draw(now) {
 }
 
 // ---------------------------------------------------------------- loop
-let last = performance.now(), lastDay = 0;
+let last = performance.now(), lastDay = 0, lastDt = 1 / 60, lastDark = 0, titleT = 0, lastAmb = '';
 function frame(now) {
-  const dt = clamp((now - last) / 1000, 0, 1 / 30); last = now;
+  const dt = clamp((now - last) / 1000, 0, 1 / 30); last = now; lastDt = dt;
+  pollPad(dt);
   UI.tick(dt);
   const mode = NN.mode;
-  if (mode === 'play' || mode === 'build') {
+  if (mode === 'title' && G.sh) { titleT += dt; G.sh.x = W.GX + Math.sin(titleT / 11) * 170; G.sh.y = W.FOLD.y + W.FOLD.h + 30 + Math.sin(titleT / 7) * 40; G.sh.vx = Math.cos(titleT / 11) * 15; G.sh.vy = 0; }
+  if (G.sh) NN.FX.update(mode === 'play' || mode === 'build' || mode === 'title' ? dt : 0, camX, camY, lastDark);
+  // the soundscape follows where you are and the time of day
+  if (G.sh && NN.audio && NN.audio.ambience) {
+    const reg = W.regionId(W.regionAt(G.sh.x, G.sh.y));
+    const amb = mode === 'credits' || mode === 'end' ? 'none' : G.storm ? 'storm' : G.phase === 'night' ? 'night' : reg === 'canyon' ? 'canyon' : W.riverDist(G.sh.x, G.sh.y) < 140 || reg === 'marsh' ? 'river' : 'meadow';
+    if (amb !== lastAmb) { lastAmb = amb; try { NN.audio.ambience(amb); } catch (e) { /* */ } }
+  }
+  if ((mode === 'play' || mode === 'build') && NN.FX.hitstop > 0) { /* a beat of hit-stop: the world holds still for a moment */ }
+  else if (mode === 'play' || mode === 'build') {
     GM.update(dt, input());
     // held interactions (cutting thorns, clearing rocks)
     const it = UI.current;
     if (it && it.hold && (keys.e || holdTouch) && NN.mode === 'play') { it.prog = (it.prog || 0) + dt; if (it.prog >= it.hold) { it.prog = 0; GM.useInteract(it); } }
     else if (it && it.hold) it.prog = Math.max(0, (it.prog || 0) - dt * 2);
     if (G.lvPending > 0 && NN.mode === 'play' && !UI.busy()) UI.levelUp();
-    if (G.day !== lastDay && G.phase === 'day' && NN.mode === 'play') { lastDay = G.day; if (G.day > 1) NN.save(); }
+    if (G.day !== lastDay && G.phase === 'day' && NN.mode === 'play') { lastDay = G.day; if (G.day > 1 && NN.save()) UI.saved(); }
   } else if (mode === 'title' || mode === 'dialog' || mode === 'chapter' || mode === 'chend') GM.updateIdle(dt);
   if (G.sh) draw(now);
   if (!$('hud').hidden && G.sh) UI.hud();
@@ -454,6 +536,9 @@ function resize() {
   $('ui').style.transform = `scale(${s})`;
 }
 addEventListener('resize', resize);
+// switching away mid-game pauses it
+document.addEventListener('visibilitychange', () => { if (document.hidden && (NN.mode === 'play' || NN.mode === 'build')) { UI.placing = null; NN.mode = 'play'; UI.openPanel('pause'); } });
+if (NN.SET && NN.SET.bigText) document.getElementById('ui').classList.add('big');
 
 // Debug hook for automated tests and tuning in the console.
 window.__nn = { NN, G, GM, W, ST, UI, keys, save: NN.save, load: loadSave };

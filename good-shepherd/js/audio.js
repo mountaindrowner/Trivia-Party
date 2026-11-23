@@ -13,13 +13,25 @@
      NN.sfx.<name>()            one-shot sound effects
      NN.note(t, freq, dur, type, vol, dest, slide), NN.mf(midi) for custom sounds; NN.sfxOk() is true when
                                 they would be heard (dest defaults to the sfx bus)
+     NN.audio.setMusicVolume(v)  0..1 (default 0.8), NN.audio.musicVolume reads it; saved in localStorage 'nn-vol-music'
+     NN.audio.setSfxVolume(v)    0..1 (default 0.9), NN.audio.sfxVolume reads it; saved as 'nn-vol-sfx'. It also sets the
+                                level of the ambience (the sounds of the world), and of the dialogue voices.
+     NN.audio.duck(on)          true while dialogue is on screen: the music eases down to 45% (0.25 s), and back on false
+     NN.audio.ambience(name)    the quiet bed under the music: 'meadow' 'night' 'river' 'canyon' 'storm', or 'none' / null.
+                                Crossfades over 1 s; asking for the one already playing does nothing. It is silent while
+                                paused or muted. NN.audio.currentAmbience is the name asked for last ('none' before any);
+                                NN.audio.ambiences lists the names.
+     NN.sfx.voice(kind, i)      one soft dialogue blip for typewriter text (call it every 2-3 characters; it rate-limits
+                                itself). kind: 'shepherd' 'sheep' 'lamb' 'human' 'gruff' 'narrator'; i is the character
+                                counter, which picks the pitch (the same line always "speaks" the same way).
    Testing: NN.audio.render(name, seconds, {raw, choir}) renders a track or an sfx into an OfflineAudioContext and
-   resolves to the AudioBuffer; NN.audio.loopSeconds(name); NN.audio.warnings lists notation problems. */
+   resolves to the AudioBuffer ('ambience:<name>' renders a bed, 'voice:<kind>' a line of blips);
+   NN.audio.loopSeconds(name); NN.audio.warnings lists notation problems. */
 (() => {
 'use strict';
 const NN = window.NN = window.NN || {};
 const mf = m => 440 * Math.pow(2, (m - 69) / 12);
-const MASTER = 0.9, MUSIC = 0.5, SFXV = 0.62;
+const MASTER = 0.9, MUSIC = 0.5, SFXV = 0.62, AMBV = 1, DUCK = 0.45;
 const WARN = [];
 const warn = s => { WARN.push(s); if (typeof console !== 'undefined') console.warn('[audio] ' + s); };
 const rnd = Math.random;
@@ -106,7 +118,7 @@ function waves(ctx) {
 // ---------------------------------------------------------------- engine (one per AudioContext: live or offline)
 //   music layers → session bus → E.music → E.gate → E.master → compressor → out
 //   sends: session → E.rvMus → E.rvGate → reverb → master;  session → E.echoIn → delay loop → E.gate
-//   sfx → E.sfx (soft lowpass) → master;  sfx sends → E.sfxRv → reverb
+//   sfx → E.sfx (soft lowpass) → master;  sfx sends → E.sfxRv → reverb;  ambience → E.ambIn → E.ambGate → master
 function makeEngine(ctx, opt = {}) {
   const E = { ctx, live: !!opt.live, cur: null, pend: null, silent: false, flags: { choir: false } };
   E.waves = waves(ctx);
@@ -128,6 +140,10 @@ function makeEngine(ctx, opt = {}) {
   const sl = F(E, 'lowpass', 9000, 0.5); E.sfx = G(E, SFXV); E.sfx.connect(sl); sl.connect(E.master);
   E.sfxRv = G(E, SFXV); E.sfxRv.connect(E.verb);
   E.white = noiseBuf(ctx, 2, false); E.brown = noiseBuf(ctx, 3, true);
+  // ambience: beds → E.ambIn (level) → soft lowpass → E.ambGate (pause) → master;  sends → E.ambRv → E.ambRvGate → reverb
+  const al = F(E, 'lowpass', 7500, 0.5); E.ambIn = G(E, AMBV); E.ambGate = G(E, 1);
+  E.ambIn.connect(al); al.connect(E.ambGate); E.ambGate.connect(E.master);
+  E.ambRv = G(E, AMBV); E.ambRvGate = G(E, 1); E.ambRv.connect(E.ambRvGate); E.ambRvGate.connect(E.verb);
   return E;
 }
 // a per-sound output that also feeds the reverb
@@ -984,16 +1000,268 @@ const SFX = {
     [0, 0.18, 0.36].forEach(d => V.clap(E, E.sfx, t + 0.1 + d, null, 0, 0.35));
   },
   step(E, t) { burst(E, E.sfx, t, 'lowpass', 300 + rnd() * 250, 0.8, 0.05, 0.22, 0.003); },
+  // ---- polish: UI, objectives, pickups (all gentle)
+  footstep(E, t) {                                      // softer than step, never twice the same: a muffled pad + grass
+    const v = 0.12 + rnd() * 0.07;
+    burst(E, E.sfx, t, 'lowpass', 200 + rnd() * 220, 0.7, 0.045, v, 0.004);
+    burst(E, E.sfx, t + 0.004, 'bandpass', 2200 + rnd() * 2000, 1.2, 0.03, v * 0.2, 0.006);
+  },
+  hover(E, t) { tone(E, E.sfx, t, 'sine', 1900 + rnd() * 80, 0, 0.018, 0.04, 0, 0.002); },
+  open(E, t) {
+    burst(E, E.sfx, t, 'bandpass', 600, 1.1, 0.12, 0.05, 0.03, 2200);
+    tone(E, E.sfx, t + 0.01, 'triangle', mf(72), 0, 0.08, 0.12); tone(E, E.sfx, t + 0.065, 'triangle', mf(79), 0, 0.12, 0.11);
+  },
+  close(E, t) {
+    burst(E, E.sfx, t, 'bandpass', 2000, 1.1, 0.1, 0.045, 0.02, 600);
+    tone(E, E.sfx, t, 'triangle', mf(79), 0, 0.07, 0.1); tone(E, E.sfx, t + 0.055, 'triangle', mf(72), 0, 0.1, 0.1);
+  },
+  goal(E, t) {                                          // objective complete: E–G–C, a little chime
+    const o = wet(E, 0.3);
+    [76, 79, 84].forEach((m, i) => {
+      tone(E, o, t + i * 0.085, 'sq', mf(m), 0, 0.12, 0.08, 3400);
+      V.bell(E, o, t + i * 0.085, m + 12, 0, i === 2 ? 0.11 : 0.07, { dec: i === 2 ? 0.45 : 0.25 });
+    });
+  },
+  chapter(E, t) {                                       // chapter card: a warm swell that blooms into bells
+    const o = wet(E, 0.5);
+    [55, 60, 64, 67].forEach(m => V.choir(E, o, t, m, 1.3, 0.05, { att: 0.6, rel: 0.6 }));
+    V.sub(E, o, t, 36, 1.5, 0.16, NO);
+    V.bell(E, o, t + 0.55, 72, 0, 0.07, { dec: 0.9 }); V.bell(E, o, t + 0.55, 84, 0, 0.12, { dec: 0.7 });
+    V.bell(E, o, t + 0.78, 91, 0, 0.08, { dec: 0.7 });
+  },
+  lessonPop(E, t) {                                     // a lesson card appears: pop, then G–C
+    const o = wet(E, 0.2);
+    tone(E, o, t, 'sine', 420, 760, 0.04, 0.1, 0, 0.003);
+    V.harp(E, o, t + 0.03, 79, 0, 0.15, { dec: 0.25 }); V.harp(E, o, t + 0.13, 84, 0, 0.15, { dec: 0.35 });
+  },
+  pickupWood(E, t) {                                    // a hollow knock, then the collect chime, lower
+    tone(E, E.sfx, t, 'sine', 330, 210, 0.07, 0.2); burst(E, E.sfx, t, 'bandpass', 900, 2, 0.05, 0.16);
+    const o = wet(E, 0.12); tone(E, o, t + 0.06, 'triangle', 988, 0, 0.1, 0.15); tone(E, o, t + 0.12, 'triangle', 1319, 0, 0.16, 0.13);
+  },
+  pickupStone(E, t) {                                   // clack-clack, then the chime
+    burst(E, E.sfx, t, 'bandpass', 2600, 3, 0.025, 0.2); burst(E, E.sfx, t + 0.045, 'bandpass', 3100, 3, 0.02, 0.13);
+    tone(E, E.sfx, t, 'sine', 1800, 1500, 0.03, 0.05);
+    const o = wet(E, 0.15); tone(E, o, t + 0.08, 'triangle', 1175, 0, 0.1, 0.14); tone(E, o, t + 0.14, 'triangle', 1568, 0, 0.16, 0.12);
+  },
+  hitWolf(E, t) {                                       // the staff connects: a soft thwack, no crunch
+    tone(E, E.sfx, t, 'sine', 190, 70, 0.1, 0.36, 0, 0.002);
+    burst(E, E.sfx, t, 'lowpass', 1100, 0.8, 0.06, 0.3, 0.002);
+    burst(E, E.sfx, t, 'bandpass', 2200, 1.2, 0.025, 0.1, 0.001);
+  },
+  poof(E, t) {                                          // a soft airy puff
+    const o = wet(E, 0.25);
+    burst(E, o, t, 'bandpass', 2400, 0.8, 0.28, 0.2, 0.015, 450);
+    burst(E, o, t, 'lowpass', 500, 0.6, 0.18, 0.16, 0.02);
+  },
+  sparkle(E, t) {                                       // four tiny rising bells
+    const o = wet(E, 0.35), sc = [88, 91, 96, 100, 103], k = rnd() < 0.5 ? 0 : 1;
+    for (let i = 0; i < 4; i++) V.bell(E, o, t + i * 0.045 + rnd() * 0.008, sc[i + k], 0, 0.05 - i * 0.006, { dec: 0.18 });
+  },
 };
 
+// ---------------------------------------------------------------- dialogue voices: VOICE(E, t, kind, i)
+// A tiny blip per few characters. The pitch walks a pentatonic set chosen by a hash of i, so speech has a contour.
+const VK = {
+  shepherd: { f: 196, w: 'triangle', cut: 1300, v: 0.12, d: 0.05, oct: 0.3, sl: 0.97 },   // warm, low, gentle
+  sheep: { f: 392, w: 'p25', cut: 2100, v: 0.07, d: 0.045, bleat: 0.04, fm: 950 },     // higher, a little bleat
+  lamb: { f: 740, w: 'triangle', cut: 3400, v: 0.075, d: 0.03, sl: 1.06 },               // high and tiny
+  human: { f: 262, w: 'sq', cut: 1600, v: 0.075, d: 0.045, sl: 0.99 },                   // mid
+  gruff: { f: 117, w: 'sawtooth', cut: 620, v: 0.13, d: 0.05, sl: 0.93, q: 1.6 },        // low: Bram, Chomp, Thistle
+  narrator: { f: 523, w: 'sine', cut: 4000, v: 0.03, d: 0.04, every: 2 },                // barely there
+};
+const PENTA = [0, 2, 4, 7, 9, -3, 2, 4, -5, 0];
+function VOICE(E, t, kind, i) {
+  const K = VK[kind] || VK.human, h = Math.imul((i | 0) + 7, 2654435761) >>> 0;
+  const f = K.f * Math.pow(2, (PENTA[h % PENTA.length] + (rnd() - 0.5) * 0.3) / 12), v = K.v * (0.85 + rnd() * 0.15);
+  const o = O(E, K.w, f, t), lp = F(E, 'lowpass', K.cut, K.q || 0.7), g = G(E), end = t + K.d * 2.2 + 0.03;
+  if (K.sl) o.frequency.exponentialRampToValueAtTime(f * K.sl, t + K.d);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.004); g.gain.setTargetAtTime(0, t + 0.008, K.d / 3.5);
+  o.connect(lp);
+  if (K.fm) { const b = F(E, 'bandpass', K.fm, 1.6), bg = G(E, 1.4); lp.connect(b); b.connect(bg); bg.connect(g); lp.connect(g); }
+  else lp.connect(g);
+  if (K.oct) { const o2 = O(E, 'sine', f * 2, t), g2 = G(E, K.oct); o2.connect(g2); g2.connect(g); o2.start(t); o2.stop(end); }
+  if (K.bleat) vib(E, [o], t, f, K.bleat, 30, 0, end);
+  g.connect(E.sfx); o.start(t); o.stop(end);
+}
+
+// ---------------------------------------------------------------- ambience: quiet beds under the music
+// An ambience is AMB[name](E, I, t): it starts looping beds on I.out (dry) / I.wet (reverb send) and returns a list of
+// event generators { next, fn(E, I, t) → seconds until the next one } that the scheduler runs a little ahead of time.
+function ambBufs(E) {
+  if (!E.ambW) { E.ambW = noiseBuf(E.ctx, 6.3, false); E.ambB = noiseBuf(E.ctx, 7.7, true); }
+}
+function lfo(E, I, t, param, rate, depth) {
+  const l = O(E, 'sine', rate, t), g = G(E, depth); l.connect(g); g.connect(param); l.start(t); I.src.push(l);
+}
+function bed(E, I, t, buf, type, f, q, vel) {              // a looped noise through one filter
+  const s = Nz(E, buf, t, Infinity, true), b = F(E, type, f, q), g = G(E, vel);
+  s.connect(b); b.connect(g); g.connect(I.out); I.src.push(s);
+  return { f: b, g };
+}
+function spot(E, I, pan, rv) {                            // an output for one event, panned, with a reverb send
+  const g = G(E, 1); let o = g;
+  if (pan && E.ctx.createStereoPanner) { const p = E.ctx.createStereoPanner(); p.pan.value = pan; g.connect(p); o = p; }
+  o.connect(I.out); if (rv) { const s = G(E, rv); o.connect(s); s.connect(I.wet); }
+  return g;
+}
+function blip(E, out, t, f0, f1, dur, vel, type = 'sine') {
+  const o = O(E, type, f0, t), g = G(E);
+  if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.8);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + Math.min(0.008, dur * 0.3));
+  g.gain.setTargetAtTime(0, t + dur * 0.45, dur * 0.22);
+  o.connect(g); g.connect(out); o.start(t); o.stop(t + dur * 1.6 + 0.02);
+}
+const pick = a => a[Math.floor(rnd() * a.length)];
+function bird(E, I, t) {
+  const out = spot(E, I, (rnd() * 2 - 1) * 0.7, 0.25), f = 2800 + rnd() * 1600, v = 0.009 + rnd() * 0.008, k = rnd();
+  if (k < 0.45) {                                       // chirps: two to four quick upward sweeps
+    const n = 2 + Math.floor(rnd() * 3), gap = 0.06 + rnd() * 0.04;
+    for (let i = 0; i < n; i++) blip(E, out, t + i * gap, f * (1 + 0.04 * i), f * 1.35, 0.045, v);
+  } else if (k < 0.78) {                                // a two-note call: tee-oo
+    blip(E, out, t, f * 1.1, f * 1.13, 0.15, v * 0.8); blip(E, out, t + 0.21, f * 0.86, f * 0.8, 0.2, v * 0.7);
+  } else {                                              // a short trill
+    const o = O(E, 'sine', f, t), l = O(E, 'sine', 18 + rnd() * 10, t), lg = G(E, f * 0.07), g = G(E), d = 0.25 + rnd() * 0.2;
+    o.frequency.linearRampToValueAtTime(f * (rnd() < 0.5 ? 0.85 : 1.15), t + d);
+    l.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v * 0.7, t + 0.03); g.gain.setTargetAtTime(0, t + d, 0.03);
+    o.connect(g); g.connect(out); o.start(t); l.start(t); o.stop(t + d + 0.25); l.stop(t + d + 0.25);
+  }
+  return rnd() < 0.25 ? 0.5 + rnd() * 0.6 : 1.6 + rnd() * 4.5;   // sometimes a quick reply
+}
+function cricket(f, pan, vel) {                          // a chirp of three or four pulses, then rest
+  return (E, I, t) => {
+    if (!I.cr) I.cr = {};
+    const out = I.cr[f] || (I.cr[f] = spot(E, I, pan, 0.15)), o = O(E, 'sine', f * (1 + (rnd() - 0.5) * 0.004), t), g = G(E);
+    const n = rnd() < 0.7 ? 3 : 4, v = vel * (0.8 + rnd() * 0.2);
+    g.gain.setValueAtTime(0, t);
+    for (let i = 0; i < n; i++) {
+      const p = t + i * 0.034; g.gain.setValueAtTime(0, p); g.gain.linearRampToValueAtTime(v, p + 0.006);
+      g.gain.setValueAtTime(v, p + 0.016); g.gain.linearRampToValueAtTime(0, p + 0.024);
+    }
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + n * 0.034 + 0.05);
+    return rnd() < 0.06 ? 3 + rnd() * 6 : 0.55 + rnd() * 0.12;
+  };
+}
+function owl(E, I, t) {                                  // hoo … hoo-hoo, soft and far off
+  const out = spot(E, I, (rnd() - 0.5) * 0.9, 0.6), f = 370 + rnd() * 50, v = 0.016;
+  [[0, 0.34, 1], [0.62, 0.16, 0.8], [0.82, 0.42, 0.9]].forEach(([d, len, k]) => {
+    const tt = t + d, o = O(E, 'sine', f * 1.03, tt), o2 = O(E, 'sine', f * 2.06, tt), g2 = G(E, 0.12), g = G(E);
+    o.frequency.linearRampToValueAtTime(f * 0.95, tt + len); o2.frequency.linearRampToValueAtTime(f * 1.9, tt + len);
+    g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(v * k, tt + 0.06); g.gain.setTargetAtTime(0, tt + len - 0.05, 0.04);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(out); o.start(tt); o2.start(tt); o.stop(tt + len + 0.3); o2.stop(tt + len + 0.3);
+  });
+  return 20 + rnd() * 25;
+}
+function bubble(E, I, t) {                               // the river's little babbles
+  const out = I.pans ? pick(I.pans) : I.out, f = 380 + rnd() * 520;
+  blip(E, out, t, f, f * (1.6 + rnd() * 0.6), 0.03 + rnd() * 0.025, 0.004 + rnd() * 0.006);
+  return 0.12 + rnd() * 0.55;
+}
+function drip(E, I, t) {                                 // a far-off drip that echoes down the canyon
+  const f = 900 + rnd() * 700, v = 0.012 + rnd() * 0.008, out = spot(E, I, (rnd() - 0.5) * 1.2, 0.7);
+  blip(E, out, t, f, f * 2.1, 0.035, v); if (I.echo) { const s = G(E, 0.8); out.connect(s); s.connect(I.echo); }
+  return 1.6 + rnd() * 4;
+}
+function patter(E, I, t) {                               // a few close raindrops on leaves
+  burst(E, pick(I.pans), t, 'bandpass', 3000 + rnd() * 3000, 1.5, 0.012, 0.006 + rnd() * 0.008, 0.001, 0, E.ambW);
+  return 0.04 + rnd() * 0.22;
+}
+function pans(E, I) { I.pans = [-0.55, 0, 0.55].map(p => spot(E, I, p, 0.1)); }
+const AMB = {
+  meadow(E, I, t) {                                     // day: a gentle breeze, leaves, and birds now and then
+    const b = bed(E, I, t, E.ambB, 'lowpass', 480, 0.5, 0.05);
+    lfo(E, I, t, b.f.frequency, 0.05, 160); lfo(E, I, t, b.g.gain, 0.083, 0.022); lfo(E, I, t, b.g.gain, 0.031, 0.015);
+    const l = bed(E, I, t, E.ambW, 'bandpass', 3200, 0.6, 0.0045);
+    lfo(E, I, t, l.g.gain, 0.11, 0.003); lfo(E, I, t, l.f.frequency, 0.07, 800);
+    return [{ next: t + 0.8 + rnd() * 2, fn: bird }];
+  },
+  night(E, I, t) {                                      // crickets, still air, an owl far away
+    const b = bed(E, I, t, E.ambB, 'lowpass', 300, 0.5, 0.035); lfo(E, I, t, b.g.gain, 0.06, 0.015);
+    return [{ next: t + 0.3, fn: cricket(4550, -0.45, 0.0065) }, { next: t + 0.6, fn: cricket(4820, 0.5, 0.0045) },
+      { next: t + 1.1, fn: cricket(4300, 0.1, 0.0028) }, { next: t + 6 + rnd() * 10, fn: owl }];
+  },
+  river(E, I, t) {                                      // flowing water: a moving band of noise over a low rush
+    const w = bed(E, I, t, E.ambW, 'bandpass', 750, 0.7, 0.03);
+    lfo(E, I, t, w.f.frequency, 0.13, 220); lfo(E, I, t, w.f.frequency, 0.071, 140); lfo(E, I, t, w.g.gain, 0.19, 0.01);
+    const r = bed(E, I, t, E.ambB, 'lowpass', 380, 0.6, 0.05); lfo(E, I, t, r.g.gain, 0.09, 0.015);
+    const h = bed(E, I, t, E.ambW, 'highpass', 2800, 0.5, 0.004); lfo(E, I, t, h.g.gain, 0.23, 0.002);
+    pans(E, I);
+    return [{ next: t + 0.2, fn: bubble }];
+  },
+  canyon(E, I, t) {                                     // low wind through stone, drips echoing far off
+    const w = bed(E, I, t, E.ambW, 'bandpass', 260, 1.6, 0.05);
+    lfo(E, I, t, w.f.frequency, 0.06, 110); lfo(E, I, t, w.f.frequency, 0.023, 60);
+    lfo(E, I, t, w.g.gain, 0.09, 0.02); lfo(E, I, t, w.g.gain, 0.037, 0.015);
+    bed(E, I, t, E.ambB, 'lowpass', 150, 0.6, 0.045);
+    const d = E.ctx.createDelay(1), fb = G(E, 0.42), lp = F(E, 'lowpass', 1800, 0.5), dg = G(E, 0.6);
+    d.delayTime.value = 0.43; d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(dg); dg.connect(I.out); I.echo = d;
+    return [{ next: t + 1 + rnd() * 2, fn: drip }];
+  },
+  storm(E, I, t) {                                      // light: the storm music already has the rain
+    const r = bed(E, I, t, E.ambW, 'bandpass', 4200, 0.5, 0.012); lfo(E, I, t, r.g.gain, 0.08, 0.004);
+    const g = bed(E, I, t, E.ambB, 'lowpass', 550, 0.5, 0.03); lfo(E, I, t, g.g.gain, 0.05, 0.015);
+    pans(E, I);
+    return [{ next: t + 0.1, fn: patter }];
+  },
+};
+const AMB_NAMES = Object.keys(AMB);
+function ambStart(E, name, t, fade) {
+  ambBufs(E);
+  const I = { name, out: G(E), wet: G(E), src: [], gens: [] };
+  I.out.connect(E.ambIn); I.wet.connect(E.ambRv);
+  for (const n of [I.out, I.wet]) { n.gain.setValueAtTime(0, t); n.gain.setTargetAtTime(1, t, fade / 3); }
+  I.gens = AMB[name](E, I, t) || [];
+  return I;
+}
+function ambStop(E, I, t, fade) {
+  I.gens = [];
+  for (const n of [I.out, I.wet]) { n.gain.cancelScheduledValues(t); n.gain.setTargetAtTime(0, t, fade / 4); }
+  for (const s of I.src) try { s.stop(t + fade * 1.6 + 0.2); } catch (e) { /* already stopped */ }
+  if (E.live) setTimeout(() => { try { I.out.disconnect(); I.wet.disconnect(); } catch (e) { /* gone */ } }, (fade * 2 + 1) * 1000);
+}
+function ambPump(E, I, until, now) {
+  for (const g of I.gens) {
+    for (let guard = 0; guard < 4096 && g.next < until; guard++) {
+      if (g.next < now) g.next = now + 0.02 + rnd() * 0.1;          // after a stall or a pause: no backlog
+      try { g.next += Math.max(0.02, g.fn(E, I, g.next)); } catch (e) { warn('ambience: ' + e.message); g.next = Infinity; }
+    }
+  }
+}
+
 // ---------------------------------------------------------------- the live engine and the public API
-const A = { E: null, track: null, paused: false, muted: false, music: true, flags: { choir: false }, timer: 0, last: {} };
+const VOL_DEF = { music: 0.8, sfx: 0.9 };
+const clamp01 = v => (v > 1 ? 1 : v > 0 ? v : 0);
+function loadVol(key, def) {
+  try { const v = localStorage.getItem(key); if (v != null && v !== '' && isFinite(+v)) return clamp01(+v); } catch (e) { /* no storage */ }
+  return def;
+}
+function saveVol(key, v) { try { localStorage.setItem(key, String(v)); } catch (e) { /* no storage */ } }
+const A = { E: null, track: null, paused: false, muted: false, music: true, flags: { choir: false }, timer: 0, last: {},
+  vm: loadVol('nn-vol-music', VOL_DEF.music), vs: loadVol('nn-vol-sfx', VOL_DEF.sfx), ducked: false, amb: 'none', vLast: -1, vN: 0 };
+// Sets the bus levels from the volume settings and the duck (tau: smoothing time constant; 0 sets them at once).
+function levels(tau) {
+  const E = A.E; if (!E) return;
+  const now = E.ctx.currentTime, m = MUSIC * A.vm * (A.ducked ? DUCK : 1), sv = SFXV * A.vs, av = AMBV * A.vs;
+  [[E.music, m], [E.rvMus, m], [E.echoIn, m], [E.sfx, sv], [E.sfxRv, sv], [E.ambIn, av], [E.ambRv, av]].forEach(([n, v]) => {
+    n.gain.cancelScheduledValues(now);
+    if (tau) n.gain.setTargetAtTime(v, now, tau); else n.gain.setValueAtTime(v, now);
+  });
+}
 function tick() {
   const E = A.E; if (!E) return;
   const now = E.ctx.currentTime, silent = A.paused || A.muted || !A.music;
   if (silent !== E.silent) {
     E.silent = silent;
     for (const n of [E.gate, E.rvGate]) { n.gain.cancelScheduledValues(now); n.gain.setTargetAtTime(silent ? 0 : 1, now, silent ? 0.03 : 0.06); }
+  }
+  const aq = A.paused || A.muted;                          // ambience: hushed while paused or muted
+  if (aq !== E.ambQuiet) {
+    E.ambQuiet = aq;
+    for (const n of [E.ambGate, E.ambRvGate]) { n.gain.cancelScheduledValues(now); n.gain.setTargetAtTime(aq ? 0 : 1, now, aq ? 0.04 : 0.15); }
+  }
+  if (E.amb) {
+    if (aq) for (const g of E.amb.gens) g.next = Math.max(g.next, now + 0.3);
+    else ambPump(E, E.amb, now + 0.2, now);
   }
   const S = E.cur;
   if (S && (silent || S.next < now - 0.25)) S.next = Math.max(S.next, now + 0.06);   // freeze while silent; skip after a stall
@@ -1019,6 +1287,23 @@ for (const k of Object.keys(SFX)) {
     try { SFX[k](A.E, now + 0.005); } catch (e) { warn(`sfx ${k}: ${e.message}`); }
   };
 }
+// Dialogue blips: at most one every 55 ms whatever the caller does; the narrator speaks on every other call.
+NN.sfx.voice = (kind, i) => {
+  if (!sfxOk()) return;
+  if (i == null || !isFinite(i)) i = A.vN++;
+  if (kind === 'narrator' && (i | 0) % 2) return;
+  const now = A.E.ctx.currentTime;
+  if (now - A.vLast < 0.055) return;
+  A.vLast = now;
+  try { VOICE(A.E, now + 0.005, kind, i); } catch (e) { warn(`voice ${kind}: ${e.message}`); }
+};
+function setAmbience(name) {
+  const E = A.E; if (!E) return;
+  const cur = E.amb ? E.amb.name : 'none'; if (cur === name) return;
+  const now = E.ctx.currentTime;
+  if (E.amb) ambStop(E, E.amb, now, 1);
+  E.amb = name !== 'none' ? ambStart(E, name, now + 0.02, 1) : null;
+}
 
 NN.audio = {
   init() {
@@ -1027,7 +1312,9 @@ NN.audio = {
     try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
     A.E = makeEngine(ctx, { live: true }); A.E.flags = A.flags;
     if (A.muted) A.E.master.gain.value = 0;
+    levels(0);
     if (A.track) A.E.pend = { name: A.track };
+    if (A.amb !== 'none') { try { setAmbience(A.amb); } catch (e) { warn('ambience: ' + e.message); } }
     if (ctx.state === 'suspended') ctx.resume();
     A.timer = setInterval(tick, 25); tick();
   },
@@ -1054,6 +1341,31 @@ NN.audio = {
     return A.muted;
   },
   get ctx() { return A.E ? A.E.ctx : null; },
+  get musicVolume() { return A.vm; },
+  get sfxVolume() { return A.vs; },
+  setMusicVolume(v) {
+    v = clamp01(+v); if (isNaN(v)) return A.vm;
+    A.vm = v; saveVol('nn-vol-music', v); levels(0.03); return v;
+  },
+  setSfxVolume(v) {
+    v = clamp01(+v); if (isNaN(v)) return A.vs;
+    A.vs = v; saveVol('nn-vol-sfx', v); levels(0.03); return v;
+  },
+  duck(on) {
+    on = !!on; if (on === A.ducked) return;
+    A.ducked = on; levels(0.08);                         // ≈ 0.25 s to settle
+  },
+  get ducked() { return A.ducked; },
+  ambience(name) {
+    if (name === undefined) return;
+    name = name || 'none';
+    if (name !== 'none' && !AMB[name]) { warn('unknown ambience ' + name); name = 'none'; }
+    if (name === A.amb) return;
+    A.amb = name;
+    try { setAmbience(name); } catch (e) { warn('ambience: ' + e.message); }
+  },
+  get currentAmbience() { return A.amb; },
+  get ambiences() { return AMB_NAMES.slice(); },
   get choir() { return A.flags.choir; }, set choir(v) { A.flags.choir = !!v; },
   get warnings() { return WARN.slice(); },
   loopSeconds(name) { const tr = compile(name); return tr ? tr.bars * 16 * 60 / tr.bpm / 4 : 0; },
@@ -1061,7 +1373,10 @@ NN.audio = {
   render(name, seconds = 20, opt = {}) {
     const sr = opt.sr || 44100, oc = new OfflineAudioContext(2, Math.ceil(sr * seconds), sr);
     const E = makeEngine(oc, { raw: opt.raw }); E.flags = { choir: !!opt.choir };
-    if (SFX[name]) SFX[name](E, 0.05);
+    const am = /^ambience:(\w+)$/.exec(name), vo = /^voice:(\w+)$/.exec(name);
+    if (am && AMB[am[1]]) { const I = ambStart(E, am[1], 0.02, opt.fade ?? 1); ambPump(E, I, seconds, 0); }
+    else if (vo) { for (let i = 0, t = 0.05; t < seconds - 0.3; i++, t += 0.07) if (vo[1] !== 'narrator' || i % 2 === 0) VOICE(E, t, vo[1], i); }
+    else if (SFX[name]) SFX[name](E, 0.05);
     else { E.pend = { name }; pump(E, seconds, 0); }
     return oc.startRendering();
   },

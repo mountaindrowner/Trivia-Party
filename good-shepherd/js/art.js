@@ -1272,4 +1272,610 @@ Object.assign(NN.ICONS, {
   heart: ICON(['.rr.rr.', 'ryrrrrr', 'rrrrrrr', 'rrrrrrq', '.rrrrq.', '..rrq..', '...q...'],
     { r: '#d8574f', y: '#ffffff', q: '#a83a34' }, '#5a2430'),
 });
+
+// ---------------------------------------------------------------- idle poses: grazing, sleeping, lying down; birds
+// Pose frames use the same palette chars and hidden tags as their base sprite, so every swap works on them too.
+Object.assign(NN.PAL, { O: '#5a3a2a', Q: '#7a5038', C: '#e8843a', S: '#fbe0b0' });
+// The hidden tags of the standing sheep (see sheepTop), found again on a pose: top outline '1', top wool '2', the
+// lowest belly row '3', and the snags '4' / '5' wherever the wool under them is the same.
+const tagSheepPose = (rows, bellyRow) => rows.map((row, y) => row.replace(/./g, (ch, x) => {
+  if (y === 0 && ch === 'o') return '1';
+  if (y === 1 && ch === 'w') return '2';
+  if (y === bellyRow && ch === 'V') return '3';
+  const t = SNAG[x + ',' + y];
+  return t && ch === (t === '4' ? 'w' : 'W') ? t : ch;
+}));
+const SHEEP_GRAZE = [
+  '...ooo.ooo.......',
+  '..owwwowwwoo.....',
+  '.owwywwwwwwwo....',
+  'owwwwwwwwwwwwo...',
+  'owwwwwwwwwwwwwo..',
+  'owwwwwwwwwwwwwwo.',
+  'oWwwwwwwwwwwwwWo.',
+  'oWWwwwwwwWWWoooo.',
+  '.oVWWWWWWWfoFFFFo',
+  '..oVVVVVVVVofFefo',
+  '..olo...olooffffo',
+];
+const SHEEP_SLEEP = [
+  '...ooo.ooo......',
+  '..owwwowwwoo....',
+  '.owwywwwwwwwo...',
+  'owwwwwwwwwwwwo..',
+  'owwwwwwwwwwoooo.',
+  'oWwwwwwwwfoFFFFo',
+  'oWwwwwwwwwofeefo',
+  'oWWwwwwwwWoffffo',
+  '.oVWWWWWWVVoffpo',
+  '..oVVVVVVVVoooo.',
+  '...oooooooo.....',
+];
+const LAMB_GRAZE = [
+  '.ooo.oo......',
+  'owwwowwwo....',
+  'owywwwwwwo...',
+  'oww4wwwwwwo..',
+  'oWwwwwWWooooo',
+  '.oVVVVVVfFFFo',
+  '.olo..olofefo',
+];
+Object.assign(NN.SPR, {
+  // head down in the grass, nibbling (frame 1 opens the jaw)
+  sheepGraze: { frames: [
+    tagSheepPose(SHEEP_GRAZE.concat(['..olo...olo.offpo', '..oo....oo...ooo.']), 9),
+    tagSheepPose(SHEEP_GRAZE.concat(['..olo...olo.offfo', '..oo....oo...opo.']), 9),
+  ] },
+  // lying down, legs tucked, chin on the grass, eyes shut (the engine draws the Z's)
+  sheepSleep: { frames: [tagSheepPose(SHEEP_SLEEP, 9)] },
+  lambGraze: { frames: [
+    LAMB_GRAZE.concat(['.olo..oloffpo', '.oo...oo.ooo.']),
+    LAMB_GRAZE.concat(['.olo..olofffo', '.oo...oo.opo.']),
+  ] },
+  lambSleep: { frames: [
+    ['.ooo.oo.....', 'owwwowwwo...', 'owywwwwooooo', 'oww4wwwfFFFo', 'oWwwwwwoeefo', '.oVVVVVoffpo', '..ooooooooo.'],
+  ] },
+});
+
+// The Alpha lying down with the lamb: head on his paws, eyes shut. Same chars as the wolf, so `alpha` still works.
+Object.assign(NN.SPR, {
+  wolfLie: { out: '#2b2638', frames: [
+    ['.................G.G...', '......DDDDD......GGGz..', '....DDDDDDDDDD..GGGGGG.', '..DDDDDDDDDDDDDDGGddGGN', '.GGGGGGGGGGGGGGGGzGLLL.', 'GGLGGGLLLLLLLGGGGLLLL..', 'LG..ddd.....GGGGGGGGddd'],
+    ['................G..G...', '......DDDDD......GGGz..', '....DDDDDDDDDD..GGGGGG.', '..DDDDDDDDDDDDDDGGddGGN', '.GGGGGGGGGGGGGGGGzGLLL.', '.GLGGGLLLLLLLGGGGLLLL..', 'GL..ddd.....GGGGGGGGddd'],
+  ] },
+  // ambient life: a far-off bird flapping (wings up, wings down) and a little songbird sitting on a fence
+  bird: { frames: [
+    ['O.....O', 'OO...OO', '.QOOOQ.', '...O...', '.......'],
+    ['.......', '.......', '.QOOOQ.', 'OO.O.OO', 'O.....O'],
+  ] },
+  birdSit: { out: '#3a2418', frames: [
+    ['...uu.', '..uueg', 'UUuCC.', '.UCSS.', '..B.B.'],
+  ] },
+});
+
+// ---------------------------------------------------------------- the title logo and the chapter vignettes
+{
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const bay = (X, Y) => (BAYER[(Y & 3) * 4 + (X & 3)] + 0.5) / 16;
+const LOGO_OUT = '#3e2416';
+
+// "NINETY-NINE" in chunky cream-and-honey wooden letters: the I of NINETY is a shepherd's crook, the hyphen is a
+// heart, and a sheep peeks over the last E. 200×52, transparent; foot point at the bottom center.
+function makeLogo() {
+  const W = 200, H = 52, [c, x] = canvas(W, H), CAP = 26, TOP = 19, DEPTH = 4;
+  const kind = new Uint8Array(W * H), rel = new Int8Array(W * H); // kind: 1 letter, 2 heart, 3 crook
+  const at = (X, Y) => (X >= 0 && Y >= 0 && X < W && Y < H ? kind[Y * W + X] : 0);
+  // glyphs on a local grid, then chamfer every convex corner by one pixel so the letters read soft and chunky
+  const glyph = (w, h, draw) => {
+    const g = Array.from({ length: h }, () => new Uint8Array(w)), p = (X, Y) => { if (g[Y] && X >= 0 && X < w) g[Y][X] = 1; };
+    draw(p);
+    const on = (X, Y) => (g[Y] && X >= 0 && X < w ? g[Y][X] : 0), cut = [];
+    for (let Y = 0; Y < h; Y++) for (let X = 0; X < w; X++) if (on(X, Y)) {
+      for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) if (!on(X + a, Y) && !on(X, Y + b) && !on(X + a, Y + b)) cut.push([X, Y]);
+    }
+    for (const [X, Y] of cut) g[Y][X] = 0;
+    return { w, h, g };
+  };
+  const GL = {
+    N: glyph(19, CAP, p => { for (let Y = 0; Y < CAP; Y++) { for (let i = 0; i < 5; i++) { p(i, Y); p(14 + i, Y); } const x0 = Math.round(Y * 13 / (CAP - 1)); for (let i = 0; i < 6; i++) p(x0 + i, Y); } }),
+    I: glyph(6, CAP, p => { for (let Y = 0; Y < CAP; Y++) for (let i = 0; i < 6; i++) p(i, Y); }),
+    E: glyph(15, CAP, p => {
+      for (let Y = 0; Y < CAP; Y++) for (let i = 0; i < 6; i++) p(i, Y);
+      for (let i = 0; i < 15; i++) for (let Y = 0; Y < 5; Y++) { p(i, Y); p(i, CAP - 5 + Y); }
+      for (let i = 0; i < 12; i++) for (let Y = 10; Y < 15; Y++) p(i, Y);
+    }),
+    T: glyph(18, CAP, p => { for (let i = 0; i < 18; i++) for (let Y = 0; Y < 5; Y++) p(i, Y); for (let Y = 0; Y < CAP; Y++) for (let i = 6; i < 12; i++) p(i, Y); }),
+    Y: glyph(18, CAP, p => {
+      for (let Y = 0; Y < 14; Y++) { const k = Math.round(Y * 6 / 13); for (let i = 0; i < 6; i++) { p(k + i, Y); p(12 - k + i, Y); } }
+      for (let Y = 12; Y < CAP; Y++) for (let i = 6; i < 12; i++) p(i, Y);
+    }),
+    // the crook: a staff for the stem of the I, its hook curling over the top
+    '|': glyph(17, CAP + 15, p => {
+      for (let Y = 8; Y < CAP + 15; Y++) for (let i = 1; i < 5; i++) p(i, Y);
+      for (let Y = 0; Y < 12; Y++) for (let X = 0; X < 17; X++) {
+        const dx = X - 8.5, dy = Y - 8, r = Math.hypot(dx, dy);
+        if (r >= 4.3 && r <= 7.6 && (dy <= 0 || (dx > 0 && dy < 2))) p(X, Y);
+      }
+    }),
+    '♥': glyph(14, 12, p => {
+      const rows = ['.####..####.', '############', '############', '############', '.##########.', '..########..', '...######...', '....####....', '.....##.....'];
+      rows.forEach((r, Y) => { for (let i = 0; i < r.length; i++) if (r[i] === '#') p(i + 1, Y + 2); });
+      p(2, 1); p(3, 1); p(4, 1); p(7, 1); p(8, 1); p(9, 1);
+    }),
+  };
+  GL['|'].w = 6; // the hook may hang over the next letter
+  const word = ['N', '|', 'N', 'E', 'T', 'Y', '♥', 'N', 'I', 'N', 'E'], gap = (a, b) => (a === '♥' || b === '♥' ? 3 : 2);
+  let total = 0;
+  word.forEach((ch, i) => { total += GL[ch].w + (i ? gap(word[i - 1], ch) : 0); });
+  let cx = Math.round((W - total) / 2);
+  const slots = [];
+  for (const [n, ch] of word.entries()) {
+    if (n) cx += gap(word[n - 1], ch);
+    const gl = GL[ch], mid = cx + gl.w / 2, arch = -Math.round(2.6 * Math.sin(Math.PI * mid / W));
+    const top = ch === '|' ? TOP + arch - 15 : ch === '♥' ? TOP + arch + 6 : TOP + arch;
+    const k = ch === '♥' ? 2 : ch === '|' ? 3 : 1;
+    gl.g.forEach((row, Y) => row.forEach((v, X) => {
+      if (!v) return;
+      const XX = cx + X, YY = top + Y;
+      if (XX < 0 || YY < 0 || XX >= W || YY >= H) return;
+      kind[YY * W + XX] = k; rel[YY * W + XX] = ch === '|' ? Y - 15 : Y;
+    }));
+    slots.push({ ch, x: cx, w: gl.w, top: ch === '|' ? top + 15 : top });
+    cx += gl.w;
+  }
+  // the extruded wooden sides below every letter, then a 2px warm dark outline around the lot
+  const ext = new Uint8Array(W * H), extK = new Uint8Array(W * H);
+  for (let Y = H - 1; Y >= 0; Y--) for (let X = 0; X < W; X++) {
+    const i = Y * W + X;
+    if (kind[i]) continue;
+    for (let d = 1; d <= DEPTH; d++) if (at(X, Y - d)) { ext[i] = d; extK[i] = at(X, Y - d); break; }
+  }
+  const solid = i => kind[i] || ext[i];
+  // the sheep behind the last E (drawn first so the letters hide its lower half)
+  const lastE = slots[slots.length - 1];
+  {
+    const sx = lastE.x + 7, sy = lastE.top, [h, hx] = canvas(19, 16);
+    blob(hx, [[9, 6, 6], [4, 7, 3], [14, 7, 3], [6, 3, 3], [12, 3, 3], [9, 2, 3]], '#e6dacb');
+    blob(hx, [[9, 5, 5], [5, 6, 2], [13, 6, 2], [7, 3, 2], [11, 3, 2], [9, 2, 2]], '#fdf8ee');
+    rect(hx, '#ffffff', 6, 2, 2, 1); rect(hx, '#ffffff', 10, 1, 2, 1); rect(hx, '#ffffff', 5, 5, 1, 1);
+    oval(hx, 9, 10, 4, 5, '#5b4746'); oval(hx, 9, 9, 3, 3, '#7d6563');
+    blob(hx, [[9, 5, 2], [7, 6, 1], [11, 6, 1]], '#fdf8ee'); // the forelock
+    rect(hx, '#5b4746', 1, 8, 4, 2); rect(hx, '#7d6563', 2, 8, 2, 1); rect(hx, '#5b4746', 14, 8, 4, 2); rect(hx, '#7d6563', 15, 8, 2, 1); // ears
+    rect(hx, '#1d1418', 7, 9, 1, 2); rect(hx, '#1d1418', 11, 9, 1, 2); rect(hx, '#ffffff', 7, 9, 1, 1); rect(hx, '#ffffff', 11, 9, 1, 1);
+    rect(hx, '#ef9aa0', 9, 12, 1, 1); rect(hx, '#ef9aa0', 5, 11, 1, 1); rect(hx, '#ef9aa0', 13, 11, 1, 1); // nose and cheeks
+    x.drawImage(outline(h, '#4e3d3f'), sx - 10, sy - 17);
+    slots.peek = { sx, sy };
+  }
+  const ring = new Uint8Array(W * H);
+  for (let pass = 1; pass <= 2; pass++) {
+    const add = [];
+    for (let Y = 0; Y < H; Y++) for (let X = 0; X < W; X++) {
+      const i = Y * W + X;
+      if (solid(i) || ring[i]) continue;
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const XX = X + a, YY = Y + b, j = YY * W + XX;
+        if (XX < 0 || YY < 0 || XX >= W || YY >= H) continue;
+        if (solid(j) || (ring[j] && ring[j] < pass)) { add.push(i); break; }
+      }
+    }
+    for (const i of add) ring[i] = pass;
+  }
+  // a soft shadow under the whole word
+  for (let Y = 0; Y < H; Y++) for (let X = 0; X < W; X++) {
+    const i = Y * W + X, up = (Y - 2) * W + X - 1;
+    if (!solid(i) && !ring[i] && Y > 2 && X > 0 && (solid(up) || ring[up]) && bay(X, Y) < 0.5) rect(x, 'rgba(46,26,20,0.35)', X, Y);
+  }
+  const FACE = ['#fffaf0', '#fff2c4', '#fbe8b4', '#f5dc9c', '#efcc86', '#e8bc72', '#e0aa6c'];
+  const SIDE = { 1: ['#c58d55', '#b07a45', '#9a6638', '#7a4a24'], 2: ['#a83a34', '#8e3030', '#7a2430', '#5a2430'], 3: ['#7a4a24', '#6b4226', '#5a3418', '#4a2a14'] };
+  for (let Y = 0; Y < H; Y++) for (let X = 0; X < W; X++) {
+    const i = Y * W + X;
+    if (ring[i]) { rect(x, LOGO_OUT, X, Y); continue; }
+    if (ext[i]) { rect(x, SIDE[extK[i]][Math.min(3, ext[i] - 1)], X, Y); if (ext[i] === 1 && !at(X - 1, Y - 1)) rect(x, extK[i] === 1 ? '#d8a468' : extK[i] === 2 ? '#c84a44' : '#8a5a33', X, Y); continue; }
+    const k = kind[i];
+    if (!k) continue;
+    const r = rel[i], edgeL = !at(X - 1, Y), edgeR = !at(X + 1, Y), edgeT = !at(X, Y - 1);
+    if (k === 1) {
+      const t = r / (CAP - 1) * (FACE.length - 1), b = Math.floor(t), f = t - b;
+      let col = FACE[Math.min(FACE.length - 1, b + (f > bay(X, Y) ? 1 : 0))];
+      if (edgeT || (edgeL && r < CAP - 6)) col = '#fffaf0';
+      else if (edgeR) col = '#d89a5a';
+      rect(x, col, X, Y);
+    } else if (k === 2) {
+      rect(x, edgeR || !at(X, Y + 1) ? '#b8443e' : '#d8574f', X, Y);
+    } else {
+      rect(x, edgeL || edgeT ? '#e0aa6c' : edgeR ? '#8a5a33' : '#b07a45', X, Y);
+    }
+  }
+  // wood grain: short warm streaks across the letter faces
+  const R = NN.U.seeded(99);
+  for (let n = 0; n < 70; n++) {
+    const X = Math.floor(R() * W), Y = Math.floor(R() * H), len = 2 + Math.floor(R() * 5);
+    for (let k = 0; k < len; k++) {
+      const i = Y * W + X + k;
+      if (kind[i] !== 1 || !at(X + k + 1, Y) || !at(X + k - 1, Y) || !at(X + k, Y - 1) || !at(X + k, Y + 1)) break;
+      if (rel[i] > 3) rect(x, rel[i] < 14 ? '#f0d49a' : '#d8a060', X + k, Y);
+    }
+  }
+  // the heart's shine; the crook's grain
+  for (const s of slots) {
+    if (s.ch === '♥') { rect(x, '#ffffff', s.x + 3, s.top + 3, 2, 1); rect(x, '#ffffff', s.x + 3, s.top + 4, 1, 1); rect(x, '#ef8a7a', s.x + 5, s.top + 3, 1, 2); }
+    if (s.ch === '|') for (let Y = s.top + 1; Y < s.top + CAP - 2; Y += 5) rect(x, '#c48d55', s.x + 2, Y, 1, 2);
+  }
+  // hooves over the top edge of the E
+  const { sx } = slots.peek;
+  for (const hx of [sx - 6, sx + 3]) { rect(x, LOGO_OUT, hx - 1, lastE.top - 3, 5, 4); rect(x, '#5b4746', hx, lastE.top - 2, 3, 2); rect(x, '#7d6563', hx, lastE.top - 2, 1, 1); rect(x, '#fdf8ee', hx, lastE.top - 3, 3, 1); }
+  return c;
+}
+NN.PROPS.logo = { make: makeLogo, ox: 100, oy: 52 };
+
+// Chapter vignettes: 128×64 little paintings for the chapter title cards, framed in 1px of warm brown. Each is drawn
+// back to front: a dithered sky, far hills (pale), middle ground, then a darker foreground. Seeded, so they never change.
+const VW = 128, VH = 64;
+// sky: bands of color that dither into each other only near the seams
+const vSky = (x, cols, y0 = 0, y1 = VH - 1) => {
+  const n = cols.length - 1;
+  for (let Y = y0; Y <= y1; Y++) {
+    const t = (Y - y0) / Math.max(1, y1 - y0) * n, i = Math.min(n - 1, Math.floor(t)), f = NN.U.clamp((t - i - 0.4) / 0.6, 0, 1);
+    for (let X = 0; X < VW; X++) rect(x, f > bay(X, Y) ? cols[i + 1] : cols[i], X, Y);
+  }
+};
+// a smooth wobbly line: a sum of seeded sines
+const vWave = (R, parts) => { const ph = parts.map(() => R() * TAU); return X => parts.reduce((a, [amp, f], i) => a + amp * Math.sin(X * f + ph[i]), 0); };
+// fill everything below a ridge; `lit` colors the ridge's top pixel, `shade` dithers the lower part darker
+const vLand = (x, top, col, lit, shade, y1 = VH) => {
+  for (let X = 0; X < VW; X++) {
+    const t = Math.round(top(X));
+    rect(x, col, X, t, 1, y1 - t);
+    if (lit) rect(x, lit, X, t, 1, 1);
+    if (shade) for (let Y = t + 1; Y < y1; Y++) if ((Y - t) / (y1 - t) > 0.45 + bay(X, Y) * 0.55) rect(x, shade, X, Y);
+  }
+};
+// a dithered glow: dense in the middle, fading out
+const vGlow = (x, cx, cy, r, col, k = 1, ry = r) => {
+  for (let Y = Math.floor(cy - ry); Y <= cy + ry; Y++) for (let X = Math.floor(cx - r); X <= cx + r; X++) {
+    const d = Math.hypot((X - cx) / r, (Y - cy) / ry);
+    if (d < 1 && k * (1 - d) * (1 - d) * 1.6 > bay(X, Y)) rect(x, col, X, Y);
+  }
+};
+const vCloud = (x, cx, cy, w, col, shade, hi) => {
+  const n = Math.max(2, Math.round(w / 5));
+  for (let i = 0; i < n; i++) { const X = cx - w / 2 + (i + 0.5) * w / n, r = 2 + ((i * 7 + w) % 3) + (i === n >> 1 ? 1 : 0); disc(x, X, cy - r * 0.4, r, col); }
+  rect(x, shade, Math.round(cx - w / 2), Math.round(cy), Math.round(w), 1);
+  if (hi) for (let i = 0; i < n; i++) rect(x, hi, Math.round(cx - w / 2 + (i + 0.3) * w / n), Math.round(cy - 3 - (i === n >> 1 ? 1 : 0)), 2, 1);
+};
+const vPine = (x, X, Y, h, dark, mid, lit) => {
+  rect(x, '#5a3418', X, Y - 2, 1, 3);
+  for (let j = 0; j < h; j++) {
+    const half = Math.round(((j % Math.max(3, h >> 2)) + 1) * 0.45 + j * 0.28), y = Y - 2 - h + j;
+    rect(x, dark, X - half, y, half * 2 + 1, 1);
+    if (half > 0) rect(x, mid, X - half, y, half, 1);
+    if (lit && half > 1 && j % 3 === 1) rect(x, lit, X - half, y, 1, 1);
+  }
+};
+const vTree = (x, X, Y, r, cols, trunk = '#6b4226') => {
+  rect(x, trunk, X, Y - r, 1 + (r > 4 ? 1 : 0), r + 1);
+  disc(x, X, Y - r * 1.6, r, cols[0]); disc(x, X - 1, Y - r * 1.7 - 1, Math.max(1, r - 1), cols[1]);
+  if (r > 2) disc(x, X - 2, Y - r * 1.8 - 2, Math.max(1, r - 3), cols[2]);
+};
+const vOlive = (x, X, Y, s) => {
+  rect(x, '#7a6a52', X, Y - 2 * s, 1, 2 * s + 1); rect(x, '#5a4c3a', X - 1, Y, 3, 1);
+  blob(x, [[X - 2 * s, Y - 3 * s, 2 * s], [X + 2 * s, Y - 3 * s, 2 * s], [X, Y - 4 * s, 2 * s]], '#6e8a6a');
+  blob(x, [[X - 2 * s, Y - 3 * s - 1, s], [X + 1, Y - 4 * s - 1, s + (s > 1 ? 1 : 0)]], '#8ea886');
+  rect(x, '#b6c8a8', X - 2 * s, Y - 4 * s - 1, s + 1, 1); rect(x, '#b6c8a8', X + 1, Y - 5 * s - 1, s, 1);
+};
+// little sheep: far (4×3) and near (6×4), facing right unless flipped; `rim` is the light catching their backs
+const vSheep = (x, X, Y, near, flip, rim) => {
+  const rows = near ? ['.www..', 'wwwwwk', 'WWWWW.', '.k..k.'] : ['.ww.', 'wwwk', 'k.k.'];
+  pix(x, X, Y, flip ? rows.map(r => r.split('').reverse().join('')) : rows, { w: '#fdf8ee', W: '#d8cbbb', k: '#4e3d3f' });
+  if (rim) rect(x, rim, X + (flip ? 2 : 1), Y, near ? 3 : 1, 1);
+};
+const vFence = (x, x0, x1, Y, h, step, col, colS) => {
+  for (let X = x0; X <= x1; X += step) rect(x, colS, X, Y - h, 1, h + 1);
+  rect(x, col, x0, Y - h + 1, x1 - x0 + 1, 1); rect(x, col, x0, Y - 1, x1 - x0 + 1, 1);
+};
+const vHut = (x, X, Y, night) => { // a little hut with a red roof, 17×13, foot at (X, Y)
+  rect(x, '#c58d55', X + 2, Y - 7, 13, 7); rect(x, '#a8703f', X + 2, Y - 7, 1, 7); rect(x, '#9a98a8', X + 2, Y - 1, 13, 1);
+  rect(x, '#7a4a24', X + 7, Y - 5, 3, 5); rect(x, night ? '#ffd36a' : '#a8d8f0', X + 11, Y - 5, 2, 2);
+  for (let j = 0; j < 6; j++) { rect(x, j % 2 ? '#9e4334' : '#b34f3f', X + 5 - j, Y - 13 + j, 7 + j * 2, 1); }
+  rect(x, '#7a2e26', X, Y - 8, 17, 1); rect(x, '#d06a52', X + 5, Y - 13, 7, 1);
+  rect(x, '#8a8898', X + 12, Y - 15, 2, 4);
+};
+const vFrame = x => { x.fillStyle = '#3e2416'; x.fillRect(0, 0, VW, 1); x.fillRect(0, VH - 1, VW, 1); x.fillRect(0, 0, 1, VH); x.fillRect(VW - 1, 0, 1, VH); };
+const vGrass = (x, R, y0, y1, cols, n) => { for (let k = 0; k < n; k++) { const X = Math.floor(R() * VW), Y = y0 + Math.floor(R() * (y1 - y0)); rect(x, cols[k % cols.length], X, Y, 1, 1); if (R() < 0.5) rect(x, cols[k % cols.length], X + 1, Y - 1, 1, 1); } };
+const vFlowers = (x, R, y0, y1, cols, n) => { for (let k = 0; k < n; k++) { const X = 2 + Math.floor(R() * (VW - 4)), Y = y0 + Math.floor(R() * (y1 - y0)); rect(x, cols[k % cols.length], X, Y, 1, 1); } };
+const vignette = (seed, paint) => () => { const [c, x] = canvas(VW, VH); paint(x, NN.U.seeded(seed)); vFrame(x); return c; };
+
+// 1 · Green Pastures: a spring morning over the home meadow, the fold and the hut, sheep at their grazing
+const vig1 = vignette(23, (x, R) => {
+  vSky(x, ['#7ab8e6', '#98caee', '#b8dcf0', '#d8ecee', '#f6efd0'], 0, 36);
+  vGlow(x, 96, 14, 18, '#fbf2d0', 0.8); disc(x, 96, 14, 6, '#ffe680'); disc(x, 95, 13, 4, '#fff2c4');
+  vCloud(x, 28, 12, 18, '#ffffff', '#d8ecf4', '#ffffff'); vCloud(x, 60, 7, 10, '#f4fafc', '#cfe6f2'); vCloud(x, 118, 22, 10, '#fdf8ee', '#e0ecee');
+  const far = vWave(R, [[2.5, 0.05], [1.2, 0.13]]), mid = vWave(R, [[3, 0.04], [1.5, 0.1]]), near = vWave(R, [[1.6, 0.05], [0.8, 0.17]]);
+  vLand(x, X => 29 + far(X), '#a9cf9a', '#c6e2b0');
+  for (const X of [8, 14, 19, 70, 76, 120]) vTree(x, X, Math.round(30 + far(X)) + 1, 2, ['#7aa872', '#8cba80', '#a4cc92'], '#6a7a5a');
+  vLand(x, X => 36 + mid(X) + (X - 64) * (X - 64) / 900, '#7cc256', '#9bd16a', '#6ab04c');
+  vTree(x, 34, Math.round(37 + mid(34)), 4, ['#3f7a34', '#56983f', '#74b54d']); vTree(x, 41, Math.round(37 + mid(41)) + 1, 3, ['#3f7a34', '#56983f', '#74b54d']);
+  // the fold on the rise, the hut beside it
+  const fy = 44;
+  rect(x, '#8fcc62', 58, fy - 6, 34, 6); vFence(x, 58, 91, fy - 6, 3, 3, '#c58d55', '#8a5a33');
+  for (const [X, Y, f] of [[61, fy - 4, 0], [67, fy - 3, 1], [73, fy - 5, 0], [79, fy - 3, 0], [84, fy - 4, 1]]) vSheep(x, X, Y, false, f);
+  vFence(x, 58, 70, fy, 3, 3, '#e0aa6c', '#8a5a33'); vFence(x, 78, 91, fy, 3, 3, '#e0aa6c', '#8a5a33'); // the gate is open
+  vHut(x, 96, 43); vGlow(x, 109, 23, 4, '#fdf8ee', 0.6); rect(x, '#fdf8ee', 109, 25, 2, 1);
+  vLand(x, X => 47 + near(X), '#56983f', '#74b54d', '#4a8a38');
+  // a path down to the gate
+  for (let Y = 44; Y < VH; Y++) { const t = (Y - 44) / 20, cx = 74 + Math.sin(t * 2.6) * 6 - t * 18, w = 2 + t * 9; rect(x, '#c8b070', Math.round(cx - w / 2), Y, Math.round(w), 1); rect(x, '#e0c890', Math.round(cx - w / 4), Y, Math.max(1, Math.round(w / 3)), 1); }
+  for (const [X, Y, f] of [[22, 50, 0], [40, 54, 1], [96, 52, 1], [108, 57, 0]]) { rect(x, 'rgba(38,52,24,.35)', X, Y + 4, 6, 1); vSheep(x, X, Y, true, f, '#fff6d8'); }
+  vLand(x, X => 59 + near(X * 2) * 0.8, '#3f7a34', '#56983f');
+  vGrass(x, R, 48, 62, ['#3f7a34', '#74b54d'], 50);
+  vFlowers(x, R, 48, 62, ['#ffffff', '#f5c542', '#ef9aa0', '#ffffff'], 26);
+  // an oak framing the left edge
+  rect(x, '#6b4226', 4, 34, 3, 26); rect(x, '#8a5a33', 5, 34, 1, 26);
+  blob(x, [[5, 22, 11], [16, 20, 6], [2, 32, 6]], '#3f7a34'); blob(x, [[4, 19, 8], [14, 18, 4]], '#56983f'); blob(x, [[2, 15, 4], [12, 16, 2]], '#74b54d');
+  for (let k = 0; k < 14; k++) rect(x, '#9bd16a', Math.floor(R() * 18), 9 + Math.floor(R() * 16), 1, 1);
+});
+
+// 2 · Still Waters: a slow river, a plank bridge across it, reeds, and a great sycamore on the far bank
+const vig2 = vignette(7, (x, R) => {
+  vSky(x, ['#8ec6ea', '#a8d6f0', '#c8e6f0', '#e8f2e4'], 0, 28);
+  vCloud(x, 22, 9, 16, '#ffffff', '#d8ecf4', '#ffffff'); vCloud(x, 70, 14, 12, '#f4fafc', '#d0e6f0');
+  const far = vWave(R, [[2, 0.05], [1, 0.15]]);
+  vLand(x, X => 23 + far(X), '#9cc4b0', '#b8d8c0');
+  vLand(x, X => 28 + Math.sin(X * 0.09) * 0.8, '#74b54d', '#9bd16a', null, 34);
+  for (const X of [6, 12, 46, 54, 60]) vTree(x, X, 30, 2 + (X % 3), ['#4f9a3c', '#62ad5a', '#86c46a']);
+  // the river: sky in it near the far bank, deeper toward us
+  vSky(x, ['#a8dcf5', '#6ab8e0', '#4aa3d8', '#3a8cc4'], 33, 50);
+  rect(x, '#3f7a34', 0, 32, VW, 1); rect(x, '#56983f', 0, 31, VW, 1);
+  // the sycamore and its reflection
+  const tx = 96;
+  for (let Y = 14; Y < 32; Y++) { const w = 4 + (Y > 28 ? Y - 28 : 0); rect(x, '#9a9078', tx - (w >> 1), Y, w, 1); rect(x, '#d8d0bc', tx - (w >> 1) + 1, Y, 1, 1); }
+  for (const [X, Y] of [[tx - 1, 18], [tx, 24], [tx - 1, 28]]) rect(x, '#6a604e', X, Y, 2, 1);
+  for (let Y = 33; Y < 40; Y++) if (bay(tx, Y) < 0.7) rect(x, '#7a8a8a', tx - 2, Y, 4, 1);
+  blob(x, [[tx, 10, 12], [tx - 13, 15, 7], [tx + 13, 15, 7], [tx - 6, 4, 7], [tx + 7, 5, 7]], '#3f7a34');
+  blob(x, [[tx - 1, 8, 10], [tx - 12, 13, 5], [tx + 11, 13, 5], [tx - 6, 3, 5], [tx + 6, 4, 5]], '#56983f');
+  blob(x, [[tx - 5, 4, 5], [tx - 13, 11, 2], [tx + 8, 2, 3]], '#74b54d'); blob(x, [[tx - 7, 2, 2], [tx + 8, 1, 1]], '#9bd16a');
+  for (let k = 0; k < 16; k++) rect(x, '#35692d', tx - 16 + Math.floor(R() * 32), 10 + Math.floor(R() * 10), 2, 1);
+  rect(x, '#35692d', tx - 18, 17, 36, 1);
+  for (let Y = 34; Y < 46; Y++) for (let X = tx - 18; X <= tx + 18; X++) {
+    const d = Math.abs(X - tx) / 18 + (Y - 34) / 12; if (d < 1 && bay(X, Y) < 0.55 * (1 - d) + 0.15) rect(x, '#3e8a8a', X, Y);
+  }
+  // still-water glints
+  for (let k = 0; k < 22; k++) { const Y = 35 + Math.floor(R() * 14), X = Math.floor(R() * VW); rect(x, Y < 41 ? '#e8f6fc' : '#a8dcf5', X, Y, 2 + Math.floor(R() * 4), 1); }
+  // lily pads
+  for (const [X, Y] of [[18, 44], [26, 47], [108, 46], [34, 42]]) { oval(x, X, Y, 3, 1, '#3d7a2e'); rect(x, '#5aa846', X - 2, Y - 1, 3, 1); }
+  rect(x, '#f6b3c8', 26, 46, 2, 1); rect(x, '#ffffff', 26, 45, 1, 1); rect(x, '#f6b3c8', 108, 45, 1, 1);
+  // the plank bridge, coming toward us across the water
+  for (let Y = 31; Y < VH; Y++) {
+    const t = (Y - 31) / 32, cx = 58 - t * 6, w = 6 + t * 26, l = Math.round(cx - w / 2), r = Math.round(cx + w / 2);
+    const plank = Math.floor(Math.pow(t, 0.7) * 12);
+    rect(x, ['#c08c52', '#b8824a', '#a8743f'][plank % 3], l, Y, r - l, 1);
+    if (Math.floor(Math.pow((Y - 30) / 32, 0.7) * 12) !== plank) rect(x, '#7a4a24', l, Y, r - l, 1);
+    rect(x, '#d8a468', l, Y, 1, 1); rect(x, '#6b4226', r - 1, Y, 1, 1);
+    if (Y > 34 && Y < 52 && Y % 2) rect(x, '#2f7ab0', l - 1, Y + 1, r - l + 2, 1);
+  }
+  for (const t of [0.12, 0.3, 0.55, 0.85]) { // posts and their reflections
+    const Y = Math.round(31 + t * 32), cx = 58 - t * 6, w = 6 + t * 26, h = 2 + Math.round(t * 6);
+    for (const X of [Math.round(cx - w / 2) - 1, Math.round(cx + w / 2)]) { rect(x, '#6b4226', X, Y - h, 1 + (t > 0.5 ? 1 : 0), h + 2); rect(x, '#b07a45', X, Y - h, 1, 1); }
+  }
+  // the near bank, reeds and cattails
+  vLand(x, X => 52 + Math.sin(X * 0.07) * 1.5 + (X > 40 && X < 76 ? 8 : 0), '#56983f', '#74b54d', '#3f7a34');
+  for (const [X0, n] of [[2, 9], [100, 11]]) for (let k = 0; k < n; k++) {
+    const X = X0 + k * 2 + Math.floor(R() * 2), top = 38 + Math.floor(R() * 10), lean = R() < 0.5 ? -1 : 1;
+    for (let Y = top; Y < VH; Y++) rect(x, Y < top + 3 ? '#9bd16a' : Y > 56 ? '#3d7a2e' : '#5aa846', X + Math.round(lean * (VH - Y) / 16), Y, 1, 1);
+    if (k % 3 === 1) { rect(x, '#7a4a24', X + Math.round(lean * (VH - top) / 16), top + 1, 2, 4); rect(x, '#a0663a', X + Math.round(lean * (VH - top) / 16), top + 1, 1, 2); }
+  }
+});
+
+// 3 · He Restores My Soul: thorn hills at sunset, a path cut through them, and one lamb on its way home
+const vig3 = vignette(31, (x, R) => {
+  vSky(x, ['#3e2e5a', '#5e3a6a', '#8e4a72', '#c8647a', '#ec8e6e', '#f8be72', '#ffe0a0'], 0, 40);
+  for (let k = 0; k < 10; k++) rect(x, '#e8d0f0', Math.floor(R() * VW), Math.floor(R() * 7) + 1, 1, 1);
+  vGlow(x, 64, 33, 30, '#ffd890', 0.7, 14); disc(x, 64, 33, 9, '#ffd36a'); disc(x, 64, 32, 7, '#ffe8a8'); disc(x, 63, 31, 4, '#fff6d8');
+  vCloud(x, 26, 19, 22, '#d8708a', '#a8506e', '#f0a080'); vCloud(x, 104, 15, 18, '#c8607a', '#9a4a6a', '#e8907a'); vCloud(x, 88, 26, 10, '#f0907a', '#c06a70');
+  const spikes = (top, col, every) => { for (let X = 1; X < VW - 1; X += every) { const t = Math.round(top(X)); rect(x, col, X, t - 1, 1, 1); if (X % (every * 2) === 0) rect(x, col, X + 1, t - 2, 1, 1); } };
+  const a = vWave(R, [[3, 0.06], [1.5, 0.15]]), b = vWave(R, [[4, 0.05], [2, 0.12]]), cc = vWave(R, [[3, 0.07], [1.5, 0.2]]);
+  const notch = X => -6 * Math.exp(-((X - 64) * (X - 64)) / 120);
+  vLand(x, X => 36 + a(X) + notch(X) * 0.3, '#a86a7a', '#e0907e'); spikes(X => 36 + a(X) + notch(X) * 0.3, '#a86a7a', 3);
+  vLand(x, X => 43 + b(X) - notch(X) * 0.6, '#7a4652', '#c0706e', '#6a3a48'); spikes(X => 43 + b(X) - notch(X) * 0.6, '#7a4652', 2);
+  // the path, cut through the thorns, lit by the low sun
+  const px = Y => 64 + Math.sin((VH - Y) / 7) * 9 * ((VH - Y) / 26), pw = Y => 1 + (Y - 38) * 0.75;
+  for (let Y = 39; Y < VH; Y++) {
+    const cx = px(Y), w = pw(Y), l = Math.round(cx - w / 2), r = Math.round(cx + w / 2);
+    rect(x, '#b88a62', l, Y, r - l + 1, 1); rect(x, '#e8c08a', Math.round(cx - w / 5), Y, Math.max(1, Math.round(w / 3)), 1);
+    rect(x, '#8a5a4a', l, Y, 1, 1); rect(x, '#8a5a4a', r, Y, 1, 1);
+  }
+  // thorn thickets either side of it
+  const bush = (X, Y, r, d, m, l) => { blob(x, [[X, Y, r], [X + r, Y + 1, r - 1], [X - r, Y + 1, r - 1]], d); blob(x, [[X - 1, Y - 1, r - 1]], m); rect(x, l, X - 1, Y - r, 2, 1); for (let k = 0; k < r * 3; k++) { const ang = R() * Math.PI, rr = r + 1; rect(x, '#e8c8a8', Math.round(X + Math.cos(ang) * rr * 1.4), Math.round(Y - Math.sin(ang) * rr), 1, 1); } };
+  for (const [X, Y, r] of [[20, 50, 4], [34, 52, 3], [92, 49, 4], [108, 52, 5], [8, 54, 5]]) bush(X, Y, r, '#5a3442', '#7a4652', '#c0706e');
+  vLand(x, X => (X < 44 ? 56 + cc(X) - (44 - X) / 6 : X > 84 ? 56 + cc(X) - (X - 84) / 6 : 70), '#3e2230', '#7a4652', '#2e1a26');
+  for (let X = 1; X < VW - 1; X += 2) { const t = X < 44 ? 56 + cc(X) - (44 - X) / 6 : X > 84 ? 56 + cc(X) - (X - 84) / 6 : 99; if (t < 64) { rect(x, '#3e2230', X, Math.round(t) - 1, 1, 1); if (X % 4 === 1) rect(x, '#e8c8a8', X + 1, Math.round(t) - 2, 1, 1); } }
+  // the lamb, rim-lit, with a long shadow toward us
+  const lx = Math.round(px(50)) - 3, ly = 47;
+  for (let k = 0; k < 6; k++) rect(x, '#8a5a4a', lx + 1 + (k >> 1), ly + 4 + k, 3, 1);
+  pix(x, lx, ly, ['.ww...', 'wwwwk.', 'wWWWkk', '.k..k.'], { w: '#fdf8ee', W: '#e6c8b0', k: '#4e3d3f' });
+  rect(x, '#ffe0a0', lx + 1, ly, 2, 1); rect(x, '#ffd890', lx, ly + 1, 1, 1);
+});
+
+// 4 · Paths of Righteousness: an old road winding west past pines, Hank's tent and the hay cart, a storm coming
+const vig4 = vignette(41, (x, R) => {
+  vSky(x, ['#7a8aa8', '#98a6b8', '#c0c4c0', '#e8dcb8'], 0, 36);
+  // the storm on the western horizon: heavy clouds, rain, one far flash
+  for (const [cx, cy, w] of [[14, 22, 30], [34, 18, 26], [8, 13, 18], [52, 24, 20]]) vCloud(x, cx, cy, w, '#5d5e78', '#4a4b62', '#7d7e98');
+  for (const [cx, cy, w] of [[20, 27, 26], [44, 28, 18]]) vCloud(x, cx, cy, w, '#4a4b62', '#3a3b52');
+  for (let k = 0; k < 36; k++) { const X = Math.floor(R() * 56), Y = 28 + Math.floor(R() * 8); rect(x, '#6a6c88', X, Y, 1, 2); rect(x, '#6a6c88', X - 1, Y + 2, 1, 1); }
+  pix(x, 30, 26, ['.y.', 'y..', 'yy.', '.y.', 'y..'], { y: '#fff2a8' });
+  vCloud(x, 92, 10, 14, '#f4ecd8', '#d0c8c0', '#ffffff'); vCloud(x, 116, 16, 10, '#ece4d0', '#c8c0b8');
+  const far = vWave(R, [[1, 0.08], [0.6, 0.2]]);
+  vLand(x, X => 36 + far(X), '#8a9a7a', '#a8b890');
+  for (let X = 2; X < 60; X += 3) if (R() < 0.7) vPine(x, X, 37, 3 + Math.floor(R() * 3), '#56685a', '#6a7c6a');
+  vLand(x, X => 39 + far(X * 1.7) * 0.5, '#b8b46a', '#d0cc80', '#a8a45a');
+  // the road: west into the weather
+  const rx = Y => 112 - Math.pow((VH - Y) / 25, 0.8) * 70 + Math.sin((VH - Y) / 4.5) * 7, rw = Y => 1 + (Y - 38) * 0.9;
+  for (let Y = 39; Y < VH; Y++) {
+    const cx = rx(Y), w = rw(Y), l = Math.round(cx - w / 2), r = Math.round(cx + w / 2);
+    rect(x, '#b08a5a', l, Y, r - l + 1, 1); rect(x, '#c8a878', l + 1, Y, Math.max(1, r - l - 1), 1);
+    if (w > 6) { rect(x, '#8a6a40', Math.round(cx - w / 4), Y, 1, 1); rect(x, '#8a6a40', Math.round(cx + w / 4), Y, 1, 1); }
+    rect(x, '#7a8a40', l - 1, Y, 1, 1); rect(x, '#7a8a40', r + 1, Y, 1, 1);
+  }
+  vGrass(x, R, 41, 62, ['#a8a45a', '#d8d48a', '#8a9a48'], 80);
+  // the tent and the cart by the roadside
+  const tent = (X, Y) => { for (let j = 0; j < 9; j++) { const h = Math.round(1 + j * 0.8); rect(x, '#c7b6a5', X - h, Y - 9 + j, h, 1); rect(x, '#e6dacb', X, Y - 9 + j, h, 1); rect(x, '#fdf8ee', X, Y - 9 + j, 1, 1); } for (let j = 3; j < 9; j++) rect(x, '#3a2a24', X - Math.round((j - 3) * 0.4), Y - 9 + j, Math.round((j - 3) * 0.8) + 1, 1); rect(x, '#d8574f', X + 3, Y - 4, 2, 2); rect(x, '#6a8fe0', X - 5, Y - 3, 2, 2); rect(x, '#6b4226', X, Y - 11, 1, 2); rect(x, '#d8574f', X + 1, Y - 11, 2, 1); };
+  tent(34, 47);
+  const cart = (X, Y) => { hayHeap(x, X, Y - 9, 14, 6); boards(x, X, Y - 5, 15, 4, '#c58d55', '#a8703f', '#e0aa6c', 2); rect(x, '#8a5a33', X + 15, Y - 3, 5, 1); for (const W0 of [X + 3, X + 11]) { disc(x, W0, Y - 1, 2, '#6b4226'); rect(x, '#b07a45', W0, Y - 1, 1, 1); } };
+  cart(70, 51);
+  // pines along the right of the road, near ones big and dark
+  for (const [X, Y, h] of [[84, 40, 7], [92, 41, 9], [100, 40, 8], [76, 39, 5], [118, 48, 18], [106, 46, 13]]) vPine(x, X, Y, h, '#2f6b45', '#3f8a55', '#62ad6a');
+  vLand(x, X => 58 + Math.sin(X * 0.1) * 1.5 + (X > 70 && X < 124 ? 9 : 0), '#7a8a40', '#a8a45a');
+  for (let k = 0; k < 30; k++) { const X = Math.floor(R() * VW), Y = 56 + Math.floor(R() * 7); rect(x, '#d8d48a', X, Y, 1, 2); }
+});
+
+// 5 · The Valley of the Shadow: a canyon at night, a line of lamp posts going down into it, one lantern ahead
+const vig5 = vignette(53, (x, R) => {
+  vSky(x, ['#0c0918', '#1a1433', '#2c2450', '#3a3060'], 0, 34);
+  for (let k = 0; k < 46; k++) { const X = Math.floor(R() * VW), Y = Math.floor(R() * 30); rect(x, R() < 0.3 ? '#ffe58a' : '#eceaff', X, Y, 1, 1); }
+  for (const [X, Y] of [[20, 6], [110, 20], [70, 4]]) { rect(x, '#6d58b0', X - 1, Y, 3, 1); rect(x, '#6d58b0', X, Y - 1, 1, 3); rect(x, '#ffffff', X, Y, 1, 1); }
+  disc(x, 100, 10, 5, '#eceaff'); disc(x, 102, 9, 5, '#1a1433'); vGlow(x, 99, 10, 10, '#352c60', 0.6);
+  // canyon walls: far, then middle, then the near cliffs that frame the picture
+  const w1 = vWave(R, [[3, 0.08], [2, 0.2]]), w2 = vWave(R, [[3, 0.1], [2, 0.25]]);
+  const vee = (X, depth, width) => depth * Math.max(0, 1 - Math.abs(X - 64) / width);
+  vLand(x, X => 24 + w1(X) + vee(X, 14, 40), '#2c2450', '#6d58b0', '#241e44');
+  vLand(x, X => 30 + w2(X) * 1.5 + vee(X, 22, 46), '#1a1433', '#4a3e80', '#140f28');
+  // the path down into the dark
+  const px = Y => 64 + Math.sin((VH - Y) / 6) * 5 * ((VH - Y) / 30), pw = Y => 1 + (Y - 40) * 0.6;
+  for (let Y = 41; Y < VH; Y++) { const cx = px(Y), w = pw(Y); rect(x, '#3a3060', Math.round(cx - w / 2), Y, Math.round(w) + 1, 1); rect(x, '#4a3e70', Math.round(cx - w / 6), Y, Math.max(1, Math.round(w / 3)), 1); }
+  // one lantern far ahead, then the lamp posts, far to near, each with its pool of light
+  vGlow(x, 64, 41, 4, '#f5a742', 1); rect(x, '#ffe58a', 64, 41, 1, 1);
+  const posts = [[45, 3], [48, 4], [51, 6], [55, 8], [60, 11]];
+  posts.forEach(([Y, h], i) => {
+    const side = i % 2 ? 1 : -1, X = Math.round(px(Y) + side * (pw(Y) / 2 + 2));
+    vGlow(x, X, Y, 3 + h * 0.9, '#7a5a50', 0.9, 1 + h * 0.3);
+    vGlow(x, X, Y - h, 2 + h * 0.8, '#f5a742', 0.55);
+    rect(x, '#0c0918', X, Y - h, 1, h + 1);
+    rect(x, '#ffd36a', X - (h > 6 ? 1 : 0), Y - h - 1, h > 6 ? 3 : 1, h > 6 ? 2 : 1); rect(x, '#fff2a8', X, Y - h - 1, 1, 1);
+    if (h > 6) rect(x, '#0c0918', X - 1, Y - h - 2, 3, 1);
+  });
+  // near cliffs, black against the sky, a moon-rim on their edges
+  const cliff = (X0, dir) => { for (let X = 0; X < 34; X++) { const XX = dir > 0 ? X0 + X : X0 - X, top = Math.round(8 + X * X / 40 + Math.sin(X * 0.7) * 1.5); rect(x, '#0c0918', XX, top, 1, VH - top); rect(x, dir < 0 ? '#352c60' : '#241e44', XX, top, 1, 1); } };
+  cliff(0, 1); cliff(VW - 1, -1);
+  for (let k = 0; k < 8; k++) { const X = 3 + Math.floor(R() * 20); rect(x, '#1a1433', X, 24 + Math.floor(R() * 34), 3, 1); }
+});
+
+// 6 · A Table Before My Enemies: the highlands, olive trees, a long feast table; far off, the wolves watch
+const vig6 = vignette(67, (x, R) => {
+  vSky(x, ['#78b4e0', '#98c8e8', '#c8e0e4', '#f0e8c4'], 0, 30);
+  vCloud(x, 30, 9, 20, '#ffffff', '#dcecf2', '#ffffff'); vCloud(x, 98, 6, 14, '#fdf8ee', '#dce8ee');
+  const a = vWave(R, [[4, 0.05], [2, 0.13]]), b = vWave(R, [[3, 0.04], [1.5, 0.11]]);
+  vLand(x, X => 24 + a(X), '#a8b8b0', '#c4d4c4');
+  vLand(x, X => 31 + b(X), '#8ea886', '#b6c8a8', '#7e9878');
+  for (const X of [10, 15, 19]) { const Y = Math.round(31 + b(X)); pix(x, X - 2, Y - 3, ['kk..k', '.kkkk', '.k.k.'], { k: '#4a4b62' }); rect(x, '#ffe680', X + 2, Y - 3, 1, 1); }
+  for (const X of [36, 52, 84, 100, 116]) vOlive(x, X, Math.round(31 + b(X)) + 2, 1);
+  vLand(x, X => 39 + b(X * 1.5) * 0.4, '#a8bc6a', '#c4d48a', '#98ac5a');
+  for (const [X, Y] of [[8, 44], [118, 44], [24, 41]]) vOlive(x, X, Y, 2);
+  // the table: a long white cloth, the food, guests on the far side, the host at the end
+  const ty = 46, tl = 30, tr = 98;
+  const guests = ['#3f8f93', '#d8574f', '#6b4380', '#e0b040', '#5a7a9a', '#c0603a', '#8e3a8a', '#6a9a4a', '#a8a070'];
+  guests.forEach((col, i) => { const X = tl + 4 + i * 7; rect(x, col, X, ty - 5, 3, 4); rect(x, '#f0c69c', X + 1, ty - 7, 1, 2); rect(x, '#5a3a24', X + 1, ty - 8, 1, 1); });
+  rect(x, '#3f8f93', tr + 3, ty - 8, 3, 9); rect(x, '#68b8b1', tr + 3, ty - 8, 1, 9); rect(x, '#f0c69c', tr + 4, ty - 10, 1, 2); rect(x, '#3f8f93', tr + 3, ty - 11, 3, 1);
+  rect(x, '#b07a45', tr + 7, ty - 13, 1, 13); rect(x, '#b07a45', tr + 6, ty - 14, 2, 1); rect(x, '#b07a45', tr + 5, ty - 13, 1, 2);
+  rect(x, '#f1e4c6', tl, ty - 2, tr - tl, 3); rect(x, '#ffffff', tl, ty - 2, tr - tl, 1); rect(x, '#d8c8a8', tl, ty + 1, tr - tl, 2);
+  for (let X = tl + 1; X < tr; X += 3) rect(x, '#e8d8b8', X, ty + 3, 1, 1);
+  for (const X of [tl + 1, tl + 34, tr - 2]) rect(x, '#8a5a33', X, ty + 3, 1, 5);
+  for (let X = tl + 3; X < tr - 2; X += 5) { const k = (X >> 2) % 4; rect(x, ['#d8984a', '#7a3a8a', '#c07a3e', '#c8dce8'][k], X, ty - 3, 2, 1); if (k === 1) rect(x, '#b070c0', X, ty - 3, 1, 1); }
+  rect(x, '#8a5a33', tl - 1, ty + 5, tr - tl + 2, 1); rect(x, '#b07a45', tl - 1, ty + 4, tr - tl + 2, 1);
+  vGlow(x, 64, ty, 40, '#fff2c4', 0.35, 8);
+  vLand(x, X => 55 + Math.sin(X * 0.08) * 2, '#7a9a4a', '#98b85a', '#6a8a3e');
+  vGrass(x, R, 54, 62, ['#5a7a38', '#a8c46a'], 50); vFlowers(x, R, 55, 62, ['#f5c542', '#ffffff', '#ef9aa0'], 14);
+  // bunting strung between two poles above the feast
+  rect(x, '#6b4226', tl - 4, ty - 22, 1, 30); rect(x, '#6b4226', tr + 12, ty - 22, 1, 30);
+  for (let X = tl - 3; X < tr + 12; X++) { const Y = Math.round(ty - 21 + Math.sin((X - tl + 3) / (tr + 15 - tl) * Math.PI) * 5); rect(x, '#5a3a24', X, Y, 1, 1); if ((X - tl) % 6 === 0) { const col = ['#d8574f', '#f5c542', '#3f8f93', '#ef9aa0'][((X - tl) / 6 & 3)]; rect(x, col, X, Y + 1, 3, 1); rect(x, col, X + 1, Y + 2, 1, 1); } }
+});
+
+// 7 · The House of the Lord: the farm at dawn from a little hill. The fold is full, the gate stands open.
+const vig7 = vignette(97, (x, R) => {
+  vSky(x, ['#2e3a78', '#4e4a90', '#8a5a98', '#c8708a', '#f0987a', '#ffc884', '#fff0c0'], 0, 38);
+  for (let k = 0; k < 14; k++) rect(x, '#eceaff', Math.floor(R() * VW), Math.floor(R() * 9), 1, 1);
+  const sx = 84, sy = 36;
+  for (let k = 0; k < 9; k++) { // rays of first light
+    const ang = Math.PI * (1.08 + k * 0.105);
+    for (let t = 10; t < 90; t++) { const X = Math.round(sx + Math.cos(ang) * t), Y = Math.round(sy + Math.sin(ang) * t); if (Y < 1 || X < 1 || X > VW - 2) break; if (bay(X, Y) < 0.42 - t / 260) rect(x, '#fff0c0', X, Y, 1, 1); }
+  }
+  vGlow(x, sx, sy, 34, '#ffe0a0', 0.8, 16); disc(x, sx, sy, 7, '#fff2c4'); disc(x, sx, sy, 5, '#ffffff');
+  vCloud(x, 30, 16, 22, '#f0a090', '#b8708a', '#ffd0a0'); vCloud(x, 112, 22, 14, '#ffb890', '#d08080', '#ffe0b0');
+  const a = vWave(R, [[2.5, 0.06], [1.2, 0.15]]);
+  vLand(x, X => 35 + a(X), '#9a7aa0', '#e0a8a0');
+  vLand(x, X => 39 + a(X * 1.3) * 0.5, '#6a9a6a', '#b8c890', '#5e8a60');
+  // the farm below: hut with its window lit, the barn, and the fold, full
+  const fy = 48;
+  vHut(x, 18, 44, true); vGlow(x, 30, 40, 4, '#ffd36a', 0.5);
+  rect(x, '#b5473a', 38, 34, 14, 10); rect(x, '#963a30', 38, 34, 1, 10); rect(x, '#7a2e26', 42, 38, 6, 6); rect(x, '#f1e4c6', 42, 38, 6, 1);
+  for (let j = 0; j < 4; j++) rect(x, j % 2 ? '#7e3a30' : '#8e4034', 37 + j, 30 + j, 16 - j * 2, 1); rect(x, '#5e261e', 36, 33, 18, 1);
+  rect(x, '#8fcc62', 56, fy - 9, 44, 9);
+  for (let i = 0; i < 18; i++) vSheep(x, 58 + (i % 9) * 4.6 + ((i / 9 | 0) % 2) * 2, fy - 8 + (i / 9 | 0) * 3 + (i % 2), false, i % 3 === 0, '#ffe0a0');
+  vFence(x, 56, 99, fy - 9, 2, 3, '#c58d55', '#8a5a33');
+  vFence(x, 56, 72, fy, 3, 3, '#e0aa6c', '#8a5a33'); vFence(x, 82, 99, fy, 3, 3, '#e0aa6c', '#8a5a33');
+  rect(x, '#8a5a33', 56, fy - 9, 1, 10); rect(x, '#8a5a33', 99, fy - 9, 1, 10);
+  rect(x, '#e0aa6c', 73, fy - 4, 1, 3); rect(x, '#e0aa6c', 74, fy - 5, 1, 3); rect(x, '#e0aa6c', 75, fy - 6, 1, 3); // the gate, swung open
+  // the Shepherd at the gate, small, his crook in hand, the light behind him
+  vGlow(x, 78, fy - 3, 6, '#fff2c4', 0.7, 4);
+  rect(x, '#3f8f93', 77, fy - 5, 3, 5); rect(x, '#68b8b1', 77, fy - 5, 1, 5); rect(x, '#f0c69c', 78, fy - 7, 1, 2); rect(x, '#3f8f93', 77, fy - 7, 1, 2);
+  rect(x, '#8a5a33', 80, fy - 9, 1, 9); rect(x, '#8a5a33', 81, fy - 10, 1, 1); rect(x, '#8a5a33', 82, fy - 9, 1, 2);
+  // a path from the hill down to the open gate
+  for (let Y = fy; Y < VH; Y++) { const t = (Y - fy) / (VH - fy), cx = 78 - t * 14, w = 3 + t * 12; rect(x, '#c8a878', Math.round(cx - w / 2), Y, Math.round(w), 1); rect(x, '#e8c890', Math.round(cx - w / 6), Y, Math.max(1, Math.round(w / 3)), 1); }
+  // the little hill we stand on, still in shadow
+  vLand(x, X => 52 + (X - 20) * (X - 20) / 400 + Math.sin(X * 0.15), '#3f7a34', '#74b54d', '#2f5a2a');
+  for (let X = 2; X < 60; X += 2) { const t = Math.round(52 + (X - 20) * (X - 20) / 400 + Math.sin(X * 0.15)); rect(x, '#56983f', X, t - 1, 1, 1); if (X % 6 === 0) rect(x, '#9bd16a', X, t - 2, 1, 1); }
+  vFlowers(x, R, 56, 62, ['#ffffff', '#f5c542', '#ef9aa0'], 12);
+  for (const [X, Y] of [[46, 10], [53, 8], [60, 12]]) pix(x, X, Y, ['o.o', '.o.'], { o: '#5a3a5a' });
+});
+Object.assign(NN.PROPS, {
+  vignette1: { make: vig1, ox: 64, oy: 64 }, vignette2: { make: vig2, ox: 64, oy: 64 }, vignette3: { make: vig3, ox: 64, oy: 64 },
+  vignette4: { make: vig4, ox: 64, oy: 64 }, vignette5: { make: vig5, ox: 64, oy: 64 }, vignette6: { make: vig6, ox: 64, oy: 64 },
+  vignette7: { make: vig7, ox: 64, oy: 64 },
+});
+}
+
+// ---------------------------------------------------------------- job gear on the idle poses
+// Every NN.MODS entry draws on the standing frame at fixed pixels. On a pose frame (recognised by its size, see
+// NN.POSES) the mod is first drawn on a blank standing-size grid, then each pixel it set is moved by the offset of the
+// part of the body it belongs to: 'head' (hats, glasses), 'chin' (bandana, bell, bucket, twig), 'neck' (scarf, collar)
+// or 'body' (bandage, yarn, choir robe, blanket). A mod not listed in MOD_PART is placed by where its pixels fall.
+// `mods: { name: [dx, dy] | null }` on a pose overrides one mod (null leaves that gear off the pose).
+// The wrapper sits on NN.MODS itself, so mods added later (by any file) work on the poses as well.
+NN.POSES = {
+  '17x13': { sprite: 'sheepGraze', base: [16, 13], head: [1, 4], chin: [1, 4], neck: [1, 2], body: [0, 0],
+    mods: { bucket: [-6, 0], bell: [0, 1] } },
+  '16x11': { sprite: 'sheepSleep', base: [16, 13], head: [0, 1], chin: [0, 1], neck: [0, 1], body: [0, 0],
+    mods: { bucket: [-8, -2], bell: [-1, -1] } },
+  '13x9': { sprite: 'lambGraze', base: [12, 9], head: [1, 3], chin: [1, 3], neck: [1, 2], body: [0, 0] },
+  '12x7': { sprite: 'lambSleep', base: [12, 9], head: [0, 1], chin: [0, 1], neck: [0, 1], body: [0, 0] },
+};
+const MOD_PART = {
+  shades: 'head', bow: 'head', beanie: 'head', specs: 'head', doc: 'head', candle: 'head', horns: 'head',
+  strawhat: 'head', flowercrown: 'head', sweatband: 'head', mask: 'head',
+  bandana: 'chin', bell: 'chin', bucket: 'chin', twig: 'chin', scarf: 'neck', collar: 'neck',
+  bandage: 'body', yarn: 'body', choir: 'body', blanket: 'body',
+};
+const BLANK = '\u0000';
+const poseMod = (name, fn) => {
+  if (typeof fn !== 'function' || fn.poseAware) return fn;
+  const wrapped = rows => {
+    const pose = rows.length && NN.POSES[rows[0].length + 'x' + rows.length];
+    if (!pose) return fn(rows);
+    const [bw, bh] = pose.base, v = Array.from({ length: bh }, () => new Array(bw).fill(BLANK));
+    fn(v);
+    const px = [];
+    v.forEach((row, Y) => row.forEach((ch, X) => { if (ch !== BLANK) px.push([X, Y, ch]); }));
+    if (!px.length) return;
+    let part = MOD_PART[name];
+    if (!part) {
+      const cx = px.reduce((a, p) => a + p[0], 0) / px.length, cy = px.reduce((a, p) => a + p[1], 0) / px.length;
+      part = cx < bw * 0.62 ? 'body' : cy < bh * 0.6 ? 'head' : 'chin';
+    }
+    const off = pose.mods && name in pose.mods ? pose.mods[name] : pose[part];
+    if (off) for (const [X, Y, ch] of px) set(rows, X + off[0], Y + off[1], ch);
+  };
+  wrapped.poseAware = true;
+  return wrapped;
+};
+for (const k of Object.keys(NN.MODS)) NN.MODS[k] = poseMod(k, NN.MODS[k]);
+NN.MODS = new Proxy(NN.MODS, { set: (t, k, fn) => { t[k] = poseMod(k, fn); return true; } });
 })();
