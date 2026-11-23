@@ -1530,13 +1530,13 @@ const vLand = (x, top, col, lit, shade, y1 = VH) => {
     if (shade) for (let Y = t + 1; Y < y1; Y++) if ((Y - t) / (y1 - t) > 0.45 + bay(X, Y) * 0.55) rect(x, shade, X, Y);
   }
 };
-// a dithered glow: dense in the middle, fading out
+// a soft glow: stacked translucent ovals, brightest in the middle
 const vGlow = (x, cx, cy, r, col, k = 1, ry = r) => {
-  for (let Y = Math.floor(cy - ry); Y <= cy + ry; Y++) for (let X = Math.floor(cx - r); X <= cx + r; X++) {
-    const d = Math.hypot((X - cx) / r, (Y - cy) / ry);
-    if (d < 1 && k * (1 - d) * (1 - d) * 1.6 > bay(X, Y)) rect(x, col, X, Y);
-  }
+  const [cr, cg, cb] = NN.U.hexRGB(col), steps = Math.max(2, Math.round(r / 2));
+  x.fillStyle = `rgba(${cr},${cg},${cb},${(0.55 * k / steps).toFixed(3)})`;
+  for (let i = steps; i >= 1; i--) oval(x, cx, cy, Math.max(1, Math.round(r * i / steps)), Math.max(1, Math.round(ry * i / steps)));
 };
+const vTint = (x, X, Y, col, a) => { const [cr, cg, cb] = NN.U.hexRGB(col); rect(x, `rgba(${cr},${cg},${cb},${a.toFixed(3)})`, X, Y); };
 const vCloud = (x, cx, cy, w, col, shade, hi) => {
   const n = Math.max(2, Math.round(w / 5));
   for (let i = 0; i < n; i++) { const X = cx - w / 2 + (i + 0.5) * w / n, r = 2 + ((i * 7 + w) % 3) + (i === n >> 1 ? 1 : 0); disc(x, X, cy - r * 0.4, r, col); }
@@ -1623,7 +1623,7 @@ const vig2 = vignette(7, (x, R) => {
   vLand(x, X => 28 + Math.sin(X * 0.09) * 0.8, '#74b54d', '#9bd16a', null, 34);
   for (const X of [6, 12, 46, 54, 60]) vTree(x, X, 30, 2 + (X % 3), ['#4f9a3c', '#62ad5a', '#86c46a']);
   // the river: sky in it near the far bank, deeper toward us
-  vSky(x, ['#a8dcf5', '#6ab8e0', '#4aa3d8', '#3a8cc4'], 33, 50);
+  vSky(x, ['#a8dcf5', '#6ab8e0', '#4aa3d8', '#3a8cc4', '#347ab4'], 33, VH - 1);
   rect(x, '#3f7a34', 0, 32, VW, 1); rect(x, '#56983f', 0, 31, VW, 1);
   // the sycamore and its reflection
   const tx = 96;
@@ -1635,8 +1635,9 @@ const vig2 = vignette(7, (x, R) => {
   blob(x, [[tx - 5, 4, 5], [tx - 13, 11, 2], [tx + 8, 2, 3]], '#74b54d'); blob(x, [[tx - 7, 2, 2], [tx + 8, 1, 1]], '#9bd16a');
   for (let k = 0; k < 16; k++) rect(x, '#35692d', tx - 16 + Math.floor(R() * 32), 10 + Math.floor(R() * 10), 2, 1);
   rect(x, '#35692d', tx - 18, 17, 36, 1);
-  for (let Y = 34; Y < 46; Y++) for (let X = tx - 18; X <= tx + 18; X++) {
-    const d = Math.abs(X - tx) / 18 + (Y - 34) / 12; if (d < 1 && bay(X, Y) < 0.55 * (1 - d) + 0.15) rect(x, '#3e8a8a', X, Y);
+  for (let Y = 34; Y < 47; Y++) { // the tree upside down in the water, broken by ripples
+    const half = Math.round(17 - Math.abs(Y - 38) * 1.1 - (Y > 42 ? (Y - 42) * 2 : 0)), wob = Math.round(Math.sin(Y * 1.7) * 1.5);
+    if (half > 0) { rect(x, Y % 2 ? '#3a8a7a' : '#4a9a86', tx - half + wob, Y, half * 2, 1); if (Y % 3 === 0) rect(x, '#6ab8a0', tx - half + wob + 3, Y, 4, 1); }
   }
   // still-water glints
   for (let k = 0; k < 22; k++) { const Y = 35 + Math.floor(R() * 14), X = Math.floor(R() * VW); rect(x, Y < 41 ? '#e8f6fc' : '#a8dcf5', X, Y, 2 + Math.floor(R() * 4), 1); }
@@ -1646,10 +1647,10 @@ const vig2 = vignette(7, (x, R) => {
   // the plank bridge, coming toward us across the water
   for (let Y = 31; Y < VH; Y++) {
     const t = (Y - 31) / 32, cx = 58 - t * 6, w = 6 + t * 26, l = Math.round(cx - w / 2), r = Math.round(cx + w / 2);
-    const plank = Math.floor(Math.pow(t, 0.7) * 12);
-    rect(x, ['#c08c52', '#b8824a', '#a8743f'][plank % 3], l, Y, r - l, 1);
-    if (Math.floor(Math.pow((Y - 30) / 32, 0.7) * 12) !== plank) rect(x, '#7a4a24', l, Y, r - l, 1);
-    rect(x, '#d8a468', l, Y, 1, 1); rect(x, '#6b4226', r - 1, Y, 1, 1);
+    const plank = Math.floor(Math.pow(t, 0.55) * 22), seam = Math.floor(Math.pow((Y - 30) / 32, 0.55) * 22) !== plank;
+    rect(x, seam ? '#8a5a33' : plank % 2 ? '#c08c52' : '#b8824a', l, Y, r - l, 1);
+    if (!seam && plank % 4 === 1) rect(x, '#d8a468', l + 2, Y, Math.max(1, (r - l) >> 2), 1);
+    rect(x, '#6b4226', l, Y, 1, 1); rect(x, '#6b4226', r - 1, Y, 1, 1);
     if (Y > 34 && Y < 52 && Y % 2) rect(x, '#2f7ab0', l - 1, Y + 1, r - l + 2, 1);
   }
   for (const t of [0.12, 0.3, 0.55, 0.85]) { // posts and their reflections
@@ -1684,10 +1685,11 @@ const vig3 = vignette(31, (x, R) => {
     rect(x, '#8a5a4a', l, Y, 1, 1); rect(x, '#8a5a4a', r, Y, 1, 1);
   }
   // thorn thickets either side of it
-  const bush = (X, Y, r, d, m, l) => { blob(x, [[X, Y, r], [X + r, Y + 1, r - 1], [X - r, Y + 1, r - 1]], d); blob(x, [[X - 1, Y - 1, r - 1]], m); rect(x, l, X - 1, Y - r, 2, 1); for (let k = 0; k < r * 3; k++) { const ang = R() * Math.PI, rr = r + 1; rect(x, '#e8c8a8', Math.round(X + Math.cos(ang) * rr * 1.4), Math.round(Y - Math.sin(ang) * rr), 1, 1); } };
+  const bush = (X, Y, r, d, m, l) => { blob(x, [[X, Y, r], [X + r, Y + 1, r - 1], [X - r, Y + 1, r - 1]], d); blob(x, [[X - 1, Y - 1, r - 1]], m); rect(x, l, X - 1, Y - r, 2, 1); for (let k = 0; k < r * 3; k++) { const ang = R() * Math.PI, rr = r + 1; rect(x, k % 2 ? '#c08a7a' : '#3e2230', Math.round(X + Math.cos(ang) * rr * 1.4), Math.round(Y - Math.sin(ang) * rr), 1, 1); } };
   for (const [X, Y, r] of [[20, 50, 4], [34, 52, 3], [92, 49, 4], [108, 52, 5], [8, 54, 5]]) bush(X, Y, r, '#5a3442', '#7a4652', '#c0706e');
-  vLand(x, X => (X < 44 ? 56 + cc(X) - (44 - X) / 6 : X > 84 ? 56 + cc(X) - (X - 84) / 6 : 70), '#3e2230', '#7a4652', '#2e1a26');
-  for (let X = 1; X < VW - 1; X += 2) { const t = X < 44 ? 56 + cc(X) - (44 - X) / 6 : X > 84 ? 56 + cc(X) - (X - 84) / 6 : 99; if (t < 64) { rect(x, '#3e2230', X, Math.round(t) - 1, 1, 1); if (X % 4 === 1) rect(x, '#e8c8a8', X + 1, Math.round(t) - 2, 1, 1); } }
+  const fg = X => 55 + cc(X) - Math.abs(X - 64) / 10 + 16 * Math.exp(-((X - 64) * (X - 64)) / 260);
+  vLand(x, fg, '#3e2230', '#7a4652', '#2e1a26');
+  for (let X = 1; X < VW - 1; X += 2) { const t = Math.round(fg(X)); if (t < 63) { rect(x, '#3e2230', X, t - 1, 1, 1); if (X % 4 === 1) { rect(x, '#3e2230', X + 1, t - 2, 1, 1); rect(x, '#c08a7a', X + 1, t - 3, 1, 1); } } }
   // the lamb, rim-lit, with a long shadow toward us
   const lx = Math.round(px(50)) - 3, ly = 47;
   for (let k = 0; k < 6; k++) rect(x, '#8a5a4a', lx + 1 + (k >> 1), ly + 4 + k, 3, 1);
@@ -1708,15 +1710,15 @@ const vig4 = vignette(41, (x, R) => {
   vLand(x, X => 36 + far(X), '#8a9a7a', '#a8b890');
   for (let X = 2; X < 60; X += 3) if (R() < 0.7) vPine(x, X, 37, 3 + Math.floor(R() * 3), '#56685a', '#6a7c6a');
   vLand(x, X => 39 + far(X * 1.7) * 0.5, '#b8b46a', '#d0cc80', '#a8a45a');
+  vGrass(x, R, 41, 62, ['#a8a45a', '#d8d48a', '#8a9a48'], 80);
   // the road: west into the weather
   const rx = Y => 112 - Math.pow((VH - Y) / 25, 0.8) * 70 + Math.sin((VH - Y) / 4.5) * 7, rw = Y => 1 + (Y - 38) * 0.9;
   for (let Y = 39; Y < VH; Y++) {
     const cx = rx(Y), w = rw(Y), l = Math.round(cx - w / 2), r = Math.round(cx + w / 2);
-    rect(x, '#b08a5a', l, Y, r - l + 1, 1); rect(x, '#c8a878', l + 1, Y, Math.max(1, r - l - 1), 1);
-    if (w > 6) { rect(x, '#8a6a40', Math.round(cx - w / 4), Y, 1, 1); rect(x, '#8a6a40', Math.round(cx + w / 4), Y, 1, 1); }
+    rect(x, '#9a7448', l, Y, r - l + 1, 1); rect(x, '#b89062', l + 1, Y, Math.max(1, r - l - 1), 1);
+    if (w > 5) { rect(x, '#86643c', Math.round(cx - w / 4), Y, 1, 1); rect(x, '#86643c', Math.round(cx + w / 4), Y, 1, 1); rect(x, '#d0aa78', Math.round(cx), Y, 1, 1); }
     rect(x, '#7a8a40', l - 1, Y, 1, 1); rect(x, '#7a8a40', r + 1, Y, 1, 1);
   }
-  vGrass(x, R, 41, 62, ['#a8a45a', '#d8d48a', '#8a9a48'], 80);
   // the tent and the cart by the roadside
   const tent = (X, Y) => { for (let j = 0; j < 9; j++) { const h = Math.round(1 + j * 0.8); rect(x, '#c7b6a5', X - h, Y - 9 + j, h, 1); rect(x, '#e6dacb', X, Y - 9 + j, h, 1); rect(x, '#fdf8ee', X, Y - 9 + j, 1, 1); } for (let j = 3; j < 9; j++) rect(x, '#3a2a24', X - Math.round((j - 3) * 0.4), Y - 9 + j, Math.round((j - 3) * 0.8) + 1, 1); rect(x, '#d8574f', X + 3, Y - 4, 2, 2); rect(x, '#6a8fe0', X - 5, Y - 3, 2, 2); rect(x, '#6b4226', X, Y - 11, 1, 2); rect(x, '#d8574f', X + 1, Y - 11, 2, 1); };
   tent(34, 47);
@@ -1730,10 +1732,11 @@ const vig4 = vignette(41, (x, R) => {
 
 // 5 · The Valley of the Shadow: a canyon at night, a line of lamp posts going down into it, one lantern ahead
 const vig5 = vignette(53, (x, R) => {
-  vSky(x, ['#0c0918', '#1a1433', '#2c2450', '#3a3060'], 0, 34);
+  vSky(x, ['#0c0918', '#1a1433', '#2c2450', '#3a3060', '#3a3060'], 0, VH - 1);
   for (let k = 0; k < 46; k++) { const X = Math.floor(R() * VW), Y = Math.floor(R() * 30); rect(x, R() < 0.3 ? '#ffe58a' : '#eceaff', X, Y, 1, 1); }
   for (const [X, Y] of [[20, 6], [110, 20], [70, 4]]) { rect(x, '#6d58b0', X - 1, Y, 3, 1); rect(x, '#6d58b0', X, Y - 1, 1, 3); rect(x, '#ffffff', X, Y, 1, 1); }
-  disc(x, 100, 10, 5, '#eceaff'); disc(x, 102, 9, 5, '#1a1433'); vGlow(x, 99, 10, 10, '#352c60', 0.6);
+  vGlow(x, 99, 10, 10, '#6d58b0', 0.35);
+  for (let Y = 4; Y <= 16; Y++) for (let X = 94; X <= 106; X++) if (Math.hypot(X - 100, Y - 10) <= 5.2 && Math.hypot(X - 102.5, Y - 8.5) > 4.6) rect(x, X < 97 ? '#fff6d8' : '#eceaff', X, Y);
   // canyon walls: far, then middle, then the near cliffs that frame the picture
   const w1 = vWave(R, [[3, 0.08], [2, 0.2]]), w2 = vWave(R, [[3, 0.1], [2, 0.25]]);
   const vee = (X, depth, width) => depth * Math.max(0, 1 - Math.abs(X - 64) / width);
@@ -1743,13 +1746,13 @@ const vig5 = vignette(53, (x, R) => {
   const px = Y => 64 + Math.sin((VH - Y) / 6) * 5 * ((VH - Y) / 30), pw = Y => 1 + (Y - 40) * 0.6;
   for (let Y = 41; Y < VH; Y++) { const cx = px(Y), w = pw(Y); rect(x, '#3a3060', Math.round(cx - w / 2), Y, Math.round(w) + 1, 1); rect(x, '#4a3e70', Math.round(cx - w / 6), Y, Math.max(1, Math.round(w / 3)), 1); }
   // one lantern far ahead, then the lamp posts, far to near, each with its pool of light
-  vGlow(x, 64, 41, 4, '#f5a742', 1); rect(x, '#ffe58a', 64, 41, 1, 1);
+  vGlow(x, 64, 41, 5, '#f5a742', 1); rect(x, '#ffe58a', 64, 41, 1, 1);
   const posts = [[45, 3], [48, 4], [51, 6], [55, 8], [60, 11]];
   posts.forEach(([Y, h], i) => {
     const side = i % 2 ? 1 : -1, X = Math.round(px(Y) + side * (pw(Y) / 2 + 2));
-    vGlow(x, X, Y, 3 + h * 0.9, '#7a5a50', 0.9, 1 + h * 0.3);
-    vGlow(x, X, Y - h, 2 + h * 0.8, '#f5a742', 0.55);
-    rect(x, '#0c0918', X, Y - h, 1, h + 1);
+    vGlow(x, X, Y, 3 + h * 1.1, '#f5a742', 0.55, 1 + Math.round(h * 0.3));
+    vGlow(x, X, Y - h, 2 + h * 0.9, '#ffd36a', 0.6);
+    rect(x, '#0c0918', X, Y - h, h > 6 ? 2 : 1, h + 1);
     rect(x, '#ffd36a', X - (h > 6 ? 1 : 0), Y - h - 1, h > 6 ? 3 : 1, h > 6 ? 2 : 1); rect(x, '#fff2a8', X, Y - h - 1, 1, 1);
     if (h > 6) rect(x, '#0c0918', X - 1, Y - h - 2, 3, 1);
   });
@@ -1766,7 +1769,7 @@ const vig6 = vignette(67, (x, R) => {
   const a = vWave(R, [[4, 0.05], [2, 0.13]]), b = vWave(R, [[3, 0.04], [1.5, 0.11]]);
   vLand(x, X => 24 + a(X), '#a8b8b0', '#c4d4c4');
   vLand(x, X => 31 + b(X), '#8ea886', '#b6c8a8', '#7e9878');
-  for (const X of [10, 15, 19]) { const Y = Math.round(31 + b(X)); pix(x, X - 2, Y - 3, ['kk..k', '.kkkk', '.k.k.'], { k: '#4a4b62' }); rect(x, '#ffe680', X + 2, Y - 3, 1, 1); }
+  for (const X of [9, 17, 25]) { const Y = Math.round(31 + b(X)); pix(x, X - 2, Y - 3, ['kk..k', '.kkkk', '.k.k.'], { k: '#4a4b62' }); rect(x, '#ffe680', X + 2, Y - 3, 1, 1); }
   for (const X of [36, 52, 84, 100, 116]) vOlive(x, X, Math.round(31 + b(X)) + 2, 1);
   vLand(x, X => 39 + b(X * 1.5) * 0.4, '#a8bc6a', '#c4d48a', '#98ac5a');
   for (const [X, Y] of [[8, 44], [118, 44], [24, 41]]) vOlive(x, X, Y, 2);
@@ -1781,7 +1784,7 @@ const vig6 = vignette(67, (x, R) => {
   for (const X of [tl + 1, tl + 34, tr - 2]) rect(x, '#8a5a33', X, ty + 3, 1, 5);
   for (let X = tl + 3; X < tr - 2; X += 5) { const k = (X >> 2) % 4; rect(x, ['#d8984a', '#7a3a8a', '#c07a3e', '#c8dce8'][k], X, ty - 3, 2, 1); if (k === 1) rect(x, '#b070c0', X, ty - 3, 1, 1); }
   rect(x, '#8a5a33', tl - 1, ty + 5, tr - tl + 2, 1); rect(x, '#b07a45', tl - 1, ty + 4, tr - tl + 2, 1);
-  vGlow(x, 64, ty, 40, '#fff2c4', 0.35, 8);
+  vGlow(x, 64, ty - 2, 40, '#fff6dc', 0.4, 9);
   vLand(x, X => 55 + Math.sin(X * 0.08) * 2, '#7a9a4a', '#98b85a', '#6a8a3e');
   vGrass(x, R, 54, 62, ['#5a7a38', '#a8c46a'], 50); vFlowers(x, R, 55, 62, ['#f5c542', '#ffffff', '#ef9aa0'], 14);
   // bunting strung between two poles above the feast
@@ -1794,9 +1797,9 @@ const vig7 = vignette(97, (x, R) => {
   vSky(x, ['#2e3a78', '#4e4a90', '#8a5a98', '#c8708a', '#f0987a', '#ffc884', '#fff0c0'], 0, 38);
   for (let k = 0; k < 14; k++) rect(x, '#eceaff', Math.floor(R() * VW), Math.floor(R() * 9), 1, 1);
   const sx = 84, sy = 36;
-  for (let k = 0; k < 9; k++) { // rays of first light
-    const ang = Math.PI * (1.08 + k * 0.105);
-    for (let t = 10; t < 90; t++) { const X = Math.round(sx + Math.cos(ang) * t), Y = Math.round(sy + Math.sin(ang) * t); if (Y < 1 || X < 1 || X > VW - 2) break; if (bay(X, Y) < 0.42 - t / 260) rect(x, '#fff0c0', X, Y, 1, 1); }
+  for (let Y = 1; Y < sy; Y++) for (let X = 1; X < VW - 1; X++) { // rays of first light
+    const ang = Math.atan2(Y - sy, X - sx), d = Math.hypot(X - sx, Y - sy);
+    if (Math.sin(ang * 22) > 0.35 && d > 8) vTint(x, X, Y, '#fff4d0', 0.22 * Math.max(0, 1 - d / 95));
   }
   vGlow(x, sx, sy, 34, '#ffe0a0', 0.8, 16); disc(x, sx, sy, 7, '#fff2c4'); disc(x, sx, sy, 5, '#ffffff');
   vCloud(x, 30, 16, 22, '#f0a090', '#b8708a', '#ffd0a0'); vCloud(x, 112, 22, 14, '#ffb890', '#d08080', '#ffe0b0');
