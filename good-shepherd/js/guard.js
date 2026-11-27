@@ -50,7 +50,7 @@ function checkWorld(step) {
   // wolves that can't get anywhere quietly leave; anything broken goes too
   for (const w of G.wolves) {
     if (!fin(w)) { w.gone = true; continue; }
-    if (w.peace || w.flee) continue;
+    if (w.peace || w.flee || w.gnawing) { w._still = 0; continue; }
     const moved = Math.hypot(w.x - (w._gx ?? w.x), w.y - (w._gy ?? w.y));
     w._gx = w.x; w._gy = w.y;
     w._still = moved < 3 && !(w.root > 0) && !(w.rest > 0) ? (w._still || 0) + step : 0;

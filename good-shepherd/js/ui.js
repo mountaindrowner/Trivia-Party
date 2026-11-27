@@ -400,64 +400,163 @@ function frame(title, sub, body) {
   return el.firstChild;
 }
 function renderPanel() {
-  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp, settings: renderSettings, menu: renderMenu, milestones: renderMilestones }[panel] || (() => {}))();
+  ({ build: renderBuild, flock: renderFlock, goals: renderGoals, map: renderMap, codex: renderCodex, pause: renderPause, help: renderHelp, settings: renderSettings, menu: renderMenu, milestones: renderMilestones, ledger: renderLedger }[panel] || (() => {}))();
 }
 const PROP_FOR = { feeder: 'feeder', trough: 'trough', lean: 'lean', workshop: 'workshop', hayBarn: 'hayBarn', well: 'well', watchtower: 'watchtower', lampPost: 'lampPostLit', herbGarden: 'herbGarden', infirmary: 'infirmary', loom: 'loom', treadmill: 'treadmill0', choirStage: 'choirStage', olivePress: 'olivePress' };
 NN.PROP_FOR = PROP_FOR;
+// ---- little pictures for the pieces and tools
+(() => {
+  const { mk, rect: R, outline } = NN.U;
+  const art = (w, h, f, out) => () => { const c = mk(w, h), x = c.getContext('2d'); f(x); return out === false ? c : outline(c, out || '#3e2416'); };
+  const post = (x, px) => { R(x, '#a8703f', px, 2, 3, 11); R(x, '#7a4a24', px + 2, 3, 1, 10); R(x, '#d39a5c', px, 2, 3, 1); };
+  Object.assign(NN.PROPS, {
+    fencePiece: { make: art(18, 13, x => { for (const h of [4, 8]) { R(x, '#c58d55', 0, h, 18, 2); R(x, '#8a5a33', 0, h + 1, 18, 1); } post(x, 2); post(x, 13); }), ox: 9, oy: 14 },
+    gatePiece: { make: art(18, 13, x => { for (const h of [4, 8]) { R(x, '#e8c878', 2, h, 14, 2); R(x, '#b8954a', 2, h + 1, 14, 1); } post(x, 0); post(x, 15); R(x, '#f5c542', 1, 1, 1, 1); R(x, '#f5c542', 16, 1, 1, 1); }), ox: 9, oy: 14 },
+    roadTile: { make: art(16, 12, x => { R(x, '#c9a26a', 0, 0, 16, 12); R(x, '#a57a48', 0, 0, 16, 1); R(x, '#8f6a3e', 0, 11, 16, 1); R(x, '#e3c690', 3, 4, 2, 1); R(x, '#a8845a', 9, 8, 2, 1); R(x, '#ddb57a', 6, 9, 1, 1); R(x, '#b8935e', 12, 3, 1, 1); }), ox: 8, oy: 12 },
+    toolClear: { make: art(13, 13, x => { for (let i = 0; i < 9; i++) R(x, '#a8703f', 2 + i, 11 - i, 2, 2); R(x, '#9a98a8', 7, 0, 5, 3); R(x, '#c4c3cf', 9, 2, 4, 4); R(x, '#d4d5e0', 10, 1, 2, 1); }), ox: 7, oy: 14 },
+    toolUp: { make: art(11, 13, x => { for (let i = 0; i < 6; i++) R(x, '#f5c542', 5 - i, i, 1 + i * 2, 1); R(x, '#f5c542', 3, 6, 5, 7); R(x, '#fff2a8', 5, 1, 1, 3); R(x, '#c99a2e', 7, 6, 1, 7); }), ox: 6, oy: 14 },
+    toolRemove: { make: art(11, 11, x => { for (let i = 0; i < 11; i++) { R(x, '#d8574f', i, i, 2, 1); R(x, '#d8574f', 9 - i, i, 2, 1); } }), ox: 6, oy: 12 },
+    foldPlus: { make: art(20, 14, x => { R(x, '#dcb965', 1, 2, 12, 10); for (const h of [1, 11]) R(x, '#c58d55', 0, h, 14, 2); R(x, '#c58d55', 0, 1, 2, 12); R(x, '#c58d55', 12, 1, 2, 12); R(x, '#7cc256', 16, 3, 2, 8); R(x, '#7cc256', 13, 6, 8, 2); }), ox: 10, oy: 15 },
+  });
+  Object.assign(PROP_FOR, { fence: 'fencePiece', gate: 'gatePiece', road: 'roadTile' });
+})();
+// ---- the build menu: one list. First the ways to grow the farm, then the buildings.
+const TOOLS = {
+  clear: { name: 'Clear land', art: 'toolClear', ch: 1, desc: 'Take out trees, bushes, stumps and rocks to make room. You keep the timber and stone. Walk near what you want gone.' },
+  upgrade: { name: 'Upgrade', art: 'toolUp', ch: 2, desc: 'Make a building better without using more ground: more room for workers, more sheep fed, a brighter lamp. Each building has three levels.' },
+  remove: { name: 'Remove', art: 'toolRemove', ch: 1, desc: 'Take down something you built and get most of the supplies back. Fences, gates and paths come back in full.' },
+};
+UI.TOOLS = TOOLS;
+const hotbar = () => {
+  const B = NN.DEFS.BUILD, out = [];
+  for (const t of ['fence', 'gate', 'road']) if (B[t].ch <= G.chapter) out.push({ type: t, name: B[t].name, art: PROP_FOR[t] });
+  for (const k of ['clear', 'upgrade', 'remove']) if (TOOLS[k].ch <= G.chapter) out.push({ tool: k, name: TOOLS[k].name, art: TOOLS[k].art });
+  return out;
+};
+UI.startBuild = P => {
+  if (P.type && !GM.has(NN.DEFS.BUILD[P.type].cost)) { GM.sfx('cancel'); UI.toast(`Not enough for a ${NN.DEFS.BUILD[P.type].name}.`); return; }
+  if (panel) UI.closePanel();
+  UI.placing = P; NN.mode = 'build'; GM.sfx('select'); barKey = '';
+};
+UI.pickTool = i => { const h = hotbar()[i]; if (h) UI.startBuild(h.type ? { type: h.type } : { tool: h.tool }); };
+// the bar along the bottom while building
+let barKey = '', infoText = '';
+UI.buildBar = show => {
+  const el = $('buildbar'); if (!el) return;
+  if (!show) { if (!el.hidden) { el.hidden = true; barKey = ''; $('hud').classList.remove('building'); } return; }
+  const P = UI.placing || {}, key = (P.type || '') + '|' + (P.tool || '') + '|' + G.chapter;
+  if (key === barKey) return;
+  barKey = key; el.hidden = false; $('hud').classList.add('building');
+  const row = $('bb-tools'); row.innerHTML = '';
+  const cur = P.type && !NN.DEFS.BUILD[P.type].piece ? P.type : null;
+  if (cur) { const b = document.createElement('button'); b.type = 'button'; b.className = 'bb sel'; b.title = NN.DEFS.BUILD[cur].name; const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { prop: PROP_FOR[cur] }); b.append(c); row.append(b); }
+  hotbar().forEach((h, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'bb' + ((h.type && h.type === P.type) || (h.tool && h.tool === P.tool) ? ' sel' : ''); b.title = h.name;
+    const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { prop: h.art });
+    b.append(c); b.insertAdjacentHTML('beforeend', `<kbd>${i + 1}</kbd>`);
+    b.addEventListener('click', e => { e.stopPropagation(); UI.pickTool(i); });
+    row.append(b);
+  });
+  if (!$('tbar').hidden) { const pl = document.createElement('button'); pl.type = 'button'; pl.className = 'bb txt go'; pl.textContent = 'Place'; pl.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); NN.buildUse && NN.buildUse(); }); row.append(pl); }
+  const more = document.createElement('button'); more.type = 'button'; more.className = 'bb txt'; more.textContent = 'Menu'; more.addEventListener('click', e => { e.stopPropagation(); UI.placing = null; NN.mode = 'play'; UI.openPanel('build'); }); row.append(more);
+  const done = document.createElement('button'); done.type = 'button'; done.className = 'bb txt'; done.textContent = 'Done'; done.addEventListener('click', e => { e.stopPropagation(); UI.placing = null; NN.mode = 'play'; GM.sfx('cancel'); }); row.append(done);
+};
+UI.buildInfo = t => { if (t === infoText) return; infoText = t; const el = $('bb-info'); if (el) el.textContent = t; };
 let bsel = null;
 function renderBuild() {
-  const B = NN.DEFS.BUILD, types = Object.keys(B).filter(k => B[k].ch <= G.chapter);
-  if (!bsel || !types.includes(bsel)) bsel = types.find(t => GM.has(B[t].cost)) || types[0];
-  const p = frame('Build', 'Pick a building to see what it does.', `<div class="split"><div class="list" id="blist"></div><div class="pane" id="bpane"></div></div>`);
+  const B = NN.DEFS.BUILD, D = NN.DEFS, N = D.RES_NAME, JOBS = D.JOBS;
+  const farm = ['@fold'].concat(['fence', 'gate', 'road'].filter(k => B[k].ch <= G.chapter), ['clear', 'upgrade', 'remove'].filter(k => TOOLS[k].ch <= G.chapter).map(k => '@' + k));
+  const types = Object.keys(B).filter(k => B[k].ch <= G.chapter && !B[k].piece);
+  const all = farm.concat(types);
+  if (!bsel || !all.includes(bsel)) bsel = types.find(t => GM.has(B[t].cost)) || types[0];
+  const p = frame('Build', 'Grow the farm, then fill it.', `<div class="split"><div class="list" id="blist"></div><div class="pane" id="bpane"></div></div>`);
+  const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'btn x'; lb.textContent = 'Ledger (L)'; lb.addEventListener('click', () => { UI.closePanel(); UI.openPanel('ledger'); });
+  p.querySelector('header').insertBefore(lb, p.querySelector('[data-close]'));
   const list = p.querySelector('#blist'), pane = p.querySelector('#bpane');
-  const N = NN.DEFS.RES_NAME, JOBS = NN.DEFS.JOBS;
+  const costHtml = c => `<div class="cost">Costs: ${Object.entries(c).map(([k, v]) => `<span class="${(G.res[k] || 0) < v ? 'no' : ''}">${v} ${esc(N[k])} (you have ${G.res[k] || 0})</span>`).join('')}</div>`;
+  const artOf = t => t === '@fold' ? 'foldPlus' : t[0] === '@' ? TOOLS[t.slice(1)].art : PROP_FOR[t];
+  const nameOf = t => t === '@fold' ? 'Bigger fold' : t[0] === '@' ? TOOLS[t.slice(1)].name : B[t].name;
+  const go = t => {
+    if (t === '@fold') { growFold(); return; }
+    if (t[0] === '@') { UI.startBuild({ tool: t.slice(1) }); UI.tip('Point with the mouse and click, or walk up and press Enter. Esc when you are done.', 6); return; }
+    if (!GM.has(B[t].cost)) { GM.sfx('cancel'); return; }
+    UI.startBuild({ type: t });
+    UI.tip(B[t].piece ? `${B[t].name}: click, or hold and drag to draw a line. Esc when you are done.` : `Place the ${B[t].name}: point with the mouse, or walk to the spot and press Enter. Esc cancels.`, 6);
+  };
+  const growFold = () => {
+    const why = GM.canExpandFold();
+    if (why !== 'ok') { GM.sfx('cancel'); return; }
+    UI.closePanel();
+    UI.fade(true, 0.3, () => { GM.expandFold(); NN.FX && NN.FX.snap(); UI.fade(false, 0.4); UI.toast(`The fold is bigger: ${D.FOLD_UP[G.foldLv].name}. It sleeps ${D.FOLD_BEDS[G.foldLv]} sheep now.`, 5); GM.sfx('level'); });
+  };
   const show = t => {
     bsel = t;
     list.querySelectorAll('.item').forEach(b => b.classList.toggle('sel', b.dataset.t === t));
-    const d = B[t], ok = GM.has(d.cost), have = GM.count(t);
-    const jobs = d.jobs ? Object.entries(d.jobs).map(([j, n]) => `${n} ${JOBS[j].name}${n > 1 ? 's' : ''}`).join(', ') : '';
-    pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(d.name)}</h3><div>${esc(d.desc)}</div>
-      ${jobs ? `<div class="muted">Jobs here: ${esc(jobs)}. Sheep volunteer by themselves.</div>` : ''}
-      <div class="cost">Costs: ${Object.entries(d.cost).map(([k, v]) => `<span class="${(G.res[k] || 0) < v ? 'no' : ''}">${v} ${esc(N[k])} (you have ${G.res[k] || 0})</span>`).join('')}</div>
-      ${have ? `<div class="muted">You have built ${have}.</div>` : ''}
-      <div class="acts"><button class="btn" type="button" id="bgo" ${ok ? '' : 'disabled'}>${ok ? 'Place it' : 'Not enough supplies'}</button></div>`;
-    UI.drawArt(pane.querySelector('canvas'), { prop: PROP_FOR[t] });
-    pane.querySelector('#bgo').addEventListener('click', () => place(t));
+    if (t === '@fold') {
+      const lv = G.foldLv || 0, n = GM.foldNext(), why = GM.canExpandFold();
+      const label = why === 'ok' ? 'Expand the fold' : why === 'max' ? 'As big as it gets' : why === 'later' ? `Opens in chapter ${n.ch}` : why === 'poor' ? 'Not enough supplies' : 'Something is in the way';
+      pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>Bigger fold</h3>
+        <div>Move the fence out and give the flock more room. Size ${lv + 1} of 4. It sleeps ${D.FOLD_BEDS[lv]} sheep${n ? `, and the next size sleeps ${D.FOLD_BEDS[lv + 1]}` : ''}.</div>
+        <div class="muted">Anything you built inside stays where it is. Trees in the way are cleared for you.</div>
+        ${why.startsWith('blocked') ? `<div class="cost"><span class="no">A ${esc(why.slice(8))} sits right where the new fence goes. Remove it first.</span></div>` : ''}
+        ${n ? costHtml(n.cost) : ''}
+        <div class="acts"><button class="btn" type="button" id="bgo" ${why === 'ok' ? '' : 'disabled'}>${label}</button></div>`;
+    } else if (t[0] === '@') {
+      const T = TOOLS[t.slice(1)];
+      pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(T.name)}</h3><div>${esc(T.desc)}</div>
+        ${t === '@upgrade' ? `<div class="muted">Level 2 costs what the building cost. Level 3 costs that twice, and opens in chapter 4.</div>` : ''}
+        <div class="acts"><button class="btn" type="button" id="bgo">Use it</button></div>`;
+    } else {
+      const d = B[t], ok = GM.has(d.cost), have = GM.count(t);
+      const jobs = d.jobs ? Object.entries(d.jobs).map(([j, n]) => `${n} ${JOBS[j].name}${n > 1 ? 's' : ''}`).join(', ') : '';
+      pane.innerHTML = `<canvas class="pic" width="160" height="56"></canvas><h3>${esc(d.name)}</h3><div>${esc(d.desc)}</div>
+        ${jobs ? `<div class="muted">Jobs here: ${esc(jobs)}. Sheep volunteer by themselves.</div>` : ''}
+        ${costHtml(d.cost)}
+        ${have ? `<div class="muted">You have built ${have}.</div>` : ''}
+        <div class="acts"><button class="btn" type="button" id="bgo" ${ok ? '' : 'disabled'}>${ok ? (d.piece ? 'Start laying' : 'Place it') : 'Not enough supplies'}</button></div>`;
+    }
+    UI.drawArt(pane.querySelector('canvas'), { prop: artOf(t) });
+    pane.querySelector('#bgo').addEventListener('click', () => go(t));
   };
-  const place = t => {
-    const d = B[t];
-    if (!GM.has(d.cost)) { GM.sfx('cancel'); return; }
-    UI.closePanel(); UI.placing = { type: t }; NN.mode = 'build'; GM.sfx('select');
-    UI.tip(`Place the ${d.name}: point with the mouse, or walk to the spot and press Enter. Esc cancels.`, 6);
-  };
-  types.forEach(t => {
-    const d = B[t], ok = GM.has(d.cost);
+  const head = text => { const h = document.createElement('div'); h.className = 'lhead'; h.textContent = text; list.append(h); };
+  all.forEach((t, i) => {
+    if (i === 0) head('Grow the farm'); if (i === farm.length) head('Buildings');
+    const ok = t === '@fold' ? GM.canExpandFold() === 'ok' : t[0] === '@' ? true : GM.has(B[t].cost);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'item'; b.dataset.t = t;
-    const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { prop: PROP_FOR[t] });
+    const c = document.createElement('canvas'); c.width = 22; c.height = 16; UI.drawArt(c, { prop: artOf(t) });
     b.append(c);
-    b.insertAdjacentHTML('beforeend', `<span>${esc(d.name)}</span><small class="${ok ? '' : 'no'}">${ok ? 'ready' : 'need more'}</small>`);
+    b.insertAdjacentHTML('beforeend', `<span>${esc(nameOf(t))}</span><small class="${ok ? '' : 'no'}">${t[0] === '@' && t !== '@fold' ? 'tool' : ok ? 'ready' : t === '@fold' && GM.canExpandFold() === 'max' ? 'done' : 'need more'}</small>`);
     b.addEventListener('click', () => show(t));
-    b.addEventListener('dblclick', () => place(t));
-    b.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); place(t); } });
+    b.addEventListener('dblclick', () => go(t));
+    b.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(t); } });
     b.addEventListener('focus', () => show(t));
     list.append(b);
   });
   show(bsel);
   setTimeout(() => { const b = list.querySelector('.item.sel'); b && b.focus({ preventScroll: true }); }, 0);
 }
-const STATUS = s => {
-  const c = [];
-  if (s.state === 'nap') c.push(['napping', '']);
-  if (s.hurt) c.push(['hurt', 'bad']);
-  if (!s.fed) c.push(['hungry', 'bad']);
-  if (!s.watered) c.push(['thirsty', 'bad']);
-  if (s.cold) c.push(['cold', 'bad']);
-  if (s.energy < 0.35) c.push(['tired', 'bad']);
-  if (s.blanket) c.push(['blanket', 'good']);
-  if (s.state === 'follow') c.push(['with you', 'good']);
-  if (s.kind === 'lamb') c.push(['lamb', 'good']);
-  return c;
-};
+// ---- the ledger: what the farm makes and uses each day
+function renderLedger() {
+  const D = NN.DEFS, B = D.BUILD, N = D.RES_NAME, r = G.report || {}, made = r.made || {}, used = r.used || {};
+  const cap = GM.capacity(), home = GM.homeCount(), flock = G.sheep.filter(s => !s.owner && !s.hidden && s.state !== 'wild').length;
+  const slots = GM.jobSlots().filter(sl => sl[0] !== 'guard'), byJob = {};
+  for (const sl of slots) (byJob[sl[0]] = byJob[sl[0]] || [0, 0])[1]++;
+  for (const q of G.sheep) if (q.job && byJob[q.job.type]) byJob[q.job.type][0]++;
+  const row = (k) => { const m = made[k] || 0, u = used[k] || 0, net = m - u; return `<tr><td>${esc(N[k])}</td><td>${G.res[k] || 0}</td><td>${m ? '+' + m : '·'}</td><td>${u ? '−' + u : '·'}</td><td class="${net < 0 ? 'no' : net > 0 ? 'yes' : ''}">${net > 0 ? '+' + net : net < 0 ? '−' + -net : '·'}</td></tr>`; };
+  const need = (label, have, want) => `<div class="need"><i class="${have >= want ? '' : 'x'}">${have >= want ? '✓' : '!'}</i><span>${label}: <b>${have}</b> for ${want} sheep</span></div>`;
+  const counts = {}; for (const b of G.buildings) { const c = counts[b.type] = counts[b.type] || { n: 0, lv: 0 }; c.n++; c.lv = Math.max(c.lv, b.lv || 1); }
+  const p = frame('Farm ledger', `Day ${G.day} · from this morning's count`, `<div class="scroll ledger">
+    <div class="lcol"><h3 class="sub">Supplies</h3><table><tr><th></th><th>Have</th><th>Made</th><th>Used</th><th>Net</th></tr>${D.RES.map(row).join('')}</table>
+      <div class="muted">Made and used are per day. A red net means that store is shrinking.</div></div>
+    <div class="lcol"><h3 class="sub">Room</h3>${need('Beds', cap.beds, flock)}${need('Feeder places', cap.food, flock)}${need('Trough places', cap.drink, flock)}
+      <div class="muted">Fold size ${(G.foldLv || 0) + 1} of 4. ${flock} in the flock, ${home} home.</div>
+      <h3 class="sub">Workers</h3>${Object.entries(byJob).map(([j, [a, b]]) => `<div class="need"><i class="${a >= b ? '' : 'x'}">${a >= b ? '✓' : '·'}</i><span>${esc(D.JOBS[j].name)}: ${a} of ${b}</span></div>`).join('') || '<div class="muted">No jobs yet. Build a Workshop or a Hay Barn.</div>'}
+      <h3 class="sub">Built</h3><div class="muted">${Object.entries(counts).map(([t, c]) => `${c.n} ${esc(B[t].name)}${c.lv > 1 ? ' (up to level ' + c.lv + ')' : ''}`).join(' · ') || 'Nothing yet.'}</div></div>
+  </div>`);
+  const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'btn x'; bb.textContent = 'Build (B)'; bb.addEventListener('click', () => { UI.closePanel(); UI.openPanel('build'); });
+  p.querySelector('header').insertBefore(bb, p.querySelector('[data-close]'));
+}
+
 function renderFlock() {
   const flock = G.sheep.filter(s => !s.owner && !s.hidden && ['home', 'follow', 'nap', 'feast'].includes(s.state)).sort((a, b) => a.name.localeCompare(b.name));
   const cap = GM.capacity(), home = GM.homeCount();
@@ -554,7 +653,7 @@ function renderMap() {
   }
   x.fillStyle = '#c9a352'; x.fillRect(ox + W.FOLD.x * s, oy + W.FOLD.y * s, W.FOLD.w * s, W.FOLD.h * s);
   for (const q of G.sheep) { if (q.hidden || q.owner) continue; x.fillStyle = q.lost && q.state === 'wild' ? '#f5c542' : q.state === 'wild' ? '#fff7e0' : '#ffffff'; if (q.state === 'wild' && !q.lost && !W.isRevealed(W.regionAt(q.x, q.y))) continue; x.fillRect(Math.round(ox + q.x * s), Math.round(oy + q.y * s), 2, 2); }
-  for (const b of G.buildings) { x.fillStyle = '#7a4a24'; x.fillRect(ox + b.x * s, oy + b.y * s, Math.max(1, b.w * s), Math.max(1, b.h * s)); }
+  for (const b of G.buildings) { x.fillStyle = b.type === 'road' ? '#e3c690' : b.type === 'fence' || b.type === 'gate' ? '#a8703f' : '#7a4a24'; x.fillRect(ox + b.x * s, oy + b.y * s, Math.max(1, b.w * s), Math.max(1, b.h * s)); }
   if (NN.FAV) for (const t of NN.FAV.targets()) { const px = Math.round(ox + t.x * s), py = Math.round(oy + t.y * s); x.fillStyle = '#3e2416'; x.fillRect(px - 2, py - 2, 5, 5); x.fillStyle = '#ef9aa0'; x.fillRect(px - 1, py - 1, 3, 3); }
   const blink = Math.floor(performance.now() / 300) % 2;
   x.fillStyle = '#3e2416'; x.fillRect(Math.round(ox + G.sh.x * s) - 3, Math.round(oy + G.sh.y * s) - 3, 7, 7); x.fillStyle = blink ? '#3f8f93' : '#ffffff'; x.fillRect(Math.round(ox + G.sh.x * s) - 2, Math.round(oy + G.sh.y * s) - 2, 5, 5);
@@ -585,7 +684,7 @@ function renderHelp() {
     b.addEventListener('click', () => show(l)); b.addEventListener('focus', () => show(l));
     list.append(b);
   });
-  const keys = { id: 'keys', title: 'Keys', art: { human: 'shepherd' }, text: 'Move: [W][A][S][D] or arrows. Use or talk: [E]. Whistle: [Space]. Build: [B]. Flock: [F]. Goals: [Q]. Map: [M]. Notes: [C]. How to play: [H]. Menu: [Esc].' };
+  const keys = { id: 'keys', title: 'Keys', art: { human: 'shepherd' }, text: 'Move: [W][A][S][D] or arrows. Use or talk: [E]. Whistle: [Space]. Build: [B]. Flock: [F]. Goals: [Q]. Map: [M]. Notes: [C]. Ledger: [L]. Wide view: [Z] or the mouse wheel. How to play: [H]. Menu: [Esc]. While building: [1] to [6] pick a piece or a tool, [Enter] places, [Esc] stops.' };
   const kb = document.createElement('button'); kb.type = 'button'; kb.className = 'item'; kb.dataset.id = 'keys'; kb.style.gridTemplateColumns = '1fr'; kb.innerHTML = '<span><b>Keys</b></span>';
   kb.addEventListener('click', () => show(keys)); kb.addEventListener('focus', () => show(keys));
   list.prepend(kb);

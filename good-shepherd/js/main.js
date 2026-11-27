@@ -5,11 +5,11 @@
 const NN = window.NN;
 const { rand, clamp, dist, pick } = NN.U;
 const W = NN.WORLD, G = NN.G, GM = NN.GAME, UI = NN.UI, ST = NN.STORY;
-const SW = NN.W, SH = NN.H, TAU = NN.TAU;
+const V = NN.view, TAU = NN.TAU;
 const $ = id => document.getElementById(id);
 const cv = $('game'), ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
-const dark = NN.U.mk(SW, SH), dctx = dark.getContext('2d');
+const dark = NN.U.mk(V.w, V.h), dctx = dark.getContext('2d');
 NN.debug = /debug/.test(location.hash) || !!window.__nnDebug;
 // If the synth failed to load, play on in silence rather than break.
 if (!NN.audio) NN.audio = { init() {}, track() {}, toggleMute() { return true; }, muted: true, paused: false, ctx: null };
@@ -25,7 +25,7 @@ NN.GAME_MODS = s => {
   return m.filter(Boolean).join(',');
 };
 let camX = 0, camY = 0;
-NN.onScreen = (x, y, m = 40) => x > camX - m && x < camX + SW + m && y > camY - m && y < camY + SH + m + 20;
+NN.onScreen = (x, y, m = 40) => x > camX - m && x < camX + V.w + m && y > camY - m && y < camY + V.h + m + 20;
 const safeProp = name => { try { return NN.prop(name); } catch (e) { return null; } };
 const safeSpr = (...a) => { try { return NN.spr(...a); } catch (e) { return null; } };
 
@@ -55,6 +55,11 @@ function loadSave() {
   W.revealed = new Set(d.revealed || ['meadow']);
   for (const [k, open] of Object.entries(d.doors || {})) if (open) W.openDoor(k);
   GM.setUid(Math.max(0, ...G.sheep.map(s => s.id), ...G.buildings.map(b => b.id)) + 1);
+  // the farm's shape: cleared land, the fold's size, building levels
+  G.foldLv = G.foldLv || 0; G.cleared = G.cleared || []; G.broken = 0;
+  for (const b of G.buildings) b.lv = b.lv || 1;
+  for (const i of G.cleared) { const o = W.decor[i]; if (o && !o.gone) W.removeDecor(o); }
+  W.setFold(G.foldLv); GM.touch();
   return true;
 }
 
@@ -98,7 +103,7 @@ const input = () => ({
   x: (keys.arrowright || keys.d ? 1 : 0) - (keys.arrowleft || keys.a ? 1 : 0) + joy.x + padMove.x + (NN.botInput ? NN.botInput.x : 0),
   y: (keys.arrowdown || keys.s ? 1 : 0) - (keys.arrowup || keys.w ? 1 : 0) + joy.y + padMove.y + (NN.botInput ? NN.botInput.y : 0),
 });
-const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex', h: 'help' };
+const PANEL_KEYS = { b: 'build', f: 'flock', q: 'goals', m: 'map', c: 'codex', h: 'help', l: 'ledger' };
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'tab'].includes(k)) e.preventDefault();
@@ -117,9 +122,12 @@ addEventListener('keydown', e => {
     if (PANEL_KEYS[k] && !repeat) { const want = PANEL_KEYS[k]; const cur = UI.panelName(); UI.closePanel(); if (cur !== want) UI.openPanel(want); }
     return;
   }
+  if (k === 'z' && !repeat && (mode === 'build' || mode === 'play')) { if (mode === 'build') NN.stepZoom(V.z >= 2 ? -2 : 1); else NN.setZoom(V.z > 1 ? 1 : 2); GM.sfx('select'); return; }
   if (mode === 'build') {
-    if (k === 'escape' || k === 'b') { UI.placing = null; NN.mode = 'play'; GM.sfx('cancel'); return; }
-    if (k === 'enter' && !repeat) { tryPlace(); return; }
+    if (k === 'escape') { endBuild(); GM.sfx('cancel'); return; }
+    if (k === 'b' && !repeat) { endBuild(); UI.openPanel('build'); return; }
+    if ((k === 'enter' || k === 'e') && !repeat) { tryPlace(); return; }
+    if (+k >= 1 && +k <= 9 && !repeat) { UI.pickTool(+k - 1); return; }
     return;
   }
   if (mode !== 'play') return;
@@ -141,11 +149,14 @@ function useInteract() {
   GM.useInteract(it);
 }
 const stage = $('stage');
-const toWorld = (cx, cy) => { const r = stage.getBoundingClientRect(), s = r.width / SW; return { x: (cx - r.left) / s + camX, y: (cy - r.top) / s + camY }; };
+let dragging = false;
+stage.addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('pointerup', () => { dragging = false; lastDrag = null; });
+const toWorld = (cx, cy) => { const r = stage.getBoundingClientRect(), s = r.width / V.w; return { x: (cx - r.left) / s + camX, y: (cy - r.top) / s + camY }; };
 stage.addEventListener('pointermove', e => {
-  if (e.pointerType === 'mouse') { const p = toWorld(e.clientX, e.clientY); mouse = { x: p.x, y: p.y, t: performance.now() }; }
+  if (e.pointerType === 'mouse') { const p = toWorld(e.clientX, e.clientY); mouse = { x: p.x, y: p.y, t: performance.now() }; if (dragging && NN.mode === 'build' && (e.buttons & 1)) dragPlace(); else dragging = false; }
   if (!joy.on || e.pointerId !== joy.id) return;
-  const s = stage.getBoundingClientRect().width / SW;
+  const s = stage.getBoundingClientRect().width / V.w;
   const dx = (e.clientX - joy.ox) / (s * 14), dy = (e.clientY - joy.oy) / (s * 14), l = Math.hypot(dx, dy);
   joy.x = l > 1 ? dx / l : dx; joy.y = l > 1 ? dy / l : dy;
 });
@@ -157,11 +168,17 @@ stage.addEventListener('pointerdown', e => {
   if (mode === 'chapter') { UI._chapterGo && UI._chapterGo(); return; }
   if (mode === 'dialog') { UI.advance(); return; }
   if (mode === 'panel') { if (e.target.id === 'panel') UI.closePanel(); return; }
-  if (mode === 'build' && e.pointerType === 'mouse') { const p = toWorld(e.clientX, e.clientY); mouse = { x: p.x, y: p.y, t: performance.now() }; tryPlace(); return; }
+  if (mode === 'build' && e.pointerType === 'mouse') {
+    if (e.button === 2) { endBuild(); GM.sfx('cancel'); return; }
+    const p = toWorld(e.clientX, e.clientY); mouse = { x: p.x, y: p.y, t: performance.now() };
+    const g = ghostTile(); lastDrag = g && g.t.piece ? { tx: g.tx, ty: g.ty } : null; dragging = true;
+    tryPlace(); return;
+  }
   if (mode !== 'play' && mode !== 'build') return;
   joy.on = true; joy.ox = e.clientX; joy.oy = e.clientY; joy.x = joy.y = 0; joy.id = e.pointerId;
   try { stage.setPointerCapture(e.pointerId); } catch (_) { /* */ }
 });
+stage.addEventListener('wheel', e => { if (NN.mode !== 'play' && NN.mode !== 'build') return; e.preventDefault(); NN.stepZoom(e.deltaY > 0 ? 1 : -1); }, { passive: false });
 const endJoy = e => { if (e.pointerId === joy.id) { joy.on = false; joy.x = joy.y = 0; } };
 stage.addEventListener('pointerup', endJoy);
 stage.addEventListener('pointercancel', endJoy);
@@ -169,7 +186,7 @@ $('tbar').addEventListener('pointerdown', e => {
   const b = e.target.closest('button'); if (!b) return;
   e.stopPropagation(); NN.audio.init();
   const act = b.dataset.act;
-  if (NN.mode === 'build') { if (act === 'use' || act === 'build') { if (act === 'use') tryPlace(); else { UI.placing = null; NN.mode = 'play'; } } return; }
+  if (NN.mode === 'build') { if (act === 'use' || act === 'build') { if (act === 'use') tryPlace(); else endBuild(); } return; }
   if (NN.mode === 'panel') { UI.closePanel(); return; }
   if (NN.mode !== 'play') return;
   if (act === 'whistle') GM.whistle();
@@ -234,24 +251,102 @@ function moveFocus(dir) {
 }
 
 // ---------------------------------------------------------------- build placement
+// Where the builder is pointing: the mouse if it moved lately, otherwise the ground in front of the Shepherd.
+function cursorPt(w = 1, h = 1) {
+  if (performance.now() - mouse.t < 3000) return { x: mouse.x, y: mouse.y, mouse: true };
+  const sh = G.sh, dx = sh.dir === 'side' ? sh.face : 0, dy = sh.dir === 'up' ? -1 : sh.dir === 'down' ? 1 : 0;
+  return { x: sh.x + dx * (w * 8 + 18), y: sh.y + dy * (h * 8 + 18) - (dy === 0 ? h * 8 : dy < 0 ? h * 8 : 0) + (w === 1 && h === 1 ? 8 : 0), mouse: false };
+}
 function ghostTile() {
-  const t = UI.placing && NN.DEFS.BUILD[UI.placing.type]; if (!t) return null;
-  let px, py;
-  if (performance.now() - mouse.t < 3000) { px = mouse.x; py = mouse.y; }
-  else {
-    const sh = G.sh, dx = sh.dir === 'side' ? sh.face : 0, dy = sh.dir === 'up' ? -1 : sh.dir === 'down' ? 1 : 0;
-    px = sh.x + dx * (t.w * 8 + 18); py = sh.y + dy * (t.h * 8 + 18) - (dy === 0 ? t.h * 8 : dy < 0 ? t.h * 8 : 0);
-  }
-  const tx = Math.round(px / 16 - t.w / 2), ty = Math.round(py / 16 - t.h / 2);
+  const t = UI.placing && UI.placing.type && NN.DEFS.BUILD[UI.placing.type]; if (!t) return null;
+  const c = cursorPt(t.w, t.h);
+  const tx = t.piece ? Math.floor(c.x / 16) : Math.round(c.x / 16 - t.w / 2), ty = t.piece ? Math.floor(c.y / 16) : Math.round(c.y / 16 - t.h / 2);
   return { tx, ty, t, ok: GM.canPlace(UI.placing.type, tx, ty) && GM.has(t.cost) };
 }
-function tryPlace() {
+const CLEAR_REACH = 120;
+// What a tool is pointing at: scenery for Clear, a building for Upgrade and Remove.
+function toolTarget() {
+  const tool = UI.placing && UI.placing.tool; if (!tool) return null;
+  const c = cursorPt();
+  if (tool === 'clear') {
+    let best = null, bd = c.mouse ? 14 : 34;
+    for (const o of W.query(c.x - 44, c.y - 20, c.x + 44, c.y + 60)) {
+      if (!W.clearYield(o)) continue;
+      const hgt = o.tree ? 34 : 12, d = Math.hypot(o.x - c.x, c.y > o.y ? c.y - o.y : Math.max(0, o.y - hgt - c.y));
+      if (d < bd) { bd = d; best = o; }
+    }
+    return best ? { tool, o: best, hgt: best.tree ? 36 : 14, ok: dist(best, G.sh) < CLEAR_REACH } : { tool };
+  }
+  let best = null, bd = c.mouse ? 4 : 30;
+  for (const q of G.buildings) {
+    const d = Math.hypot(Math.max(q.x - c.x, 0, c.x - q.x - q.w), Math.max(q.y - c.y, 0, c.y - q.y - q.h));
+    if (d < bd) { bd = d; best = q; }
+  }
+  if (!best) return { tool };
+  return { tool, b: best, ok: tool === 'remove' ? true : GM.canUpgrade(best) === 'ok', why: tool === 'upgrade' ? GM.canUpgrade(best) : '' };
+}
+const costText = c => Object.entries(c).map(([k, v]) => `${v} ${NN.DEFS.RES_NAME[k].toLowerCase()}`).join(', ');
+NN.buildUse = () => tryPlace();
+function endBuild() { UI.placing = null; NN.mode = 'play'; lastDrag = null; }
+let lastDrag = null;
+function tryPlace(quiet) {
+  if (UI.placing && UI.placing.tool) { useTool(quiet); return; }
   const g = ghostTile(); if (!g) return;
-  if (!GM.has(g.t.cost)) { UI.toast(`Not enough for a ${g.t.name}.`); GM.sfx('cancel'); UI.placing = null; NN.mode = 'play'; return; }
-  if (!g.ok) { UI.toast("Can't build there. Try open ground (not on paths, water or trees)."); GM.sfx('cancel'); return; }
+  if (!GM.has(g.t.cost)) { if (!quiet) { UI.toast(`Not enough for a ${g.t.name}. It costs ${costText(g.t.cost)}.`); GM.sfx('cancel'); if (!g.t.piece) endBuild(); } return; }
+  if (!g.ok) { if (!quiet) { UI.toast(g.t.piece ? "Can't put that there." : "Can't build there. Try open ground. Trees and rocks can be cleared with the Clear tool."); GM.sfx('cancel'); } return; }
   GM.placeBuilding(UI.placing.type, g.tx, g.ty);
-  UI.toast(`${g.t.name} built!`);
-  if (!GM.has(g.t.cost)) { UI.placing = null; NN.mode = 'play'; }
+  if (!g.t.piece) { UI.toast(`${g.t.name} built!`); if (!GM.has(g.t.cost)) endBuild(); }
+}
+// dragging lays pieces along the line the mouse travelled
+function dragPlace() {
+  const g = ghostTile(); if (!g || !g.t.piece) return;
+  const a = lastDrag || { tx: g.tx, ty: g.ty }, n = Math.max(Math.abs(g.tx - a.tx), Math.abs(g.ty - a.ty));
+  for (let k = n ? 1 : 0; k <= n; k++) {
+    const tx = Math.round(a.tx + (g.tx - a.tx) * (n ? k / n : 0)), ty = Math.round(a.ty + (g.ty - a.ty) * (n ? k / n : 0));
+    if (GM.has(g.t.cost) && GM.canPlace(UI.placing.type, tx, ty)) GM.placeBuilding(UI.placing.type, tx, ty);
+  }
+  lastDrag = { tx: g.tx, ty: g.ty };
+}
+function useTool(quiet) {
+  const t = toolTarget(); if (!t) return;
+  if (t.tool === 'clear') {
+    if (!t.o) { if (!quiet) { UI.toast('Point at a tree, a bush, a stump or a rock.'); GM.sfx('cancel'); } return; }
+    if (!t.ok) { if (!quiet) { UI.toast('Walk closer to clear that.'); GM.sfx('cancel'); } return; }
+    const got = GM.clearDecor(t.o); if (!got) return;
+    const txt = Object.entries(got).map(([k, v]) => `+${v} ${NN.DEFS.RES_NAME[k].toUpperCase()}`).join(' ') || 'CLEARED';
+    GM.pop(t.o.x, t.o.y - 18, txt, '#f5c542', 1.2); GM.sfx(got.stone ? 'pickupStone' : 'pickupWood');
+    NN.FX.emit(got.stone ? 'chip' : 'puff', t.o.x, t.o.y - 6, t.o.tree ? 10 : 6);
+    return;
+  }
+  if (!t.b) { if (!quiet) { UI.toast(t.tool === 'remove' ? 'Point at something you built.' : 'Point at a building.'); GM.sfx('cancel'); } return; }
+  const d = NN.DEFS.BUILD[t.b.type];
+  if (t.tool === 'remove') {
+    GM.removeBuilding(t.b);
+    const back = Object.entries(t.b.refund || {}).map(([k, v]) => `+${v} ${NN.DEFS.RES_NAME[k].toUpperCase()}`).join(' ');
+    GM.pop(t.b.fx, t.b.fy - 14, back || 'REMOVED', '#f5c542', 1.2); GM.sfx('poof'); NN.FX.emit('puff', t.b.fx, t.b.fy - 6, d.piece ? 4 : 12);
+    return;
+  }
+  const why = GM.canUpgrade(t.b);
+  if (why === 'ok') { GM.upgrade(t.b); UI.toast(`${d.name} is now level ${t.b.lv}. ${GM.upgradeText({ type: t.b.type, lv: t.b.lv - 1 })}.`); return; }
+  if (quiet) return;
+  GM.sfx('cancel');
+  UI.toast(why === 'no' ? `A ${d.name} can't be upgraded.` : why === 'max' ? `This ${d.name} is as good as it gets.` : why === 'later' ? `Level ${(t.b.lv || 1) + 1} opens in chapter ${(t.b.lv || 1) === 1 ? 2 : 4}.` : `Level ${(t.b.lv || 1) + 1} costs ${costText(GM.upgradeCost(t.b))}.`);
+}
+// the line of words on the building bar
+function buildInfo() {
+  const P = UI.placing; if (!P) return '';
+  if (P.type) {
+    const d = NN.DEFS.BUILD[P.type];
+    return `${d.name} · ${costText(d.cost)}${d.piece ? ' each · click or drag' : ' · click to place'}`;
+  }
+  const t = toolTarget();
+  if (P.tool === 'clear') return t && t.o ? (t.ok ? `Clear it: ${Object.entries(W.clearYield(t.o)).map(([k, v]) => `+${v} ${NN.DEFS.RES_NAME[k].toLowerCase()}`).join(', ') || 'makes room'}` : 'Too far. Walk closer.') : 'Clear land · point at a tree, bush, stump or rock near you';
+  if (P.tool === 'remove') return t && t.b ? `Remove the ${NN.DEFS.BUILD[t.b.type].name} · you get most of it back` : 'Remove · point at something you built';
+  if (t && t.b) {
+    const d = NN.DEFS.BUILD[t.b.type], why = GM.canUpgrade(t.b), lv = t.b.lv || 1;
+    return why === 'no' ? `${d.name} · can't be upgraded` : why === 'max' ? `${d.name} level ${lv} · the best there is` : why === 'later' ? `${d.name} · level ${lv + 1} opens in chapter ${lv === 1 ? 2 : 4}` : `${d.name} to level ${lv + 1} · ${costText(GM.upgradeCost(t.b))} · ${GM.upgradeText(t.b)}`;
+  }
+  return 'Upgrade · point at a building';
 }
 
 // ---------------------------------------------------------------- drawing
@@ -275,6 +370,34 @@ function drawFire(x, y) {
 }
 function fencePost(px, py) { const R = NN.U.rect; R(ctx, '#3e2416', px - 2, py - 13, 5, 14); R(ctx, '#a8703f', px - 1, py - 12, 3, 12); R(ctx, '#7a4a24', px + 1, py - 11, 1, 11); R(ctx, '#d39a5c', px - 1, py - 12, 3, 1); }
 function fenceRails(x0, x1, py) { const R = NN.U.rect; for (const h of [9, 5]) { R(ctx, '#3e2416', x0, py - h - 1, x1 - x0, 4); R(ctx, '#c58d55', x0, py - h, x1 - x0, 2); R(ctx, '#8a5a33', x0, py - h + 1, x1 - x0, 1); } }
+// A fence or gate piece the player laid. Pieces join up with their neighbours.
+function drawPiece(b) {
+  const R = NN.U.rect, n = GM.pieceAt(b.tx, b.ty - 1), s = GM.pieceAt(b.tx, b.ty + 1), w = GM.pieceAt(b.tx - 1, b.ty), e = GM.pieceAt(b.tx + 1, b.ty);
+  const shake = b.hitT > 0 ? (Math.floor(performance.now() / 50) % 2 ? 1 : -1) : 0;
+  if (b.hitT > 0) b.hitT -= 1 / 60;
+  const cx = b.x + 8 + shake, py = b.y + 14;
+  const up = () => { R(ctx, '#3e2416', X(cx) - 1, Y(py) - 25, 3, 17); R(ctx, '#c58d55', X(cx), Y(py) - 24, 1, 15); };
+  if (b.type === 'gate') {
+    const vertical = (n || s) && !(w || e), open = G.sh && Math.hypot(G.sh.x - cx, G.sh.y - b.y - 8) < 20 || G.sheep.some(q => Math.abs(q.x - cx) < 14 && Math.abs(q.y - b.y - 8) < 14);
+    if (vertical) {
+      if (n) up();
+      fencePost(X(cx), Y(b.y + 4)); 
+      if (!open) { R(ctx, '#3e2416', X(cx) - 1, Y(b.y) - 2, 3, 14); R(ctx, '#e8c878', X(cx), Y(b.y) - 1, 1, 12); }
+      fencePost(X(cx), Y(py + 2));
+    } else {
+      if (!open) { for (const h of [9, 5]) { R(ctx, '#3e2416', X(b.x) + 2, Y(py) - h - 1, 12, 4); R(ctx, '#e8c878', X(b.x) + 2, Y(py) - h, 12, 2); R(ctx, '#b8954a', X(b.x) + 2, Y(py) - h + 1, 12, 1); } }
+      else { R(ctx, '#3e2416', X(b.x) + 1, Y(py) - 10, 4, 4); R(ctx, '#e8c878', X(b.x) + 2, Y(py) - 9, 2, 2); }
+      fencePost(X(b.x) + 1 + shake, Y(py)); fencePost(X(b.x) + 14 + shake, Y(py));
+      R(ctx, '#f5c542', X(b.x) + 1 + shake, Y(py) - 14, 1, 1); R(ctx, '#f5c542', X(b.x) + 14 + shake, Y(py) - 14, 1, 1);
+    }
+    return;
+  }
+  if (n) up();
+  if (e) fenceRails(X(cx), X(cx) + 16, Y(py));
+  if (!n && !s && !w && !e) fenceRails(X(b.x) + 2, X(b.x) + 14, Y(py));
+  else { if (!e && w && !n && !s) fenceRails(X(cx), X(cx) + 5, Y(py)); if (!w && e && !n && !s) fenceRails(X(cx) - 5, X(cx), Y(py)); }
+  fencePost(X(cx), Y(py));
+}
 function drawPerson(x, y, p, look) {
   const [st, bob] = walkFrame(p), dir = p.dir || 'down', flip = dir === 'side' && p.face < 0;
   NN.U.shadow(ctx, x, y, 12);
@@ -329,26 +452,38 @@ function darkness() {
 let rain = [];
 function draw(now) {
   [camX, camY] = NN.FX.camera(lastDt);
-  ctx.drawImage(W.ground, camX, camY, SW, SH, 0, 0, SW, SH);
+  ctx.drawImage(W.ground, camX, camY, V.w, V.h, 0, 0, V.w, V.h);
   const R = NN.U.rect;
+  // paths the player has laid
+  for (const b of G.buildings) {
+    if (b.type !== 'road' || !NN.onScreen(b.x + 8, b.y + 8, 20)) continue;
+    const x = X(b.x), y = Y(b.y), h = (b.tx * 7 + b.ty * 13) % 5;
+    R(ctx, '#c9a26a', x, y, 16, 16);
+    if (!GM.roadAt(b.tx, b.ty - 1)) R(ctx, '#a57a48', x, y, 16, 1);
+    if (!GM.roadAt(b.tx, b.ty + 1)) R(ctx, '#8f6a3e', x, y + 15, 16, 1);
+    if (!GM.roadAt(b.tx - 1, b.ty)) R(ctx, '#a57a48', x, y, 1, 16);
+    if (!GM.roadAt(b.tx + 1, b.ty)) R(ctx, '#a57a48', x + 15, y, 1, 16);
+    R(ctx, '#e3c690', x + 3 + h, y + 4, 2, 1); R(ctx, '#a8845a', x + 9 - h, y + 10, 2, 1); R(ctx, '#ddb57a', x + 5, y + 12 - h, 1, 1); R(ctx, '#b8935e', x + 12, y + 3 + h, 1, 1);
+  }
   // water sparkle
   for (let i = 0; i < 14; i++) {
     const ph = (now / 900 + i * 1.7) % 3; if (ph > 1) continue;
-    const wx = camX + ((i * 97 + Math.floor(now / 2700) * 31) % SW), wy = camY + ((i * 53 + Math.floor(now / 2700) * 17) % SH);
+    const wx = camX + ((i * 97 + Math.floor(now / 2700) * 31) % V.w), wy = camY + ((i * 53 + Math.floor(now / 2700) * 17) % V.h);
     if (W.riverDist(wx, wy) < 14 || Math.hypot(wx - W.POND.x, wy - W.POND.y) < W.POND.r - 6 || (Math.hypot(wx - W.LAKE.x, wy - W.LAKE.y) < W.LAKE.r - 6 && Math.hypot(wx - W.LAKE.x, wy - W.LAKE.y) > W.LAKE.islet + 6)) R(ctx, '#ffffff', X(wx), Y(wy), ph < 0.5 ? 1 : 2, 1);
   }
   for (const h of G.hearts) if (NN.onScreen(h.x, h.y)) { NN.U.shadow(ctx, X(h.x), Y(h.y) + 1, 6); const im = safeSpr('heart', 0); if (im) ctx.drawImage(im, X(h.x) - 4, Y(h.y) - 9 + Math.round(Math.sin(h.t * 6))); }
   const dk = darkness();
   const list = [];
   // scenery
-  for (const o of W.query(camX - 60, camY - 20, camX + SW + 60, camY + SH + 90)) {
+  for (const o of W.query(camX - 60, camY - 20, camX + V.w + 60, camY + V.h + 90)) {
     if (o.prop === 'fire') { list.push({ y: o.y, d: () => drawFire(o.x, o.y) }); continue; }
     const name = o.prop === 'hut' ? (dk > 0.3 ? 'hutNight' : 'hutDay') : o.prop;
     list.push({ y: o.y, d: () => { if (o.tree) NN.U.shadow(ctx, X(o.x), Y(o.y), 18); drawProp(name, o.x, o.y); } });
   }
   // buildings
   for (const b of G.buildings) {
-    if (!NN.onScreen(b.fx, b.fy, 90)) continue;
+    if (!NN.onScreen(b.fx, b.fy, 90) || b.type === 'road') continue;
+    if (b.type === 'fence' || b.type === 'gate') { list.push({ y: b.y + 14, d: () => drawPiece(b) }); continue; }
     let name = NN.PROP_FOR[b.type];
     if (b.type === 'feeder' && G.res.hay <= 0) name = 'feederEmpty';
     if (b.type === 'trough' && G.res.water <= 0) name = 'troughEmpty';
@@ -361,6 +496,7 @@ function draw(now) {
         if (p) { const sq = k < 1 ? 1 : 1 + Math.sin((b.bornT - 0.3) / 0.15 * Math.PI) * 0.08; const w = Math.round(p.img.width * sq), h = Math.round(p.img.height / sq); ctx.drawImage(p.img, X(b.fx) - Math.round(p.ox * sq), Y(b.fy) - h - drop, w, h); return; }
       }
       drawProp(name, b.fx, b.fy);
+      for (let i = 1; i < (b.lv || 1); i++) { const px = X(b.x) + 1 + (i - 1) * 6, py = Y(b.fy) - 6; R(ctx, '#3e2416', px, py + 1, 5, 3); R(ctx, '#3e2416', px + 1, py, 3, 5); R(ctx, '#f5c542', px + 1, py + 1, 3, 3); R(ctx, '#fff2a8', px + 2, py + 1, 1, 1); }
     } });
   }
   if (G.tableOut && NN.onScreen(W.SITES.table.x, W.SITES.table.y, 90)) list.push({ y: W.SITES.table.y, d: () => drawProp('feastTable', W.SITES.table.x, W.SITES.table.y) });
@@ -373,7 +509,7 @@ function draw(now) {
   } });
   // the fold fence
   const F = W.FOLD;
-  if (NN.onScreen(F.x + F.w / 2, F.y + F.h / 2, F.w)) {
+  if (NN.onScreen(F.x + F.w / 2, F.y + F.h / 2, Math.max(F.w, F.h))) {
     list.push({ y: F.y + 2, d: () => { fenceRails(X(F.x), X(F.x + F.w), Y(F.y + 2)); for (let px = F.x + 2; px <= F.x + F.w - 2; px += 16) fencePost(X(px), Y(F.y + 2)); } });
     const by = F.y + F.h - 1, gl = W.GX - W.GATE / 2, gr = W.GX + W.GATE / 2;
     list.push({ y: by, d: () => {
@@ -422,21 +558,32 @@ function draw(now) {
     else if (e.kind === 'smoke' && NN.onScreen(e.x, e.y, 30)) { ctx.globalAlpha = 0.4 * (1 - k); NN.U.disc(ctx, X(e.x + e.dx * k * 2), Y(e.y - k * 26), Math.round(1 + k * 4), dk > 0.3 ? '#7a7a98' : '#d8d6e4'); ctx.globalAlpha = 1; }
     else if (e.kind === 'spark') { R(ctx, '#fff2a8', X(e.x), Y(e.y - k * 8), 1, 1); }
   }
-  // build ghost
+  // building: a grid, the piece you're holding, and what a tool is pointing at
   if (NN.mode === 'build') {
-    const g = ghostTile();
+    ctx.fillStyle = 'rgba(255,247,224,.09)';
+    for (let gx = 16 - (camX % 16); gx < V.w; gx += 16) ctx.fillRect(gx, 0, 1, V.h);
+    for (let gy = 16 - (camY % 16); gy < V.h; gy += 16) ctx.fillRect(0, gy, V.w, 1);
+    const box = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(X(x), Y(y), w, 1); ctx.fillRect(X(x), Y(y) + h - 1, w, 1); ctx.fillRect(X(x), Y(y), 1, h); ctx.fillRect(X(x) + w - 1, Y(y), 1, h); };
+    const g = ghostTile(), t = toolTarget();
     if (g) {
       ctx.globalAlpha = 0.35; ctx.fillStyle = g.ok ? '#7cc256' : '#d8574f';
       ctx.fillRect(X(g.tx * 16), Y(g.ty * 16), g.t.w * 16, g.t.h * 16);
       ctx.globalAlpha = 1;
-      drawProp(NN.PROP_FOR[UI.placing.type], g.tx * 16 + g.t.w * 8, g.ty * 16 + g.t.h * 16, 0.7);
+      if (g.t.piece) { ctx.globalAlpha = 0.75; if (UI.placing.type === 'road') R(ctx, '#c9a26a', X(g.tx * 16) + 2, Y(g.ty * 16) + 2, 12, 12); else drawPiece({ type: UI.placing.type, x: g.tx * 16, y: g.ty * 16, tx: g.tx, ty: g.ty }); ctx.globalAlpha = 1; }
+      else drawProp(NN.PROP_FOR[UI.placing.type], g.tx * 16 + g.t.w * 8, g.ty * 16 + g.t.h * 16, 0.7);
+      // feeders and troughs only count near the fold: show how far that reaches
+      if (UI.placing.type === 'feeder' || UI.placing.type === 'trough') { const F = W.FOLD; box(F.x - 190, F.y - 190, F.w + 380, F.h + 380, 'rgba(245,197,66,.5)'); }
     }
+    if (t && t.o) { box(t.o.x - 11, t.o.y - t.hgt, 22, t.hgt + 3, t.ok ? '#f5c542' : '#d8574f'); }
+    if (t && t.b) { const col = t.tool === 'remove' ? '#d8574f' : t.ok ? '#f5c542' : '#a89878'; box(t.b.x - 1, t.b.y - 1, t.b.w + 2, t.b.h + 2, col); box(t.b.x - 2, t.b.y - 2, t.b.w + 4, t.b.h + 4, '#3e2416'); }
+    if (UI.placing && UI.placing.tool === 'clear') { ctx.globalAlpha = 0.5; ctx.strokeStyle = '#fff7e0'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(G.sh.x) + 0.5, Y(G.sh.y) + 0.5, CLEAR_REACH, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+    UI.buildInfo(buildInfo());
   }
   // fog over places you haven't reached yet
   for (const id of Object.keys(W.REGIONS)) {
     if (W.isRevealed(id)) continue;
     const Rg = W.REGIONS[id], rx = Rg.col * W.RW, ry = Rg.row * W.RH;
-    if (rx > camX + SW || rx + W.RW < camX || ry > camY + SH || ry + W.RH < camY) continue;
+    if (rx > camX + V.w || rx + W.RW < camX || ry > camY + V.h || ry + W.RH < camY) continue;
     ctx.fillStyle = 'rgba(52,66,56,.78)'; ctx.fillRect(X(rx), Y(ry), W.RW, W.RH);
     ctx.fillStyle = 'rgba(200,210,200,.12)';
     for (let i = 0; i < 18; i++) { const fx = rx + ((i * 211 + now / 60) % W.RW), fy = ry + ((i * 137) % W.RH); NN.U.disc(ctx, X(fx), Y(fy), 18 + (i % 4) * 6); }
@@ -445,12 +592,12 @@ function draw(now) {
   // night: stepped pools of light cut from a blue dark, then a little warm glow added back
   if (dk > 0) {
     dctx.globalCompositeOperation = 'source-over';
-    dctx.clearRect(0, 0, SW, SH);
-    dctx.fillStyle = `rgba(18,22,58,${dk})`; dctx.fillRect(0, 0, SW, SH);
+    dctx.clearRect(0, 0, V.w, V.h);
+    dctx.fillStyle = `rgba(18,22,58,${dk})`; dctx.fillRect(0, 0, V.w, V.h);
     const left = G.phase === 'day' ? G.len - G.t : 99;
-    if (left < 14) { dctx.fillStyle = `rgba(255,120,50,${0.18 * (1 - left / 14)})`; dctx.fillRect(0, 0, SW, SH); }
+    if (left < 14) { dctx.fillStyle = `rgba(255,120,50,${0.18 * (1 - left / 14)})`; dctx.fillRect(0, 0, V.w, V.h); }
     dctx.globalCompositeOperation = 'destination-out';
-    const lights = GM.lights().filter(([lx, ly, r]) => lx + r > camX && lx - r < camX + SW && ly + r > camY && ly - r < camY + SH);
+    const lights = GM.lights().filter(([lx, ly, r]) => lx + r > camX && lx - r < camX + V.w && ly + r > camY && ly - r < camY + V.h);
     for (const [lx, ly, r] of lights) for (const [m, a] of [[1, 0.18], [0.84, 0.2], [0.68, 0.24], [0.52, 0.3], [0.36, 0.5]]) { dctx.fillStyle = `rgba(0,0,0,${a})`; NN.U.disc(dctx, X(lx), Y(ly), Math.round(r * m)); }
     ctx.drawImage(dark, 0, 0);
     ctx.globalCompositeOperation = 'lighter';
@@ -458,14 +605,14 @@ function draw(now) {
     ctx.globalCompositeOperation = 'source-over';
   }
   if (G.storm) {
-    if (rain.length < 90) for (let i = 0; i < 90; i++) rain.push({ x: rand(0, SW), y: rand(0, SH), v: rand(180, 260) });
+    if (rain.length < 90) for (let i = 0; i < 90; i++) rain.push({ x: rand(0, V.w), y: rand(0, V.h), v: rand(180, 260) });
     ctx.strokeStyle = 'rgba(180,200,255,.45)'; ctx.lineWidth = 1; ctx.beginPath();
-    for (const r of rain) { r.y += r.v / 60; r.x -= r.v / 240; if (r.y > SH) { r.y = -6; r.x = rand(0, SW + 40); } ctx.moveTo(Math.round(r.x) + 0.5, Math.round(r.y)); ctx.lineTo(Math.round(r.x - 2) + 0.5, Math.round(r.y + 5)); }
+    for (const r of rain) { r.y += r.v / 60; r.x -= r.v / 240; if (r.y > V.h) { r.y = -6; r.x = rand(0, V.w + 40); } ctx.moveTo(Math.round(r.x) + 0.5, Math.round(r.y)); ctx.lineTo(Math.round(r.x - 2) + 0.5, Math.round(r.y + 5)); }
     ctx.stroke();
   }
   NN.FX.drawParts(ctx, X, Y, true);
   NN.FX.drawLife(ctx, X, Y, true);
-  if (G.flash > 0 && NN.SET.flashes) { ctx.fillStyle = `rgba(255,255,255,${G.flash * 2})`; ctx.fillRect(0, 0, SW, SH); }
+  if (G.flash > 0 && NN.SET.flashes) { ctx.fillStyle = `rgba(255,255,255,${G.flash * 2})`; ctx.fillRect(0, 0, V.w, V.h); }
   NN.FX.vignette(ctx);
   lastDark = dk;
   // labels above the dark
@@ -490,16 +637,16 @@ function draw(now) {
   for (const n of G.npcs) if (n.aiKey === 'thief') marks.push([n.x, n.y, '#b98ad8']);
   for (const [x, y, col, wolf] of marks) {
     const sx = x - camX, sy = y - 8 - camY;
-    if (sx >= 0 && sx < SW && sy >= 0 && sy < SH) continue;
-    const cx = Math.round(clamp(sx, 5, SW - 6));
-    let cy = Math.round(clamp(sy, 8, SH - 8));
-    if (cx > SW - 98 && cy < 104) cy = 104;
-    if (cx < 140 && cy < 60) cy = 60;
+    if (sx >= 0 && sx < V.w && sy >= 0 && sy < V.h) continue;
+    const cx = Math.round(clamp(sx, 5, V.w - 6));
+    let cy = Math.round(clamp(sy, 8, V.h - 8));
+    if (cx > V.w - 98 * V.z && cy < 104 * V.z) cy = Math.round(104 * V.z);
+    if (cx < 140 * V.z && cy < 60 * V.z) cy = Math.round(60 * V.z);
     R(ctx, '#3e2416', cx - 3, cy - 3, 7, 7); R(ctx, col, cx - 2, cy - 2, 5, 5);
     if (wolf) R(ctx, '#3e2416', cx, cy, 1, 1);
   }
   if (joy.on) {
-    const r = stage.getBoundingClientRect(), s = r.width / SW;
+    const r = stage.getBoundingClientRect(), s = r.width / V.w;
     const ox = (joy.ox - r.left) / s, oy = (joy.oy - r.top) / s;
     ctx.globalAlpha = 0.4; ctx.strokeStyle = '#fff7e0'; ctx.beginPath(); ctx.arc(ox, oy, 16, 0, TAU); ctx.stroke();
     ctx.fillStyle = '#fff7e0'; NN.U.disc(ctx, ox + joy.x * 13, oy + joy.y * 13, 6); ctx.globalAlpha = 1;
@@ -512,6 +659,8 @@ function frame(now) {
   const dt = clamp((now - last) / 1000, 0, 1 / 30); last = now; lastDt = dt;
   pollPad(dt);
   UI.tick(dt);
+  buildZoom();
+  UI.buildBar(NN.mode === 'build');
   const mode = NN.mode;
   if (mode === 'title' && G.sh) { titleT += dt; G.sh.x = W.GX + Math.sin(titleT / 11) * 170; G.sh.y = W.FOLD.y + W.FOLD.h + 30 + Math.sin(titleT / 7) * 40; G.sh.vx = Math.cos(titleT / 11) * 15; G.sh.vy = 0; }
   if (G.sh) NN.FX.update(mode === 'play' || mode === 'build' || mode === 'title' ? dt : 0, camX, camY, lastDark);
@@ -540,14 +689,35 @@ function frame(now) {
 }
 function resize() {
   const aw = Math.max(100, document.documentElement.clientWidth - 40), ah = Math.max(60, window.innerHeight - 20);
-  let s = Math.min(aw / SW, ah / SH);
+  let s = Math.min(aw / NN.W, ah / NN.H);
   if (s >= 2) s = Math.floor(s);
-  stage.style.width = SW * s + 'px'; stage.style.height = SH * s + 'px';
+  stage.style.width = NN.W * s + 'px'; stage.style.height = NN.H * s + 'px';
   $('ui').style.transform = `scale(${s})`;
+  stageScale = s; fitCanvas();
+}
+// ---------------------------------------------------------------- the wide view: see more of the farm at once
+let stageScale = 1;
+function fitCanvas() { cv.style.imageRendering = stageScale + 0.01 < V.z ? 'auto' : ''; }
+const ZOOMS = [1, 1.5, 2];
+NN.setZoom = z => {
+  z = clamp(z, 1, 2);
+  if (z === V.z) return;
+  V.z = z; V.w = Math.round(NN.W * z); V.h = Math.round(NN.H * z);
+  cv.width = V.w; cv.height = V.h; ctx.imageSmoothingEnabled = false;
+  dark.width = V.w; dark.height = V.h; rain.length = 0;
+  NN.FX.snap(); fitCanvas();
+};
+NN.stepZoom = dir => { const i = ZOOMS.indexOf(V.z); NN.setZoom(ZOOMS[clamp((i < 0 ? 0 : i) + dir, 0, ZOOMS.length - 1)]); };
+// building opens the wide view, and going back to play restores what you had
+let zoomBeforeBuild = null;
+function buildZoom() {
+  if (NN.mode === 'build' && zoomBeforeBuild === null) { zoomBeforeBuild = V.z; if (V.z < 2) NN.setZoom(2); }
+  else if (NN.mode !== 'build' && NN.mode !== 'panel' && zoomBeforeBuild !== null) { const z = zoomBeforeBuild; zoomBeforeBuild = null; NN.setZoom(z); }
+  if (NN.mode === 'title' && V.z !== 1) NN.setZoom(1);
 }
 addEventListener('resize', resize);
 // switching away mid-game pauses it
-document.addEventListener('visibilitychange', () => { if (document.hidden && (NN.mode === 'play' || NN.mode === 'build')) { UI.placing = null; NN.mode = 'play'; UI.openPanel('pause'); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden && (NN.mode === 'play' || NN.mode === 'build')) { endBuild(); UI.openPanel('pause'); } });
 if (NN.SET && NN.SET.bigText) document.getElementById('ui').classList.add('big');
 
 // Debug hook for automated tests and tuning in the console.

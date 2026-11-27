@@ -7,7 +7,7 @@
 const NN = window.NN;
 const { rand, clamp, pick, mk } = NN.U;
 const G = NN.G, W = NN.WORLD;
-const SW = NN.W, SH = NN.H, TAU = NN.TAU;
+const V = NN.view, TAU = NN.TAU;
 const FX = NN.FX = { parts: [], life: [], hitstop: 0 };
 
 // ---------------------------------------------------------------- settings (saved on this device)
@@ -23,11 +23,11 @@ NN.textCps = () => ({ slow: 34, normal: 60, fast: 120, instant: 9999 }[SET.textS
 const cam = FX.cam = { x: 0, y: 0, ready: false };
 FX.camera = dt => {
   const sh = G.sh;
-  let tx = sh.x + (sh.vx || 0) * 0.32 - SW / 2, ty = sh.y - 16 + (sh.vy || 0) * 0.22 - SH / 2;
+  let tx = sh.x + (sh.vx || 0) * 0.32 - V.w / 2, ty = sh.y - 16 + (sh.vy || 0) * 0.22 - V.h / 2;
   if (!cam.ready || Math.hypot(tx - cam.x, ty - cam.y) > 260) { cam.x = tx; cam.y = ty; cam.ready = true; }
   const k = Math.min(1, dt * 5.5);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k;
-  cam.x = clamp(cam.x, 0, W.WW - SW); cam.y = clamp(cam.y, 0, W.WH - SH);
+  cam.x = clamp(cam.x, 0, W.WW - V.w); cam.y = clamp(cam.y, 0, W.WH - V.h);
   let sx = 0, sy = 0;
   if (G.shake > 0 && SET.shake) { sx = (Math.random() - 0.5) * 4 * Math.min(1, G.shake * 4); sy = (Math.random() - 0.5) * 3 * Math.min(1, G.shake * 4); }
   return [Math.round(cam.x + sx), Math.round(cam.y + sy)];
@@ -83,7 +83,7 @@ FX.drawParts = (ctx, X, Y, glow) => {
     const isGlow = p.kind === 'ember' || p.kind === 'star';
     if (isGlow !== !!glow) continue;
     const k = p.t / p.life, px = X(p.x), py = Y(p.y - p.z);
-    if (px < -8 || py < -8 || px > SW + 8 || py > SH + 8) continue;
+    if (px < -8 || py < -8 || px > V.w + 8 || py > V.h + 8) continue;
     ctx.globalAlpha = p.kind === 'petal' ? Math.min(1, (1 - k) * 3) : 1 - k * k;
     if (p.kind === 'heart' && heart) ctx.drawImage(heart, px - 4, py - 4);
     else { ctx.fillStyle = p.col; const s = p.kind === 'puff' || p.kind === 'dust' ? Math.max(1, Math.round(p.size * (1 + k))) : p.size; ctx.fillRect(px - (s >> 1), py - (s >> 1), s, s); }
@@ -95,13 +95,13 @@ FX.drawParts = (ctx, X, Y, glow) => {
 const lifeSpr = (name, fr, flip) => { try { return NN.spr(name, fr, flip); } catch (e) { return null; } };
 function updLife(dt, camX, camY, dark) {
   const day = dark < 0.25, region = W.regionId(W.regionAt(G.sh.x, G.sh.y));
-  const near = l => l.x > camX - 60 && l.x < camX + SW + 60 && l.y > camY - 60 && l.y < camY + SH + 60;
+  const near = l => l.x > camX - 60 && l.x < camX + V.w + 60 && l.y > camY - 60 && l.y < camY + V.h + 60;
   FX.life = FX.life.filter(l => near(l) && l.t < l.life);
   const count = k => FX.life.filter(l => l.kind === k).length;
   if (!SET.particles) return;
-  if (day && region !== 'canyon' && count('butterfly') < 4 && Math.random() < dt * 0.8) FX.life.push({ kind: 'butterfly', x: camX + rand(20, SW - 20), y: camY + rand(30, SH - 20), t: 0, life: rand(10, 20), ph: rand(0, TAU), hue: pick(['', 'blue']) });
-  if (day && count('bird') < 2 && Math.random() < dt * 0.06) { const dir = Math.random() < 0.5 ? 1 : -1; FX.life.push({ kind: 'bird', x: dir > 0 ? camX - 20 : camX + SW + 20, y: camY + rand(20, SH * 0.5), vx: dir * rand(46, 70), t: 0, life: 12, ph: rand(0, TAU) }); }
-  if (!day && count('firefly') < 14 && Math.random() < dt * 3) FX.life.push({ kind: 'firefly', x: camX + rand(0, SW), y: camY + rand(0, SH), t: 0, life: rand(4, 8), ph: rand(0, TAU) });
+  if (day && region !== 'canyon' && count('butterfly') < 4 && Math.random() < dt * 0.8) FX.life.push({ kind: 'butterfly', x: camX + rand(20, V.w - 20), y: camY + rand(30, V.h - 20), t: 0, life: rand(10, 20), ph: rand(0, TAU), hue: pick(['', 'blue']) });
+  if (day && count('bird') < 2 && Math.random() < dt * 0.06) { const dir = Math.random() < 0.5 ? 1 : -1; FX.life.push({ kind: 'bird', x: dir > 0 ? camX - 20 : camX + V.w + 20, y: camY + rand(20, V.h * 0.5), vx: dir * rand(46, 70), t: 0, life: 12, ph: rand(0, TAU) }); }
+  if (!day && count('firefly') < 14 && Math.random() < dt * 3) FX.life.push({ kind: 'firefly', x: camX + rand(0, V.w), y: camY + rand(0, V.h), t: 0, life: rand(4, 8), ph: rand(0, TAU) });
   for (const l of FX.life) {
     l.t += dt;
     if (l.kind === 'butterfly') { l.x += Math.sin(l.t * 1.3 + l.ph) * 18 * dt + 6 * dt; l.y += Math.cos(l.t * 1.9 + l.ph) * 12 * dt; }
@@ -110,7 +110,7 @@ function updLife(dt, camX, camY, dark) {
   }
   // petals from blossom trees on screen, embers from the fire
   if (day && Math.random() < dt * 3) {
-    const trees = W.query(camX, camY, camX + SW, camY + SH).filter(o => o.prop === 'blossom');
+    const trees = W.query(camX, camY, camX + V.w, camY + V.h).filter(o => o.prop === 'blossom');
     if (trees.length) { const t = pick(trees); FX.emit('petal', t.x + rand(-12, 12), t.y + rand(-4, 4), 1, { z: rand(22, 34) }); }
   }
   if (Math.random() < dt * (dark > 0.3 ? 9 : 3) && Math.abs(W.FIRE.x - G.sh.x) < 260 && Math.abs(W.FIRE.y - G.sh.y) < 160) FX.emit('ember', W.FIRE.x + rand(-3, 3), W.FIRE.y, 1, { z: 8 });
@@ -164,7 +164,7 @@ FX.grade = (ctx, dark) => {
   if (!G.sh) return;
   const region = W.regionId(W.regionAt(G.sh.x, G.sh.y));
   const f = G.phase === 'day' ? G.t / G.len : 1;
-  const wash = (col, a, op = 'soft-light') => { if (a <= 0.005) return; ctx.globalCompositeOperation = op; ctx.globalAlpha = a; ctx.fillStyle = col; ctx.fillRect(0, 0, SW, SH); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; };
+  const wash = (col, a, op = 'soft-light') => { if (a <= 0.005) return; ctx.globalCompositeOperation = op; ctx.globalAlpha = a; ctx.fillStyle = col; ctx.fillRect(0, 0, V.w, V.h); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; };
   if (G.form === 'sheep' && G.phase === 'day') wash('#808080', 0.45, 'saturation'); // the world looks greyer without him
   if (G.phase === 'day' && dark < 0.5) {
     if (f < 0.22) wash('#ffc878', 0.38 * (1 - f / 0.22));          // golden morning
@@ -178,12 +178,12 @@ FX.grade = (ctx, dark) => {
 let vig = null;
 FX.vignette = ctx => {
   if (!SET.vignette) return;
-  if (!vig) {
-    vig = mk(SW, SH);
+  if (!vig || vig.width !== V.w) {
+    vig = mk(V.w, V.h);
     const x = vig.getContext('2d');
-    const g = x.createRadialGradient(SW / 2, SH / 2, SH * 0.42, SW / 2, SH / 2, SW * 0.62);
+    const g = x.createRadialGradient(V.w / 2, V.h / 2, V.h * 0.42, V.w / 2, V.h / 2, V.w * 0.62);
     g.addColorStop(0, 'rgba(20,12,6,0)'); g.addColorStop(1, 'rgba(20,12,6,.42)');
-    x.fillStyle = g; x.fillRect(0, 0, SW, SH);
+    x.fillStyle = g; x.fillRect(0, 0, V.w, V.h);
   }
   ctx.drawImage(vig, 0, 0);
 };

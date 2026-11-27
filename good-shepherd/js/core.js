@@ -6,6 +6,8 @@
 const NN = window.NN = window.NN || {};
 
 NN.W = 384; NN.H = 216; NN.TAU = Math.PI * 2;
+// The part of the world on screen. z is the zoom-out factor (1 = normal, 2 = wide view for building).
+NN.view = { w: 384, h: 216, z: 1 };
 
 const U = NN.U = {};
 U.rand = (a, b) => a + Math.random() * (b - a);

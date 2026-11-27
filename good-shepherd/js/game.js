@@ -47,7 +47,21 @@ const BUILD = {
   choirStage: { name: 'Choir Stage', w: 3, h: 2, cost: { timber: 6, wool: 2 }, ch: 6, jobs: { singer: 4 }, desc: 'Singers at night: scared sheep calm down and wolves lose heart.' },
   olivePress: { name: 'Olive Press', w: 2, h: 2, cost: { stone: 6 }, ch: 6, desc: 'Makes 2 oil a day for lamps and healing.' },
 };
-NN.DEFS = { RES, RES_NAME, TRAITS, JOBS, BUILD };
+// Pieces are one tile each and can be drawn in lines by dragging. Flat pieces lie on the ground and block nothing.
+Object.assign(BUILD, {
+  fence: { name: 'Fence', w: 1, h: 1, cost: { timber: 1 }, ch: 1, piece: true, hp: 3.5, desc: 'Keeps wolves out and sheep in. Drag to draw a line. A wolf needs a few seconds to gnaw through one piece.' },
+  gate: { name: 'Gate', w: 1, h: 1, cost: { timber: 2 }, ch: 1, piece: true, hp: 6, desc: 'You and the flock walk straight through. Wolves must break it down, and they never dare while you stand in it.' },
+  road: { name: 'Path', w: 1, h: 1, cost: { stone: 1 }, ch: 2, piece: true, flat: true, desc: 'You and the flock walk a third faster on a path. Drag to lay a line.' },
+});
+// The fold can be made bigger three times. Each size sleeps more sheep.
+const FOLD_UP = [null,
+  { cost: { timber: 16, stone: 4 }, ch: 1, name: 'the east pasture' },
+  { cost: { timber: 30, stone: 10 }, ch: 2, name: 'the north field' },
+  { cost: { timber: 50, stone: 20 }, ch: 4, name: 'the great fold' },
+];
+const FOLD_BEDS = [12, 20, 32, 44];
+const MAXLV = 3;
+NN.DEFS = { RES, RES_NAME, TRAITS, JOBS, BUILD, FOLD_UP, FOLD_BEDS, MAXLV };
 
 // ---------------------------------------------------------------- state
 const G = NN.G = {};
@@ -66,6 +80,7 @@ GM.newGame = () => {
     xp: 0, lv: 1, lvPending: 0, S: null, flags: {}, codex: [], helpers: [], storm: false, prowler: null, form: 'shepherd',
     stats: { found: 0, joined: 0, turned: 0, forgiven: 0, scattered: 0, built: 0, lambs: 0, faded: 0, days: 0 },
     shake: 0, smokeT: 0, report: null, nameI: 0, cold: false, flash: 0, gateLock: null, bellT: 0,
+    foldLv: 0, cleared: [], bv: 0, broken: 0,
   });
   resetKnacks();
   G.sh = { x: W.GX, y: W.FOLD.y + W.FOLD.h + 30, vx: 0, vy: 0, kx: 0, ky: 0, face: 1, dir: 'down', anim: 0, stun: 0, staffT: 0, slingT: 0,
@@ -108,6 +123,8 @@ GM.addXP = addXP;
 function knock(e, from, force) { const dx = e.x - from.x, dy = e.y - from.y, d = Math.hypot(dx, dy) || 1; e.kx = dx / d * force; e.ky = dy / d * force; }
 
 // ---------------------------------------------------------------- movement
+let roads = new Set(), pieces = new Map(); // tile lookups, rebuilt with the building rectangles
+const tileKey = (tx, ty) => tx + ty * 1000;
 function steer(e, tx, ty, speed, dt, arrive = 8) {
   const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
   let vx = 0, vy = 0;
@@ -116,8 +133,8 @@ function steer(e, tx, ty, speed, dt, arrive = 8) {
   e.vx += (vx - e.vx) * k; e.vy += (vy - e.vy) * k;
 }
 function move(e, dt, r = 4, ghost) {
-  const px = e.x, py = e.y;
-  e.x += (e.vx + (e.kx || 0)) * dt; e.y += (e.vy + (e.ky || 0)) * dt;
+  const px = e.x, py = e.y, k = roads.size && e.fearMax === undefined && roads.has(Math.floor(e.x / 16) + Math.floor(e.y / 16) * 1000) ? 1.33 : 1;
+  e.x += (e.vx * k + (e.kx || 0)) * dt; e.y += (e.vy * k + (e.ky || 0)) * dt;
   if (e.kx) { e.kx -= e.kx * Math.min(1, dt * 6); e.ky -= e.ky * Math.min(1, dt * 6); }
   if (Math.abs(e.vx) > 4) e.face = e.vx > 0 ? 1 : -1;
   if (Math.hypot(e.vx, e.vy) > 6) e.dir = Math.abs(e.vy) > Math.abs(e.vx) * 1.2 ? (e.vy < 0 ? 'up' : 'down') : 'side';
@@ -164,25 +181,136 @@ GM.bid = () => newId();
 GM.setUid = n => { uid = n; };
 function placeBuilding(type, tx, ty, free) {
   const d = BUILD[type];
-  const b = { id: newId(), type, tx, ty, x: tx * 16, y: ty * 16, w: d.w * 16, h: d.h * 16, fx: tx * 16 + d.w * 8, fy: ty * 16 + d.h * 16, anim: 0 };
-  G.buildings.push(b);
-  if (!free) { GM.spend(d.cost); G.stats.built++; sfx('build'); ring(b.fx, b.fy - 8, 30, '#f5c542', 0.8); emit('built', b); }
+  const b = { id: newId(), type, tx, ty, x: tx * 16, y: ty * 16, w: d.w * 16, h: d.h * 16, fx: tx * 16 + d.w * 8, fy: ty * 16 + d.h * 16, anim: 0, lv: 1 };
+  if (!d.flat) {
+    // a building takes the place of any path under it, and of small scenery
+    for (const o of G.buildings.filter(q => BUILD[q.type].flat && q.x < b.x + b.w && q.x + q.w > b.x && q.y < b.y + b.h && q.y + q.h > b.y)) removeBuilding(o, { quiet: true });
+    for (const o of W.smallIn(b.x, b.y, b.w, b.h)) clearDecor(o, true);
+  }
+  G.buildings.push(b); touch();
+  if (!free) {
+    GM.spend(d.cost);
+    if (d.piece) { sfx('pickupWood'); emit('piece', b); }
+    else { G.stats.built++; sfx('build'); ring(b.fx, b.fy - 8, 30, '#f5c542', 0.8); emit('built', b); }
+  }
   return b;
 }
 GM.placeBuilding = placeBuilding;
-GM.buildingRects = () => G.buildings.filter(b => b.type !== 'lampPost').map(b => [b.x + 1, b.y + (b.type === 'watchtower' ? 4 : 2), b.w - 2, b.h - 3]);
-W.dynamicRects = () => W.rects.concat(GM.buildingRects()).concat(G.buildings.filter(b => b.type === 'lampPost').map(b => [b.fx - 2, b.fy - 4, 4, 4]));
+// What has been spent on a building so far (its cost, plus its upgrades).
+const invested = b => { const d = BUILD[b.type], k = [0, 1, 2, 4][b.lv || 1] || 1, out = {}; for (const [r, v] of Object.entries(d.cost)) out[r] = v * k; return out; };
+function removeBuilding(b, o = {}) {
+  const i = G.buildings.indexOf(b); if (i < 0) return;
+  G.buildings.splice(i, 1); touch();
+  for (const s of G.sheep) if (s.job && s.job.key && s.job.key.includes('@' + b.id + '#')) s.job = null;
+  if (!o.broken) { const back = {}; for (const [r, v] of Object.entries(invested(b))) { const n = BUILD[b.type].piece ? v : Math.floor(v * 0.75); if (n > 0) { back[r] = n; G.res[r] += n; } } b.refund = back; }
+  if (!o.quiet) emit('removed', b);
+  return b;
+}
+GM.removeBuilding = removeBuilding;
+// Upgrades: level 2 costs the building's price again, level 3 costs it twice more.
+GM.upgradeCost = b => { const d = BUILD[b.type], k = b.lv || 1, out = {}; for (const [r, v] of Object.entries(d.cost)) out[r] = v * k; return out; };
+GM.canUpgrade = b => { const d = BUILD[b.type], lv = b.lv || 1; if (d.piece) return 'no'; if (lv >= MAXLV) return 'max'; if (G.chapter < (lv === 1 ? 2 : 4)) return 'later'; return GM.has(GM.upgradeCost(b)) ? 'ok' : 'poor'; };
+GM.upgrade = b => {
+  if (GM.canUpgrade(b) !== 'ok') return false;
+  GM.spend(GM.upgradeCost(b)); b.lv = (b.lv || 1) + 1; touch();
+  sfx('build'); ring(b.fx, b.fy - 8, 34, '#f5c542', 0.9); pop(b.fx, b.fy - b.h - 6, 'LEVEL ' + b.lv, '#f5c542', 1.4);
+  emit('upgraded', b); volunteer();
+  return true;
+};
+// What the next level of a building does, in words.
+GM.upgradeText = b => {
+  const d = BUILD[b.type], lv = (b.lv || 1) + 1;
+  if (b.type === 'feeder') return `Feeds ${10 * lv} sheep a day`;
+  if (b.type === 'trough') return `Waters ${10 * lv} sheep a day`;
+  if (b.type === 'lean') return `Sleeps ${8 + 6 * (lv - 1)} sheep`;
+  if (b.type === 'lampPost') return 'A wider, brighter light';
+  if (b.type === 'olivePress') return `Makes ${2 * lv} oil a day`;
+  if (b.type === 'watchtower') return 'Wolves get nervous from farther away';
+  if (d.jobs) return 'Room for one more ' + Object.keys(d.jobs).map(j => JOBS[j].name).join(' and one more ');
+  return 'Works better';
+};
+// Clearing scenery for supplies. Cleared pieces are remembered by their place in the scenery list.
+function clearDecor(o, quiet) {
+  const y = W.clearYield(o); if (!y) return null;
+  const i = W.decor.indexOf(o);
+  W.removeDecor(o); if (i >= 0) G.cleared.push(i);
+  for (const [r, v] of Object.entries(y)) G.res[r] += v;
+  if (o.r) W.navDirty();
+  if (!quiet) emit('cleared', { o, got: y });
+  return y;
+}
+GM.clearDecor = clearDecor;
+// Growing the fold. Returns a reason when it can't be done.
+GM.foldNext = () => FOLD_UP[(G.foldLv || 0) + 1] || null;
+GM.canExpandFold = () => {
+  const n = GM.foldNext(); if (!n) return 'max';
+  if (G.chapter < n.ch) return 'later';
+  if (!GM.has(n.cost)) return 'poor';
+  const F = W.FOLD_SIZES[(G.foldLv || 0) + 1];
+  for (const b of G.buildings) {
+    if (BUILD[b.type].piece) continue;
+    const out = b.x + b.w <= F.x - 4 || b.x >= F.x + F.w + 4 || b.y + b.h <= F.y - 4 || b.y >= F.y + F.h + 4;
+    const inside = b.x >= F.x + 6 && b.x + b.w <= F.x + F.w - 6 && b.y >= F.y + 8 && b.y + b.h <= F.y + F.h - 6;
+    if (!out && !inside) return 'blocked:' + BUILD[b.type].name;
+  }
+  return 'ok';
+};
+GM.expandFold = () => {
+  if (GM.canExpandFold() !== 'ok') return false;
+  const n = GM.foldNext(), lv = (G.foldLv || 0) + 1, F = W.FOLD_SIZES[lv];
+  GM.spend(n.cost);
+  // fence pieces and paths under the new fence line come back as supplies
+  for (const b of G.buildings.filter(q => BUILD[q.type].piece)) {
+    const out = b.x + b.w <= F.x - 2 || b.x >= F.x + F.w + 2 || b.y + b.h <= F.y - 2 || b.y >= F.y + F.h + 2;
+    const inside = b.x >= F.x + 6 && b.x + b.w <= F.x + F.w - 6 && b.y >= F.y + 6 && b.y + b.h <= F.y + F.h - 6;
+    if (!out && !inside) removeBuilding(b, { quiet: true });
+  }
+  G.foldLv = lv; W.setFold(lv); touch();
+  for (const e of G.sheep.concat(G.npcs, G.pickups, [G.sh])) W.collide(e, 5);
+  emit('foldGrown', lv);
+  return true;
+};
+GM.buildingRects = () => { W.dynamicRects(); return bRects; };
+let rectSrc = null, rectKey = '', allRects = [], bRects = [], gateRects = [];
+function touch() { G.bv = (G.bv || 0) + 1; rectSrc = null; W.navDirty(); }
+GM.touch = touch;
+W.dynamicRects = () => {
+  const key = G.buildings.length + ':' + G.bv;
+  if (rectSrc === G.buildings && key === rectKey) return allRects;
+  rectSrc = G.buildings; rectKey = key; bRects = []; gateRects = []; roads = new Set(); pieces = new Map();
+  const posts = [];
+  for (const b of G.buildings) {
+    if (b.type === 'road') { roads.add(tileKey(b.tx, b.ty)); continue; }
+    if (b.type === 'fence' || b.type === 'gate') pieces.set(tileKey(b.tx, b.ty), b);
+    if (b.type === 'gate') gateRects.push([b.x, b.y, 16, 16]);
+    else if (b.type === 'fence') bRects.push([b.x, b.y, 16, 16]);
+    else if (b.type === 'lampPost') posts.push([b.fx - 2, b.fy - 4, 4, 4]);
+    else bRects.push([b.x + 1, b.y + (b.type === 'watchtower' ? 4 : 2), b.w - 2, b.h - 3]);
+  }
+  allRects = W.rects.concat(bRects, posts);
+  return allRects;
+};
+GM.pieceAt = (tx, ty) => { W.dynamicRects(); return pieces.get(tileKey(tx, ty)) || null; };
+GM.roadAt = (tx, ty) => { W.dynamicRects(); return roads.has(tileKey(tx, ty)); };
 GM.canPlace = (type, tx, ty) => {
-  const d = BUILD[type];
-  return W.canPlace(tx * 16, ty * 16, d.w * 16, d.h * 16, G.buildings.map(b => [b.x - 2, b.y - 2, b.w + 4, b.h + 4]));
+  const d = BUILD[type], x = tx * 16, y = ty * 16, w = d.w * 16, h = d.h * 16, others = [];
+  for (const b of G.buildings) {
+    const bd = BUILD[b.type];
+    if (bd.flat && !d.flat) continue; // a building simply replaces the path under it
+    others.push(d.piece || bd.piece ? [b.x + 1, b.y + 1, b.w - 2, b.h - 2] : [b.x - 2, b.y - 2, b.w + 4, b.h + 4]);
+  }
+  return W.canPlace(x, y, w, h, others, d.flat);
 };
 GM.count = type => G.buildings.filter(b => b.type === type).length;
+const lvOf = b => b.lv || 1;
 GM.capacity = () => ({
-  beds: 12 + 8 * GM.count('lean'),
-  food: 10 * G.buildings.filter(b => b.type === 'feeder' && near(b, W.FOLD, 300)).length,
-  drink: 10 * G.buildings.filter(b => b.type === 'trough' && near(b, W.FOLD, 300)).length,
+  beds: FOLD_BEDS[G.foldLv || 0] + G.buildings.reduce((n, b) => n + (b.type === 'lean' ? 8 + 6 * (lvOf(b) - 1) : 0), 0),
+  food: G.buildings.reduce((n, b) => n + (b.type === 'feeder' && near(b, W.FOLD, 190) ? 10 * lvOf(b) : 0), 0),
+  drink: G.buildings.reduce((n, b) => n + (b.type === 'trough' && near(b, W.FOLD, 190) ? 10 * lvOf(b) : 0), 0),
 });
-const near = (b, F, d) => Math.hypot(b.fx - (F.x + F.w / 2), b.fy - (F.y + F.h / 2)) < d;
+// near the fold: within d of its fence
+const near = (b, F, d) => Math.hypot(Math.max(F.x - b.fx, 0, b.fx - F.x - F.w), Math.max(F.y - b.fy, 0, b.fy - F.y - F.h)) < d;
+GM.nearFold = b => near(b, W.FOLD, 190);
 
 // Job slots: [type, station {x,y}, building id or null]. The fold, fire and pond give a few slots before any buildings.
 GM.jobSlots = () => {
@@ -194,7 +322,7 @@ GM.jobSlots = () => {
   for (const b of G.buildings) {
     const d = BUILD[b.type];
     if (!d.jobs) continue;
-    for (const [job, n] of Object.entries(d.jobs)) for (let i = 0; i < n; i++) slots.push([job, { x: b.fx - 10 + i * 12, y: b.fy + 10 }, b.id]);
+    for (const [job, n] of Object.entries(d.jobs)) for (let i = 0; i < n + lvOf(b) - 1; i++) slots.push([job, { x: b.fx - 10 + i * 12, y: b.fy + 10 }, b.id]);
   }
   for (const s of G.sheep) if (s.special === 'guard') slots.push(['guard', { x: W.GX, y: F.y + F.h - 22 }, 'guard:' + s.id]);
   return slots;
@@ -570,7 +698,7 @@ GM.lights = () => {
   L.push([W.FIRE.x, W.FIRE.y - 4, fireR() + flick]);
   L.push([W.HUT.x + 16, W.HUT.y - 18, 22]);
   for (const b of G.buildings) {
-    if (b.type === 'lampPost') L.push([b.fx, b.fy - 20, 62 + flick]);
+    if (b.type === 'lampPost') L.push([b.fx, b.fy - 20, 62 + 16 * (lvOf(b) - 1) + flick]);
     if (b.type === 'watchtower') L.push([b.fx, b.fy - 40, 26]);
     if (b.type === 'infirmary') L.push([b.fx, b.fy - 20, 22]);
   }
@@ -597,8 +725,8 @@ function updWolf(w, dt) {
   if (G.form === 'shepherd' && dsh < S.lantern) { w.fear += dt * 0.25 * S.lanternLvl; slow = 0.62; }
   if (dist(w, W.FIRE) < fireR() * 0.8) { w.fear += dt * (G.sheep.some(s => s.job && s.job.type === 'lamp') ? 0.45 : 0.15); slow *= 0.75; }
   for (const b of G.buildings) {
-    if (b.type === 'lampPost' && Math.hypot(w.x - b.fx, w.y - b.fy) < (pk('echo') ? 80 : 56)) { w.fear += dt * (pk('echo') ? 0.45 : 0.3); slow *= 0.8; }
-    if (b.type === 'watchtower' && Math.hypot(w.x - b.fx, w.y - b.fy) < 90 && G.sheep.some(s => s.job && s.job.key && s.job.key.includes('@' + b.id + '#'))) { w.fear += dt * 0.2; }
+    if (b.type === 'lampPost' && Math.hypot(w.x - b.fx, w.y - b.fy) < (pk('echo') ? 80 : 56) + 14 * (lvOf(b) - 1)) { w.fear += dt * (pk('echo') ? 0.45 : 0.3); slow *= 0.8; }
+    if (b.type === 'watchtower' && Math.hypot(w.x - b.fx, w.y - b.fy) < 90 + 25 * (lvOf(b) - 1) && G.sheep.some(s => s.job && s.job.key && s.job.key.includes('@' + b.id + '#'))) { w.fear += dt * 0.2; }
   }
   if (G.choirOn && dist(w, W.FIRE) < 220) w.fear += dt * 0.12;
   if (w.fear >= w.fearMax) { turnWolf(w); return; }
@@ -621,7 +749,36 @@ function updWolf(w, dt) {
     } else steer(w, G.sh.x, G.sh.y, 40 * slow, dt, 1);
     if (dsh < 10 && G.sh.stun <= 0) { G.sh.stun = 0.4; knock(G.sh, w, 110); w.rest = 1; w.rx = G.sh.x; w.ry = G.sh.y; G.shake = 0.2; sfx('hurt'); }
   }
+  const bx = w.x, by = w.y;
   move(w, dt, 5);
+  // gates stop wolves (and only wolves)
+  W.dynamicRects();
+  for (const [x, y, gw, gh] of gateRects) {
+    if (w.x < x - 6 || w.x > x + gw + 6 || w.y < y - 6 || w.y > y + gh + 6) continue;
+    const cx = clamp(w.x, x, x + gw), cy = clamp(w.y, y, y + gh), dx = w.x - cx, dy = w.y - cy, d = Math.hypot(dx, dy);
+    if (d < 5) { if (d === 0) { w.x = bx; w.y = by; } else { w.x = cx + dx / d * 5; w.y = cy + dy / d * 5; } }
+  }
+  // a wolf held up by a fence or a gate gnaws at it
+  const want = Math.hypot(w.vx, w.vy), got = dt > 0 ? Math.hypot(w.x - bx, w.y - by) / dt : want;
+  w.blockT = !(w.rest > 0) && want > 12 && got < want * 0.45 ? (w.blockT || 0) + dt : Math.max(0, (w.blockT || 0) - dt * 2);
+  w.gnawing = false;
+  if (w.blockT > 0.5 && pieces.size) {
+    let p = null, pd = 24;
+    for (let ty = Math.floor((w.y - 24) / 16); ty <= Math.floor((w.y + 24) / 16); ty++) for (let tx = Math.floor((w.x - 24) / 16); tx <= Math.floor((w.x + 24) / 16); tx++) {
+      const q = pieces.get(tileKey(tx, ty)); if (!q) continue;
+      const d = Math.hypot(q.x + 8 - w.x, q.y + 8 - w.y); if (d < pd) { pd = d; p = q; }
+    }
+    if (p) {
+      w.gnawing = true; w.face = p.x + 8 > w.x ? 1 : -1;
+      if (p.type === 'gate' && G.form === 'shepherd' && Math.hypot(G.sh.x - p.x - 8, G.sh.y - p.y - 8) < 44) { w.fear += dt * 0.5; if (!w.gateSaid) { w.gateSaid = true; pop(w.x, w.y - 14, 'NOPE', '#d4d5e0', 0.9); emit('gateHeld', p); } }
+      else {
+        p.hp = (p.hp === undefined ? BUILD[p.type].hp : p.hp) - dt; p.hitT = 0.25;
+        w.gnawT = (w.gnawT || 0) - dt;
+        if (w.gnawT <= 0) { w.gnawT = 0.7; pop(p.x + 8, p.y - 4, 'GNAW', '#d8574f', 0.6); sfx('munch'); }
+        if (p.hp <= 0) { removeBuilding(p, { broken: true }); G.broken = (G.broken || 0) + 1; pop(p.x + 8, p.y - 6, 'CRACK!', '#f5c542', 1); sfx('hurt'); w.blockT = 0; }
+      }
+    }
+  }
 }
 GM.spawnFright = (o = {}) => {
   const center = o.near || G.sh;
@@ -864,7 +1021,7 @@ function dawnTally() {
     }
     s.workT = 0;
   }
-  if (GM.count('olivePress')) add('oil', 2 * GM.count('olivePress'));
+  for (const b of G.buildings) if (b.type === 'olivePress') add('oil', 2 * lvOf(b));
   if (G.helpers.includes('zeb')) { const z = pk('zebDouble') ? 2 : 1; add('timber', 2 * z); add('stone', 1 * z); add('hay', 2 * z); add('water', 2 * z); }
   const home = G.sheep.filter(s => ['home', 'nap', 'feast'].includes(s.state) || (s.state === 'follow' && !s.owner));
   const cap = GM.capacity();
@@ -886,6 +1043,8 @@ function dawnTally() {
     if (s.joy > 0.75) rep.happy++;
   });
   G.res.hay = Math.max(0, G.res.hay - Math.ceil(ate / 2)); G.res.water = Math.max(0, G.res.water - Math.ceil(drank / 2));
+  rep.used = { hay: Math.ceil(ate / 2), water: Math.ceil(drank / 2) }; rep.flock = home.length;
+  if (G.broken) { rep.lines.push(`Wolves broke ${G.broken} fence piece${G.broken > 1 ? 's' : ''} in the night.`); G.broken = 0; }
   // a gentle forecast when the stores are shrinking
   const need = Math.ceil(home.length / 2);
   for (const [k, fix] of [['hay', 'Another Hay Barn would help.'], ['water', G.chapter >= 2 ? 'Another Well would help.' : 'A Water Wrangler works at the pond.']]) {

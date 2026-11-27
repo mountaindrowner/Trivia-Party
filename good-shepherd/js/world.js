@@ -25,8 +25,16 @@ const regionAt = (x, y) => GRID[clamp(Math.floor(y / RH), 0, 2)][clamp(Math.floo
 const regionId = id => (REGIONS[id] && REGIONS[id].alias) || id;
 
 // ---------------------------------------------------------------- fixed places
-const FOLD = { x: 1184, y: 880, w: 288, h: 176 };
-const GX = FOLD.x + FOLD.w / 2, GATE = 32;
+// The fold grows as the farm does. Every size keeps the gate, the fire and the shelter where they are.
+const FOLD_SIZES = [
+  { x: 1184, y: 880, w: 288, h: 176 },
+  { x: 1184, y: 880, w: 384, h: 176 },
+  { x: 1184, y: 784, w: 384, h: 272 },
+  { x: 1184, y: 736, w: 384, h: 320 },
+];
+const FOLD0 = FOLD_SIZES[0];
+const FOLD = Object.assign({}, FOLD0);
+const GX = FOLD0.x + FOLD0.w / 2, GATE = 32;
 const FIRE = { x: GX + 10, y: FOLD.y + 96 };
 const HUT = { x: 1060, y: 900 };
 const POND = { x: 1000, y: 1180, r: 40 };
@@ -101,7 +109,7 @@ const inRect = (x, y, r, m = 0) => x > r.x - m && x < r.x + r.w + m && y > r.y -
 
 // ---------------------------------------------------------------- state the story changes
 const W = NN.WORLD = {
-  RW, RH, WW, WH, REGIONS, GRID, regionAt, regionId, FOLD, GX, GATE, FIRE, HUT, POND, LAKE, SITES, RIVER, BRIDGE, MAZE, PATHS,
+  RW, RH, WW, WH, REGIONS, GRID, regionAt, regionId, FOLD, FOLD0, FOLD_SIZES, GX, GATE, FIRE, HUT, POND, LAKE, SITES, RIVER, BRIDGE, MAZE, PATHS,
   doors: { bridge: false, thorns: false, rockslide: false, canyon: false, ridge: false },
   revealed: new Set(['meadow']), // regions without fog
   decor: [], ground: null, rects: [],
@@ -122,6 +130,12 @@ function hashAll() {
 }
 W.addDecor = o => { W.decor.push(o); hash[clamp(Math.floor(o.y / CELL), 0, ROWS - 1) * COLS + clamp(Math.floor(o.x / CELL), 0, COLS - 1)].push(o); return o; };
 W.removeDecor = o => { o.gone = true; const b = hash[clamp(Math.floor(o.y / CELL), 0, ROWS - 1) * COLS + clamp(Math.floor(o.x / CELL), 0, COLS - 1)]; const i = b.indexOf(o); if (i >= 0) b.splice(i, 1); };
+// Clearing land: what a piece of scenery gives back when the Shepherd clears it (null = it stays).
+const SMALL = ['bush', 'berry', 'blue', 'stump', 'mushrooms', 'reeds', 'cattail'];
+const YIELD = { stump: { timber: 1 }, bush: { hay: 1 }, berry: { hay: 1 }, blue: {}, mushrooms: {}, reeds: {}, cattail: {}, boulder: { stone: 2 }, boulder2: { stone: 2 }, thornBush: { timber: 1 } };
+W.clearYield = o => (!o || o.gone || o.fixed || o.door || o.sign || o.bell || o.sycamore || o.booth) ? null : o.tree ? { timber: 2 } : (YIELD[o.prop] || null);
+W.isSmall = o => SMALL.includes(o.prop) && !o.fixed && !o.door;
+W.smallIn = (x, y, w, h) => W.query(x - 20, y - 20, x + w + 20, y + h + 20).filter(o => W.isSmall(o) && o.x > x - 6 && o.x < x + w + 6 && o.y > y - 2 && o.y < y + h + 8);
 W.query = (x0, y0, x1, y1) => {
   const out = [];
   const c0 = clamp(Math.floor(x0 / CELL), 0, COLS - 1), c1 = clamp(Math.floor(x1 / CELL), 0, COLS - 1);
@@ -199,7 +213,37 @@ function paintCliff(g, x1, y1, x2, y2, kind) {
   }
 }
 
+// the fold: straw floor, a shaded strip under the shelter, the fire ring
+function paintFold(g, rnd) {
+  rect(g, '#b8954a', FOLD.x, FOLD.y, FOLD.w, FOLD.h); rect(g, '#dcb965', FOLD.x + 2, FOLD.y + 2, FOLD.w - 4, FOLD.h - 4);
+  const n = Math.round(3400 * FOLD.w * FOLD.h / (FOLD0.w * FOLD0.h));
+  for (let i = 0; i < n; i++) rect(g, ['#c9a352', '#f0d88c', '#c9a352', '#e8c878'][Math.floor(rnd() * 4)], Math.floor(FOLD.x + 3 + rnd() * (FOLD.w - 9)), Math.floor(FOLD.y + 3 + rnd() * (FOLD.h - 8)), rnd() < 0.6 ? 3 : 2, 1);
+  g.fillStyle = 'rgba(90,60,20,.22)'; g.fillRect(FOLD0.x + 12, FOLD0.y + 22, 80, 20);
+  for (let a = 0; a < 10; a++) { const sx = Math.round(FIRE.x + Math.cos(a / 10 * TAU) * 8), sy = Math.round(FIRE.y + Math.sin(a / 10 * TAU) * 5); rect(g, '#5a5868', sx - 2, sy - 1, 4, 3); rect(g, '#9a98a8', sx - 1, sy - 1, 3, 2); rect(g, '#c4c3cf', sx - 1, sy - 1); }
+  rect(g, '#5a4a3a', FIRE.x - 5, FIRE.y - 2, 10, 4);
+}
+// Grow the fold to one of its sizes: clear the scenery it covers, lay new straw, and walk the old path around it.
+W.foldLevel = 0;
+W.setFold = lv => {
+  lv = clamp(lv | 0, 0, FOLD_SIZES.length - 1);
+  Object.assign(FOLD, FOLD_SIZES[lv]); W.foldLevel = lv;
+  if (lv > 0 && W.groundCtx) {
+    const g = W.groundCtx, rnd = seeded(500 + lv);
+    const ex = FOLD.x + FOLD.w + 14, route = [[ex, FOLD0.y + FOLD0.h + 22], [ex, FOLD.y - 14]].concat(lv === 1 ? [[1508, 820]] : lv === 2 ? [[1446, 776]] : [[1372, 726]]);
+    for (const o of W.query(FOLD.x - 40, FOLD.y - 40, FOLD.x + FOLD.w + 40, FOLD.y + FOLD.h + 40)) {
+      if (['shelter', 'hay', 'fire', 'gateBell', 'signpost', 'hut'].includes(o.prop) || o.door || o.thorn && !o.clearable) continue;
+      const inside = o.x > FOLD.x - 10 && o.x < FOLD.x + FOLD.w + 10 && o.y > FOLD.y - 6 && o.y < FOLD.y + FOLD.h + 14;
+      let onRoute = false; for (let i = 1; i < route.length; i++) if (segDist(o.x, o.y, route[i - 1][0], route[i - 1][1], route[i][0], route[i][1]) < 14) onRoute = true;
+      if (inside || onRoute) W.removeDecor(o);
+    }
+    stroke(g, route, 10, '#4f8a34'); stroke(g, route, 8, '#b5834c'); stroke(g, route, 7, '#cf9f62');
+    for (let i = 0; i < 500; i++) { const k = 1 + Math.floor(rnd() * (route.length - 1)), t = rnd(), x = route[k - 1][0] + (route[k][0] - route[k - 1][0]) * t + (rnd() - 0.5) * 10, y = route[k - 1][1] + (route[k][1] - route[k - 1][1]) * t + (rnd() - 0.5) * 10; rect(g, ['#ddb57a', '#b5834c', '#e8c690', '#a57a48'][Math.floor(rnd() * 4)], Math.floor(x), Math.floor(y), rnd() < 0.3 ? 2 : 1, 1); }
+    paintFold(g, rnd);
+  }
+  W.navDirty && W.navDirty();
+};
 W.build = () => {
+  Object.assign(FOLD, FOLD0); W.foldLevel = 0;
   const rnd = seeded(2026), g0 = mk(WW, WH), g = g0.getContext('2d');
   for (const id of Object.keys(REGIONS)) paintRegion(g, id, rnd);
   // soften region seams with a dithered band
@@ -229,11 +273,7 @@ W.build = () => {
   // cliffs and ridges
   for (const [x1, y1, x2, y2, , kind] of BARRIERS) if (kind === 'cliff' || kind === 'ridge') paintCliff(g, x1, y1, x2, y2, kind);
   // the fold: straw floor, a shaded strip under the shelter, the fire ring
-  rect(g, '#b8954a', FOLD.x, FOLD.y, FOLD.w, FOLD.h); rect(g, '#dcb965', FOLD.x + 2, FOLD.y + 2, FOLD.w - 4, FOLD.h - 4);
-  for (let i = 0; i < 3400; i++) rect(g, ['#c9a352', '#f0d88c', '#c9a352', '#e8c878'][Math.floor(rnd() * 4)], Math.floor(FOLD.x + 3 + rnd() * (FOLD.w - 9)), Math.floor(FOLD.y + 3 + rnd() * (FOLD.h - 8)), rnd() < 0.6 ? 3 : 2, 1);
-  g.fillStyle = 'rgba(90,60,20,.22)'; g.fillRect(FOLD.x + 12, FOLD.y + 22, 80, 20);
-  for (let a = 0; a < 10; a++) { const sx = Math.round(FIRE.x + Math.cos(a / 10 * TAU) * 8), sy = Math.round(FIRE.y + Math.sin(a / 10 * TAU) * 5); rect(g, '#5a5868', sx - 2, sy - 1, 4, 3); rect(g, '#9a98a8', sx - 1, sy - 1, 3, 2); rect(g, '#c4c3cf', sx - 1, sy - 1); }
-  rect(g, '#5a4a3a', FIRE.x - 5, FIRE.y - 2, 10, 4);
+  paintFold(g, rnd);
   // Bram's bare paddock
   oval(g, SITES.bramFarm.x - 40, SITES.bramFarm.y + 70, 110, 60, '#a8a070'); oval(g, SITES.bramFarm.x - 40, SITES.bramFarm.y + 70, 104, 54, '#bab480');
   for (let i = 0; i < 600; i++) rect(g, '#9a9264', Math.floor(SITES.bramFarm.x - 140 + rnd() * 200), Math.floor(SITES.bramFarm.y + 20 + rnd() * 100), 2, 1);
@@ -244,8 +284,8 @@ W.build = () => {
   W.decor = [];
   const add = (x, y, prop, extra = {}) => W.decor.push(Object.assign({ x, y, prop }, extra));
   add(HUT.x, HUT.y, 'hut', { r: 0 });
-  add(FOLD.x + 52, FOLD.y + 42, 'shelter');
-  for (const [hx, hy] of [[FOLD.x + 16, FOLD.y + 62], [FOLD.x + 30, FOLD.y + 66], [FOLD.x + 22, FOLD.y + 56]]) add(hx, hy, 'hay');
+  add(FOLD0.x + 52, FOLD0.y + 42, 'shelter');
+  for (const [hx, hy] of [[FOLD0.x + 16, FOLD0.y + 62], [FOLD0.x + 30, FOLD0.y + 66], [FOLD0.x + 22, FOLD0.y + 56]]) add(hx, hy, 'hay');
   add(FIRE.x, FIRE.y + 2, 'fire');
   add(HUT.x + 40, HUT.y - 4, 'berry', { r: 6 }); add(HUT.x - 42, HUT.y - 2, 'bush', { r: 6 });
   add(SITES.gate.x + 26, SITES.gate.y + 2, 'gateBell', { r: 3, bell: true });
@@ -255,8 +295,8 @@ W.build = () => {
     const len = Math.hypot(x2 - x1, y2 - y1), step = kind === 'maze' ? 14 : 28, n = Math.max(1, Math.round(len / step));
     for (let k = 0; k <= n; k++) {
       const x = x1 + (x2 - x1) * k / n, y = y1 + (y2 - y1) * k / n;
-      if (kind === 'thorn' || kind === 'maze') add(x + (rnd() - 0.5) * 3, y + 6, kind === 'maze' ? 'thornBush' : 'thornWall', { door, thorn: true });
-      else add(x + (rnd() - 0.5) * 6, y + 8 + (rnd() - 0.5) * 6, door === 'ridge' ? 'boulder2' : rnd() < 0.5 ? 'boulder' : 'boulder2', { door, r: 0 });
+      if (kind === 'thorn' || kind === 'maze') add(x + (rnd() - 0.5) * 3, y + 6, kind === 'maze' ? 'thornBush' : 'thornWall', { door, thorn: true, fixed: true });
+      else add(x + (rnd() - 0.5) * 6, y + 8 + (rnd() - 0.5) * 6, door === 'ridge' ? 'boulder2' : rnd() < 0.5 ? 'boulder' : 'boulder2', { door, r: 0, fixed: true });
     }
   }
   add(SITES.bridge.x - 70, SITES.bridge.y + 20, 'signpost', { sign: 'bridge' });
@@ -270,7 +310,7 @@ W.build = () => {
   for (let k = 0; k < 6; k++) add(SITES.village.x + 60 + k * 18, SITES.village.y - 70, 'reeds');
   add(SITES.hankCamp.x, SITES.hankCamp.y, 'tent', { r: 0 }); add(SITES.hankCamp.x + 50, SITES.hankCamp.y + 14, 'cart', { r: 10 });
   add(SITES.bramFarm.x, SITES.bramFarm.y, 'bramBarn', { r: 0 });
-  for (let k = 0; k < 9; k++) add(SITES.oliveGrove.x + (k % 3) * 44 + (rnd() - 0.5) * 10, SITES.oliveGrove.y + Math.floor(k / 3) * 40 + (rnd() - 0.5) * 8, 'oliveTree', { r: 5, tree: true });
+  for (let k = 0; k < 9; k++) add(SITES.oliveGrove.x + (k % 3) * 44 + (rnd() - 0.5) * 10, SITES.oliveGrove.y + Math.floor(k / 3) * 40 + (rnd() - 0.5) * 8, 'oliveTree', { r: 5, tree: true, fixed: true });
   // building rectangles that block movement
   W.rects = [[HUT.x - 27, HUT.y - 26, 54, 25], [SITES.tollBooth.x - 16, SITES.tollBooth.y - 10, 32, 10], [SITES.hankCamp.x - 18, SITES.hankCamp.y - 10, 36, 10],
     [SITES.bramFarm.x - 38, SITES.bramFarm.y - 24, 76, 24]];
@@ -305,8 +345,8 @@ W.build = () => {
     }
   }
   // the world's edge: a ring of trees just inside the border
-  for (let x = 10; x < WW; x += 34) { add(x + rnd() * 8, 30 + rnd() * 6, 'pine', { r: 5, tree: true }); add(x + rnd() * 8, WH - 4, regionAt(x, WH - 4).startsWith('canyon') ? 'deadTree' : 'pine', { r: 5, tree: true }); }
-  for (let y = 60; y < WH; y += 34) { add(12 + rnd() * 6, y, regionAt(12, y).startsWith('canyon') ? 'deadTree' : 'pine', { r: 5, tree: true }); add(WW - 12 - rnd() * 6, y, 'pine', { r: 5, tree: true }); }
+  for (let x = 10; x < WW; x += 34) { add(x + rnd() * 8, 30 + rnd() * 6, 'pine', { r: 5, tree: true, fixed: true }); add(x + rnd() * 8, WH - 4, regionAt(x, WH - 4).startsWith('canyon') ? 'deadTree' : 'pine', { r: 5, tree: true, fixed: true }); }
+  for (let y = 60; y < WH; y += 34) { add(12 + rnd() * 6, y, regionAt(12, y).startsWith('canyon') ? 'deadTree' : 'pine', { r: 5, tree: true, fixed: true }); add(WW - 12 - rnd() * 6, y, 'pine', { r: 5, tree: true, fixed: true }); }
   hashAll();
 };
 
@@ -319,7 +359,7 @@ W.blocked = (x, y, r) => {
 W.collide = (e, r, px, py) => {
   e.x = clamp(e.x, 8, WW - 8); e.y = clamp(e.y, 12, WH - 4);
   // fold fence
-  const F = FOLD, fence = [[F.x, F.y, F.w, 4], [F.x, F.y, 4, F.h], [F.x + F.w - 4, F.y, 4, F.h], [F.x, F.y + F.h - 4, (F.w - GATE) / 2, 4], [F.x + (F.w + GATE) / 2, F.y + F.h - 4, (F.w - GATE) / 2, 4]];
+  const F = FOLD, gl = GX - GATE / 2, gr = GX + GATE / 2, fence = [[F.x, F.y, F.w, 4], [F.x, F.y, 4, F.h], [F.x + F.w - 4, F.y, 4, F.h], [F.x, F.y + F.h - 4, gl - F.x, 4], [gr, F.y + F.h - 4, F.x + F.w - gr, 4]];
   for (const [x, y, w, h] of fence.concat(W.dynamicRects())) {
     if (e.x < x - r - 1 || e.x > x + w + r + 1 || e.y < y - r - 1 || e.y > y + h + r + 1) continue;
     const cx = clamp(e.x, x, x + w), cy = clamp(e.y, y, y + h), dx = e.x - cx, dy = e.y - cy, d = Math.hypot(dx, dy);
@@ -374,9 +414,10 @@ function pushFromPoly(e, pts, m) {
 // they're going ask for a path and follow its waypoints.
 const NC = 16, NCOLS = Math.ceil(WW / NC), NROWS = Math.ceil(WH / NC);
 let navGrid = null, navKey = '';
-W.navDirty = () => { navKey = ''; };
+let navVer = 0;
+W.navDirty = () => { navVer++; };
 const ensureNav = () => {
-  const key = JSON.stringify(W.doors) + ':' + (W.dynamicRects().length);
+  const key = JSON.stringify(W.doors) + ':' + (W.dynamicRects().length) + ':' + navVer + ':' + W.foldLevel;
   if (key === navKey && navGrid) return;
   navKey = key; navGrid = new Uint8Array(NCOLS * NROWS);
   for (let j = 0; j < NROWS; j++) for (let i = 0; i < NCOLS; i++) {
@@ -435,17 +476,18 @@ W.nav = (e, tx, ty) => {
 };
 
 // Is a building footprint (in world px, top-left x,y, w,h) free to build on?
-W.canPlace = (x, y, w, h, others) => {
+W.canPlace = (x, y, w, h, others, flat) => {
   if (x < 10 || y < 40 || x + w > WW - 10 || y + h > WH - 10) return false;
   if (!W.isRevealed(regionAt(x + w / 2, y + h / 2))) return false;
   const inF = x >= FOLD.x + 6 && x + w <= FOLD.x + FOLD.w - 6 && y >= FOLD.y + 8 && y + h <= FOLD.y + FOLD.h - 6;
   const overlapsFold = x < FOLD.x + FOLD.w + 4 && x + w > FOLD.x - 4 && y < FOLD.y + FOLD.h + 4 && y + h > FOLD.y - 4;
-  if (overlapsFold && !inF) return false;
-  if (inF && x < GX + 22 && x + w > GX - 22 && y + h > FOLD.y + FOLD.h - 40) return false; // keep the gate clear
+  const inGate = x >= GX - GATE / 2 && x + w <= GX + GATE / 2; // a path may run through the gateway
+  if (overlapsFold && !inF && !(flat && inGate)) return false;
+  if (!flat && x < GX + 22 && x + w > GX - 22 && y + h > FOLD.y + FOLD.h - 40 && y < FOLD.y + FOLD.h + 36) return false; // keep the gate clear, inside and out
   if (inF && Math.hypot(x + w / 2 - FIRE.x, y + h / 2 - FIRE.y) < 30) return false;
-  if (x < FOLD.x + 96 && x + w > FOLD.x + 8 && y < FOLD.y + 46 && y + h > FOLD.y + 4) return false; // the shelter
+  if (x < FOLD0.x + 96 && x + w > FOLD0.x + 8 && y < FOLD0.y + 46 && y + h > FOLD0.y + 4) return false; // the shelter
   for (const [rx, ry, rw, rh] of W.rects.concat(others || [])) if (x < rx + rw && x + w > rx && y < ry + rh && y + h > ry) return false;
-  for (const o of W.query(x - 20, y - 20, x + w + 20, y + h + 20)) if ((o.r || o.tree || o.thorn) && o.x > x - 6 && o.x < x + w + 6 && o.y > y - 2 && o.y < y + h + 8) return false;
+  for (const o of W.query(x - 20, y - 20, x + w + 20, y + h + 20)) if ((o.r || o.tree || o.thorn) && !W.isSmall(o) && o.x > x - 6 && o.x < x + w + 6 && o.y > y - 2 && o.y < y + h + 8) return false;
   for (let px = x; px <= x + w; px += 8) for (let py = y; py <= y + h; py += 8) {
     if (riverDist(px, py) < RIVER_HW + 6 || Math.hypot(px - POND.x, py - POND.y) < POND.r + 4 || Math.hypot(px - LAKE.x, py - LAKE.y) < LAKE.r + 4) return false;
     for (const [x1, y1, x2, y2, hw] of BARRIERS) if (segDist(px, py, x1, y1, x2, y2) < hw + 6) return false;

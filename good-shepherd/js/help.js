@@ -15,7 +15,9 @@ const L = [
   { id: 'markers', title: 'Sheep you can\'t see', art: { box: '#fff7e0' }, text: 'Little squares at the edge of the screen point to sheep off-screen. Cream means wild. Gold means lost. Red means someone special.' },
   { id: 'fold', title: 'Bringing them home', art: { prop: 'shelter' }, text: 'Lead your followers through the gate at the bottom of the fold. Sheep inside the fold are home, and safe at night.' },
   { id: 'pickups', title: 'Supplies', art: { prop: 'branchPile' }, text: 'Branches and stones lie all over the map. Walk over them to pick them up. You build with them.' },
-  { id: 'build', title: 'Building', art: { prop: 'feeder' }, text: 'Press [B] to build. Pick a building, then place it with the mouse, or walk to the spot and press [Enter]. Feeders and troughs go near the fold.' },
+  { id: 'build', title: 'Building', art: { prop: 'feeder' }, text: 'Press [B] to build. Pick a building, then place it with the mouse, or walk to the spot and press [Enter]. Feeders and troughs go near the fold. Building shows more of the farm at once. Press [Z] or roll the mouse wheel to do that any time.' },
+  { id: 'growfarm', title: 'Growing the farm', art: { prop: 'foldPlus' }, text: 'Need more room? Press [B]. Bigger fold moves the fence out. Clear land takes out trees and rocks, and you keep the timber and stone. Remove takes a building down and gives most of it back. Press [L] for the ledger: what the farm makes and uses each day.' },
+  { id: 'fences', title: 'Fences and gates', art: { prop: 'fencePiece' }, text: 'Fences you lay keep wolves out. A wolf needs a few seconds to gnaw through one piece, and longer for a gate. Light near a fence often scares it off first. Wolves never touch a gate while you stand in it.' },
   { id: 'hearts', title: 'Hearts', art: { spr: 'heart' }, text: 'Hearts drop when you care for the flock. Walk over them. When the thin bar at the top fills, you level up and pick a new Knack.' },
   { id: 'dusk', title: 'Night is coming', art: { prop: 'gateBell' }, text: 'The sun is going down. Wolves come at night. Get your followers into the fold before dark.' },
   { id: 'night', title: 'Wolves', art: { spr: 'wolf' }, text: 'Your staff swings by itself when a wolf comes close, and your lantern scares them. Wolves never hurt sheep here. They scatter them, and a scattered sheep is lost until you find it.' },
@@ -67,6 +69,7 @@ HELP.CHAPTERS = {
   2: [
     [{ prop: 'bridge' }, 'The river blocks the way east. Build a bridge (10 timber) at the crossing to reach the Riverlands.'],
     [{ prop: 'well' }, 'New buildings: the Well brings in lots of water, and a Lookout in the Watchtower spots wolves early.'],
+    [{ prop: 'toolUp' }, 'New in the build menu: Upgrade makes a building better where it stands, and Paths make the walk a third faster.'],
     [{ human: 'nell' }, 'Meet the river folk. Somebody over there is charging for water.'],
     [{ prop: 'feastTable' }, 'Day 7 is the first Sabbath: a day of rest.'],
   ],
@@ -111,11 +114,12 @@ function onEvent(ev, d) {
   const T = HELP.teach;
   switch (ev) {
     case 'joined': if (!d.key || !['woolsworth', 'baabara', 'ramsey'].includes(d.key)) T('fold'); break;
-    case 'night': if (!G.sabbath) T('night'); if (G.storm) T('storm'); if (G.cold) T('cold'); break;
+    case 'night': if (!G.sabbath) T('night'); if (G.storm) T('storm'); if (G.cold) T('cold'); if (G.buildings.some(b => b.type === 'fence' || b.type === 'gate')) T('fences'); break;
     case 'dawn':
       if (G.sabbath) T('sabbath');
       else { T('dawn'); if (d.day >= 2) T('bell'); }
       if (d.day === 4) T('map');
+      if (d.day >= 3 || (G.report && G.report.cramped)) T('growfarm');
       break;
     case 'jobStart': T('jobs'); break;
     case 'scattered': T('lost'); break;

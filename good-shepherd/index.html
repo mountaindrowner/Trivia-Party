@@ -298,6 +298,30 @@ kbd { font-family: var(--font); font-weight: 700; font-size: .92em; background: 
 h3.sub{font-size:8px;margin:8px 0 2px;color:var(--gold, #f5c542)}
 .obj.got i{color:#d9a520}
 .obj.got b{color:#9a6a10}
+
+#buildbar{position:absolute;right:6px;top:34px;bottom:6px;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:3px;z-index:6;pointer-events:none}
+#bb-info{order:2;font-size:7px;padding:2px 6px;max-width:190px;text-align:right;line-height:1.25}
+#bb-info:empty{display:none}
+#bb-tools{display:flex;flex-direction:column;gap:2px;padding:2px;pointer-events:auto}
+.bb{position:relative;border:0;background:#fbefd2;padding:1px 2px;cursor:pointer;font-family:var(--font);color:var(--ink);font-size:6.5px;display:flex;align-items:center}
+.bb canvas{width:19px;height:14px;image-rendering:pixelated;display:block;margin:0 auto}
+.bb kbd{position:absolute;right:0;bottom:0;font-size:5px;padding:0 1.5px;line-height:1.2}
+.bb.sel{background:#fff6dc;outline:1.5px solid var(--accent, #f5c542)}
+.bb:hover,.bb:focus-visible{background:#fff6dc;outline:1px solid var(--wood)}
+.bb.txt{padding:2px 3px;font-weight:700;justify-content:center}
+.bb.go{background:#7cc256;color:#fff}
+#hud.building .tbar{display:none}
+.lhead{font-size:6px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:3px 3px 1px}
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:7.5px;line-height:1.35}
+.ledger table{border-collapse:collapse;width:100%}
+.ledger th{font-size:6px;color:var(--muted);font-weight:400;text-align:right;padding:0 2px}
+.ledger td{padding:1px 2px;text-align:right;border-top:1px solid var(--parch-dk)}
+.ledger td:first-child{text-align:left}
+.ledger td.no{color:var(--rose);font-weight:700}.ledger td.yes{color:var(--leaf);font-weight:700}
+.ledger .muted{color:var(--muted);font-size:6.5px;margin-top:2px}
+.ledger .need{display:grid;grid-template-columns:9px 1fr;gap:3px}
+.ledger .need i{font-style:normal;font-weight:700;color:var(--leaf)}.ledger .need i.x{color:var(--rose)}
+.ledger h3.sub{margin:0 0 2px}.ledger h3.sub:not(:first-child){margin-top:6px}
 </style>
 </head>
 <body>
@@ -323,6 +347,7 @@ h3.sub{font-size:8px;margin:8px 0 2px;color:var(--gold, #f5c542)}
     <div id="saved" class="wood">Saved</div>
     <div id="toast" class="wood" role="status" aria-live="polite"></div>
     <div id="tip" class="wood"></div>
+    <div id="buildbar" hidden><div id="bb-info" class="wood"></div><div id="bb-tools" class="wood"></div></div>
     <div id="banner"></div>
 
     <div id="dialog" class="wood clickable" hidden>
