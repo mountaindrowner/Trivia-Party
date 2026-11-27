@@ -64,6 +64,7 @@ const OBJ = {
     { id: 'well', text: 'Build a Well', prog: () => [GM.count('well'), 1] },
     { id: 'minnow', text: 'Find the lamb on the lake', done: () => joined('minnow'), when: () => !!keyed('minnow') },
     { id: 'home30', text: 'Bring 25 sheep home', prog: () => [homeN(), 25] },
+    { id: 'fold', text: 'Give the flock more room: make the fold bigger (B)', done: () => (G.foldLv || 0) >= 1, when: () => homeN() >= 12 || (G.foldLv || 0) >= 1 },
   ],
   3: [
     { id: 'thorns', text: 'Cut a way through the thorn wall', done: () => W.doors.thorns, key: true },
@@ -71,11 +72,13 @@ const OBJ = {
     { id: 'infirmary', text: 'Build an Infirmary', prog: () => [GM.count('infirmary'), 1] },
     { id: 'garden', text: 'Build an Herb Garden', prog: () => [GM.count('herbGarden'), 1] },
     { id: 'lamps', text: 'Build 2 Lamp Posts', prog: () => [GM.count('lampPost'), 2] },
+    { id: 'upgrade', text: 'Upgrade a building to level 2 (B)', done: () => G.buildings.some(b => (b.lv || 1) >= 2) },
     { id: 'burr', text: 'Find Burr in the thorn maze', done: () => joined('burr'), when: () => !!keyed('burr') },
     { id: 'thistle', text: 'Bring old Thistle home', done: () => joined('thistle'), key: true, when: () => !!keyed('thistle') },
   ],
   4: [
     { id: 'treadmill', text: 'Build a Treadmill', prog: () => [GM.count('treadmill'), 1] },
+    { id: 'fence', text: 'Lay a fence line to slow the wolves', prog: () => [GM.count('fence') + GM.count('gate'), 12] },
     { id: 'rockslide', text: 'Clear the rockslide on the Old Road', done: () => W.doors.rockslide, key: true },
     { id: 'hank', text: 'Meet the hired hand on the Old Road', done: () => flag('met_hank'), key: true },
     { id: 'haulers', text: 'Have 2 Hay Haulers working', prog: () => [cnt(s => s.job && s.job.type === 'hauler'), 2] },

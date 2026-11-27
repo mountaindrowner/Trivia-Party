@@ -266,6 +266,17 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
   how to get in, new buildings, new dangers, and who you'll meet. How to play (H) keeps every lesson and the key
   list. Goals only appear once they're possible. Lessons can be turned off in the pause menu.
 - **Sound:** 16 synthesized music tracks and sound effects.
+- **An expanding farm:**
+  - *Wide view.* Building zooms out to show four times the ground. Z or the mouse wheel does it any time.
+  - *A fold that grows.* Three expansions move the fence east, then north. Each one sleeps more sheep.
+  - *Fences and gates.* One-tile pieces laid by dragging. Wolves must gnaw through (3.5 s a fence, 6 s a gate), and
+    never touch a gate while the Shepherd stands in it (John 10:9). Lamp light behind a fence often turns them first.
+  - *Paths.* You and the flock walk a third faster on them.
+  - *Tools.* Clear land (trees, rocks and bushes become timber, stone and hay), Upgrade, and Remove (75% back).
+  - *Levels.* Every building has three: more workers, more sheep fed or bedded, wider lamps.
+  - *Where you build matters.* Feeders and troughs count only near the fold. A Workshop brings in up to 50% more
+    timber with trees close by, so clearing everything has a price.
+  - *Ledger (L).* What the farm made and used this morning, room for the flock, and which jobs are filled.
 - **Favors:** eleven optional side quests from the people you meet. Each has a reward that changes how you play:
   travel by signpost, a longer whistle, faster trust, double gifts from Zeb, faster healing, more hay, brighter lamp
   posts, a stash of wool, a barn full of supplies, a happier flock, and the Golden Bell that unnerves wolves.
@@ -287,6 +298,9 @@ genre, built from our own art. We don't copy any existing game's sprites, charac
 | Goals | Q | |
 | Map | M | |
 | Notes | C | |
+| Ledger | L | |
+| Wide view | Z or mouse wheel | View |
+| While building | 1–6 pick a piece or tool, Enter places, Esc stops | Place |
 | Menu | Esc | Menu |
 
 Open the page with `#debug` on the address to get the testing shortcut: N skips to the next dusk or dawn.
@@ -294,7 +308,7 @@ Open the page with `#debug` on the address to get the testing shortcut: N skips 
 ## 11. Roadmap
 
 1. **Playtest and tune:** wolf counts, day length, building costs, and how many sheep each chapter offers.
-2. **Depth:** fences and pens you can draw, sheep friendships, more favors and more for the post-game.
+2. **Depth:** pens that hold chosen sheep, haulers that carry goods along paths, sheep friendships, more favors.
 3. **Length:** stretch chapters toward the 10-hour target with side stories for the river folk and the Highlands.
 4. **Controller support**, then itch.io (like Trivia Holy Party) and maybe Steam.
 

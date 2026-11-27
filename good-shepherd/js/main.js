@@ -67,6 +67,7 @@ function loadSave() {
 function startPlay() {
   $('title').hidden = true; $('end').hidden = true; $('credits').hidden = true; $('hud').hidden = false;
   NN.mode = 'play';
+  NN.setZoom(NN.SET.zoom || 1);
 }
 const loading = fn => { $('loading').hidden = false; setTimeout(() => { try { fn(); } finally { $('loading').hidden = true; NN.FX.snap(); } }, 40); };
 NN.newGame = () => {
@@ -122,7 +123,7 @@ addEventListener('keydown', e => {
     if (PANEL_KEYS[k] && !repeat) { const want = PANEL_KEYS[k]; const cur = UI.panelName(); UI.closePanel(); if (cur !== want) UI.openPanel(want); }
     return;
   }
-  if (k === 'z' && !repeat && (mode === 'build' || mode === 'play')) { if (mode === 'build') NN.stepZoom(V.z >= 2 ? -2 : 1); else NN.setZoom(V.z > 1 ? 1 : 2); GM.sfx('select'); return; }
+  if (k === 'z' && !repeat && (mode === 'build' || mode === 'play')) { if (mode === 'build') NN.stepZoom(V.z >= 2 ? -2 : 1); else { NN.setZoom(V.z > 1 ? 1 : 2); NN.SET.zoom = V.z; NN.saveSettings(); } GM.sfx('select'); return; }
   if (mode === 'build') {
     if (k === 'escape') { endBuild(); GM.sfx('cancel'); return; }
     if (k === 'b' && !repeat) { endBuild(); UI.openPanel('build'); return; }
@@ -178,7 +179,7 @@ stage.addEventListener('pointerdown', e => {
   joy.on = true; joy.ox = e.clientX; joy.oy = e.clientY; joy.x = joy.y = 0; joy.id = e.pointerId;
   try { stage.setPointerCapture(e.pointerId); } catch (_) { /* */ }
 });
-stage.addEventListener('wheel', e => { if (NN.mode !== 'play' && NN.mode !== 'build') return; e.preventDefault(); NN.stepZoom(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+stage.addEventListener('wheel', e => { if (NN.mode !== 'play' && NN.mode !== 'build') return; e.preventDefault(); NN.stepZoom(e.deltaY > 0 ? 1 : -1); if (NN.mode === 'play') { NN.SET.zoom = V.z; NN.saveSettings(); } }, { passive: false });
 const endJoy = e => { if (e.pointerId === joy.id) { joy.on = false; joy.x = joy.y = 0; } };
 stage.addEventListener('pointerup', endJoy);
 stage.addEventListener('pointercancel', endJoy);
@@ -193,6 +194,7 @@ $('tbar').addEventListener('pointerdown', e => {
   else if (act === 'use') { holdTouch = true; useInteract(); }
   else if (act === 'build') { if (G.form !== 'sheep') UI.openPanel('build'); }
   else if (act === 'flock') UI.openPanel('flock');
+  else if (act === 'view') { NN.setZoom(V.z > 1 ? 1 : 2); NN.SET.zoom = V.z; NN.saveSettings(); }
   else if (act === 'menu') UI.openPanel('pause');
 });
 addEventListener('pointerup', () => { holdTouch = false; });
@@ -337,7 +339,10 @@ function buildInfo() {
   const P = UI.placing; if (!P) return '';
   if (P.type) {
     const d = NN.DEFS.BUILD[P.type];
-    return `${d.name} · ${costText(d.cost)}${d.piece ? ' each · click or drag' : ' · click to place'}`;
+    let extra = '';
+    if (P.type === 'workshop') { const g = ghostTile(); if (g) { const n = Math.min(5, GM.siteTrees(g.tx * 16 + d.w * 8, g.ty * 16 + d.h * 16 + 10)); extra = n ? ` · ${n} tree${n > 1 ? 's' : ''} close by: +${n * 10}% timber` : ' · no trees close by'; } }
+    if ((P.type === 'feeder' || P.type === 'trough')) { const g = ghostTile(); if (g && !GM.nearFold({ fx: g.tx * 16 + 16, fy: g.ty * 16 + 16 })) extra = ' · too far from the fold to count'; }
+    return `${d.name} · ${costText(d.cost)}${d.piece ? ' each · click or drag' : ' · click to place'}${extra}`;
   }
   const t = toolTarget();
   if (P.tool === 'clear') return t && t.o ? (t.ok ? `Clear it: ${Object.entries(W.clearYield(t.o)).map(([k, v]) => `+${v} ${NN.DEFS.RES_NAME[k].toLowerCase()}`).join(', ') || 'makes room'}` : 'Too far. Walk closer.') : 'Clear land · point at a tree, bush, stump or rock near you';

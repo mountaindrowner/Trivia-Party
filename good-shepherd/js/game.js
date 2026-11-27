@@ -35,7 +35,7 @@ const BUILD = {
   feeder: { name: 'Feeder', w: 2, h: 1, cost: { timber: 4 }, ch: 1, desc: 'Feeds 10 sheep a day. Put it near the fold.' },
   trough: { name: 'Trough', w: 2, h: 1, cost: { timber: 3 }, ch: 1, desc: 'Waters 10 sheep a day. Put it near the fold.' },
   lean: { name: 'Shelter', w: 4, h: 2, cost: { timber: 6, stone: 2 }, ch: 1, desc: 'Room for 8 more sheep to sleep. Cramped sheep don\'t rest.' },
-  workshop: { name: 'Workshop', w: 3, h: 2, cost: { timber: 6 }, ch: 1, jobs: { gatherer: 2 }, desc: 'Two Gatherers bring in timber and stone.' },
+  workshop: { name: 'Workshop', w: 3, h: 2, cost: { timber: 6 }, ch: 1, jobs: { gatherer: 2 }, desc: 'Two Gatherers bring in timber and stone. They bring more timber with trees close by, so build it at the edge of the woods.' },
   hayBarn: { name: 'Hay Barn', w: 4, h: 3, cost: { timber: 10, stone: 2 }, ch: 1, jobs: { hauler: 2 }, desc: 'Two Hay Haulers bring in hay.' },
   well: { name: 'Well', w: 2, h: 2, cost: { stone: 6, timber: 2 }, ch: 2, jobs: { wrangler: 1 }, desc: 'A Water Wrangler draws plenty of water.' },
   watchtower: { name: 'Watchtower', w: 2, h: 2, cost: { timber: 8, stone: 4 }, ch: 2, jobs: { lookout: 1 }, desc: 'A Lookout up here spots wolves early. Wolves near it get nervous.' },
@@ -302,6 +302,9 @@ GM.canPlace = (type, tx, ty) => {
   return W.canPlace(x, y, w, h, others, d.flat);
 };
 GM.count = type => G.buildings.filter(b => b.type === type).length;
+// Where you build matters: a Workshop's Gatherers bring in more timber with trees close by (10% a tree, up to 50%).
+GM.siteTrees = (x, y) => W.query(x - 100, y - 100, x + 100, y + 100).filter(o => o.tree && !o.gone && Math.hypot(o.x - x, o.y - y) < 100).length;
+GM.siteBonus = (type, x, y) => type === 'workshop' ? Math.min(5, GM.siteTrees(x, y)) * 0.1 : 0;
 const lvOf = b => b.lv || 1;
 GM.capacity = () => ({
   beds: FOLD_BEDS[G.foldLv || 0] + G.buildings.reduce((n, b) => n + (b.type === 'lean' ? 8 + 6 * (lvOf(b) - 1) : 0), 0),
@@ -1016,7 +1019,7 @@ function dawnTally() {
       case 'hauler': add('hay', 8 * share * boost * (pk('pitchfork') ? 1.5 : 1)); break;
       case 'wrangler': add('water', (s.job.key.includes('@pond') ? 10 : 14) * share * boost); break;
       case 'gardener': add('herbs', 3 * share * boost); break;
-      case 'gatherer': add('timber', 3 * share * boost); add('stone', 1.4 * share * boost); break;
+      case 'gatherer': { const sb = 1 + GM.siteBonus('workshop', s.job.station.x, s.job.station.y); add('timber', 3 * share * boost * sb); add('stone', 1.4 * share * boost); break; }
       case 'knitter': { const n = Math.min(Math.floor(G.res.wool / 2), Math.round(1.5 * share * boost)); if (n > 0) { G.res.wool -= n * 2; add('blanket', n); } break; }
     }
     s.workT = 0;

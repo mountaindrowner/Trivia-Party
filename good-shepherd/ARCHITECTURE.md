@@ -232,3 +232,23 @@ one `place_<region>` per region (`meadow river thorns road canyon highlands`).
   shepherding" calls `beginPostgame()` (chapter card, then `pg_start`). Chapter 8 has its own goals (`ST.OBJ[8]`),
   nights scaled to the flock (`ST.nightFor`), and four new wild sheep each dawn until about 112 exist. Ninety-nine
   home plays `pg_ninetynine` and a second end screen; play continues after it.
+
+## The farm as a base (`world.js`, `game.js`, `main.js`, `ui.js`)
+
+- **View.** `NN.view = { w, h, z }` is the part of the world on screen. `NN.setZoom(1 | 1.5 | 2)` resizes the canvas;
+  everything that draws or culls reads `NN.view`, never `NN.W`/`NN.H` (those stay the UI's base size). Build mode
+  zooms out and restores the player's zoom on exit; the chosen play zoom is saved in `NN.SET.zoom`.
+- **Fold.** `W.FOLD` is mutable. `W.setFold(level)` picks one of `W.FOLD_SIZES`, clears scenery inside, repaints the
+  straw and re-routes the old path. The gate (`W.GX`), fire and shelter never move; code that means "the original
+  corner" uses `W.FOLD0`. `GM.expandFold()` pays for the next size; `G.foldLv` is saved and re-applied on load.
+- **Pieces.** `fence`, `gate` and `road` are 1×1 entries in `G.buildings` with `piece: true` in `DEFS.BUILD`
+  (`flat: true` for paths). `W.dynamicRects()` is cached and rebuilt on `GM.touch()`; it also fills the tile lookups
+  behind `GM.pieceAt` and `GM.roadAt`. Fences block everyone; gates block only wolves (checked in `updWolf`), which
+  gnaw at whatever holds them up (`b.hp`, `G.broken` for the morning report).
+- **Levels.** `b.lv` is 1–3. `GM.upgrade`, `GM.upgradeCost`, `GM.canUpgrade`, `GM.upgradeText`. Job slots, feeder
+  and trough places, beds, lamp reach and oil all read the level.
+- **Clearing.** `W.clearYield(o)` says what a piece of scenery gives (null = it stays; barrier dressing, the world's
+  edge and story props are `fixed`). `GM.clearDecor` removes it and records its index in `G.cleared`; scenery is
+  generated from a fixed seed, so indices are stable across saves.
+- **Build mode.** `UI.placing` is `{ type }` or `{ tool: 'clear' | 'upgrade' | 'remove' }`. `main.js` owns the cursor,
+  drag-laying and the overlay; `ui.js` owns the menu, the side bar (`UI.buildBar`) and the ledger panel.

@@ -6,7 +6,8 @@ Trial Room minigames, and race Grumbles the Goat to the Narrow Gate. Your host i
 It plays on phones (touch) and TVs/desktops (arrow keys + Enter, or 1–4 to answer).
 
 > **Also in this repo:** [`good-shepherd/`](good-shepherd/) is *Ninety-Nine*, a cozy pixel-art farming and survival
-> game where you play the Good Shepherd: seven chapters on Psalm 23, about two hours. Open `good-shepherd/index.html`.
+> game where you play the Good Shepherd: seven chapters on Psalm 23, then an open-ended farm you keep growing, with
+> a fold that expands, fences you lay against the wolves, and buildings you upgrade. Open `good-shepherd/index.html`.
 > See [DESIGN.md](good-shepherd/DESIGN.md) and [ARCHITECTURE.md](good-shepherd/ARCHITECTURE.md).
 
 ## Play
